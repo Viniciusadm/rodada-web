@@ -9,8 +9,50 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
+import { Route as SettingsRouteImport } from './routes/settings'
+import { Route as RoomsRouteImport } from './routes/rooms'
+import { Route as RankingRouteImport } from './routes/ranking'
+import { Route as PlayersRouteImport } from './routes/players'
+import { Route as HistoryRouteImport } from './routes/history'
+import { Route as GamesRouteImport } from './routes/games'
+import { Route as CreateGameRouteImport } from './routes/create-game'
 import { Route as IndexRouteImport } from './routes/index'
 
+const SettingsRoute = SettingsRouteImport.update({
+  id: '/settings',
+  path: '/settings',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const RoomsRoute = RoomsRouteImport.update({
+  id: '/rooms',
+  path: '/rooms',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const RankingRoute = RankingRouteImport.update({
+  id: '/ranking',
+  path: '/ranking',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const PlayersRoute = PlayersRouteImport.update({
+  id: '/players',
+  path: '/players',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const HistoryRoute = HistoryRouteImport.update({
+  id: '/history',
+  path: '/history',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const GamesRoute = GamesRouteImport.update({
+  id: '/games',
+  path: '/games',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const CreateGameRoute = CreateGameRouteImport.update({
+  id: '/create-game',
+  path: '/create-game',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
@@ -19,28 +61,130 @@ const IndexRoute = IndexRouteImport.update({
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
+  '/create-game': typeof CreateGameRoute
+  '/games': typeof GamesRoute
+  '/history': typeof HistoryRoute
+  '/players': typeof PlayersRoute
+  '/ranking': typeof RankingRoute
+  '/rooms': typeof RoomsRoute
+  '/settings': typeof SettingsRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
+  '/create-game': typeof CreateGameRoute
+  '/games': typeof GamesRoute
+  '/history': typeof HistoryRoute
+  '/players': typeof PlayersRoute
+  '/ranking': typeof RankingRoute
+  '/rooms': typeof RoomsRoute
+  '/settings': typeof SettingsRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
+  '/create-game': typeof CreateGameRoute
+  '/games': typeof GamesRoute
+  '/history': typeof HistoryRoute
+  '/players': typeof PlayersRoute
+  '/ranking': typeof RankingRoute
+  '/rooms': typeof RoomsRoute
+  '/settings': typeof SettingsRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/'
+  fullPaths:
+    | '/'
+    | '/create-game'
+    | '/games'
+    | '/history'
+    | '/players'
+    | '/ranking'
+    | '/rooms'
+    | '/settings'
   fileRoutesByTo: FileRoutesByTo
-  to: '/'
-  id: '__root__' | '/'
+  to:
+    | '/'
+    | '/create-game'
+    | '/games'
+    | '/history'
+    | '/players'
+    | '/ranking'
+    | '/rooms'
+    | '/settings'
+  id:
+    | '__root__'
+    | '/'
+    | '/create-game'
+    | '/games'
+    | '/history'
+    | '/players'
+    | '/ranking'
+    | '/rooms'
+    | '/settings'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
+  CreateGameRoute: typeof CreateGameRoute
+  GamesRoute: typeof GamesRoute
+  HistoryRoute: typeof HistoryRoute
+  PlayersRoute: typeof PlayersRoute
+  RankingRoute: typeof RankingRoute
+  RoomsRoute: typeof RoomsRoute
+  SettingsRoute: typeof SettingsRoute
 }
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
+    '/settings': {
+      id: '/settings'
+      path: '/settings'
+      fullPath: '/settings'
+      preLoaderRoute: typeof SettingsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/rooms': {
+      id: '/rooms'
+      path: '/rooms'
+      fullPath: '/rooms'
+      preLoaderRoute: typeof RoomsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/ranking': {
+      id: '/ranking'
+      path: '/ranking'
+      fullPath: '/ranking'
+      preLoaderRoute: typeof RankingRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/players': {
+      id: '/players'
+      path: '/players'
+      fullPath: '/players'
+      preLoaderRoute: typeof PlayersRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/history': {
+      id: '/history'
+      path: '/history'
+      fullPath: '/history'
+      preLoaderRoute: typeof HistoryRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/games': {
+      id: '/games'
+      path: '/games'
+      fullPath: '/games'
+      preLoaderRoute: typeof GamesRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/create-game': {
+      id: '/create-game'
+      path: '/create-game'
+      fullPath: '/create-game'
+      preLoaderRoute: typeof CreateGameRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/': {
       id: '/'
       path: '/'
@@ -53,17 +197,14 @@ declare module '@tanstack/react-router' {
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
+  CreateGameRoute: CreateGameRoute,
+  GamesRoute: GamesRoute,
+  HistoryRoute: HistoryRoute,
+  PlayersRoute: PlayersRoute,
+  RankingRoute: RankingRoute,
+  RoomsRoute: RoomsRoute,
+  SettingsRoute: SettingsRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
-
-import type { getRouter } from './router.tsx'
-import type { startInstance } from './start.ts'
-declare module '@tanstack/react-start' {
-  interface Register {
-    ssr: true
-    router: Awaited<ReturnType<typeof getRouter>>
-    config: Awaited<ReturnType<typeof startInstance.getOptions>>
-  }
-}
