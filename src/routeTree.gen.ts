@@ -13,10 +13,16 @@ import { Route as SettingsRouteImport } from './routes/settings'
 import { Route as RoomsRouteImport } from './routes/rooms'
 import { Route as RankingRouteImport } from './routes/ranking'
 import { Route as PlayersRouteImport } from './routes/players'
+import { Route as MatchesRouteImport } from './routes/matches'
 import { Route as HistoryRouteImport } from './routes/history'
 import { Route as GamesRouteImport } from './routes/games'
 import { Route as CreateGameRouteImport } from './routes/create-game'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as PlayMatchIdRouteImport } from './routes/play.$matchId'
+import { Route as MatchesNewRouteImport } from './routes/matches.new'
+import { Route as MatchesMatchIdQuestionsRouteImport } from './routes/matches.$matchId.questions'
+import { Route as MatchesMatchIdPresentRouteImport } from './routes/matches.$matchId.present'
+import { Route as MatchesMatchIdHostRouteImport } from './routes/matches.$matchId.host'
 
 const SettingsRoute = SettingsRouteImport.update({
   id: '/settings',
@@ -36,6 +42,11 @@ const RankingRoute = RankingRouteImport.update({
 const PlayersRoute = PlayersRouteImport.update({
   id: '/players',
   path: '/players',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const MatchesRoute = MatchesRouteImport.update({
+  id: '/matches',
+  path: '/matches',
   getParentRoute: () => rootRouteImport,
 } as any)
 const HistoryRoute = HistoryRouteImport.update({
@@ -58,26 +69,63 @@ const IndexRoute = IndexRouteImport.update({
   path: '/',
   getParentRoute: () => rootRouteImport,
 } as any)
+const PlayMatchIdRoute = PlayMatchIdRouteImport.update({
+  id: '/play/$matchId',
+  path: '/play/$matchId',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const MatchesNewRoute = MatchesNewRouteImport.update({
+  id: '/new',
+  path: '/new',
+  getParentRoute: () => MatchesRoute,
+} as any)
+const MatchesMatchIdQuestionsRoute = MatchesMatchIdQuestionsRouteImport.update({
+  id: '/$matchId/questions',
+  path: '/$matchId/questions',
+  getParentRoute: () => MatchesRoute,
+} as any)
+const MatchesMatchIdPresentRoute = MatchesMatchIdPresentRouteImport.update({
+  id: '/$matchId/present',
+  path: '/$matchId/present',
+  getParentRoute: () => MatchesRoute,
+} as any)
+const MatchesMatchIdHostRoute = MatchesMatchIdHostRouteImport.update({
+  id: '/$matchId/host',
+  path: '/$matchId/host',
+  getParentRoute: () => MatchesRoute,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/create-game': typeof CreateGameRoute
   '/games': typeof GamesRoute
   '/history': typeof HistoryRoute
+  '/matches': typeof MatchesRouteWithChildren
   '/players': typeof PlayersRoute
   '/ranking': typeof RankingRoute
   '/rooms': typeof RoomsRoute
   '/settings': typeof SettingsRoute
+  '/matches/new': typeof MatchesNewRoute
+  '/play/$matchId': typeof PlayMatchIdRoute
+  '/matches/$matchId/host': typeof MatchesMatchIdHostRoute
+  '/matches/$matchId/present': typeof MatchesMatchIdPresentRoute
+  '/matches/$matchId/questions': typeof MatchesMatchIdQuestionsRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/create-game': typeof CreateGameRoute
   '/games': typeof GamesRoute
   '/history': typeof HistoryRoute
+  '/matches': typeof MatchesRouteWithChildren
   '/players': typeof PlayersRoute
   '/ranking': typeof RankingRoute
   '/rooms': typeof RoomsRoute
   '/settings': typeof SettingsRoute
+  '/matches/new': typeof MatchesNewRoute
+  '/play/$matchId': typeof PlayMatchIdRoute
+  '/matches/$matchId/host': typeof MatchesMatchIdHostRoute
+  '/matches/$matchId/present': typeof MatchesMatchIdPresentRoute
+  '/matches/$matchId/questions': typeof MatchesMatchIdQuestionsRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -85,10 +133,16 @@ export interface FileRoutesById {
   '/create-game': typeof CreateGameRoute
   '/games': typeof GamesRoute
   '/history': typeof HistoryRoute
+  '/matches': typeof MatchesRouteWithChildren
   '/players': typeof PlayersRoute
   '/ranking': typeof RankingRoute
   '/rooms': typeof RoomsRoute
   '/settings': typeof SettingsRoute
+  '/matches/new': typeof MatchesNewRoute
+  '/play/$matchId': typeof PlayMatchIdRoute
+  '/matches/$matchId/host': typeof MatchesMatchIdHostRoute
+  '/matches/$matchId/present': typeof MatchesMatchIdPresentRoute
+  '/matches/$matchId/questions': typeof MatchesMatchIdQuestionsRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -97,30 +151,48 @@ export interface FileRouteTypes {
     | '/create-game'
     | '/games'
     | '/history'
+    | '/matches'
     | '/players'
     | '/ranking'
     | '/rooms'
     | '/settings'
+    | '/matches/new'
+    | '/play/$matchId'
+    | '/matches/$matchId/host'
+    | '/matches/$matchId/present'
+    | '/matches/$matchId/questions'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
     | '/create-game'
     | '/games'
     | '/history'
+    | '/matches'
     | '/players'
     | '/ranking'
     | '/rooms'
     | '/settings'
+    | '/matches/new'
+    | '/play/$matchId'
+    | '/matches/$matchId/host'
+    | '/matches/$matchId/present'
+    | '/matches/$matchId/questions'
   id:
     | '__root__'
     | '/'
     | '/create-game'
     | '/games'
     | '/history'
+    | '/matches'
     | '/players'
     | '/ranking'
     | '/rooms'
     | '/settings'
+    | '/matches/new'
+    | '/play/$matchId'
+    | '/matches/$matchId/host'
+    | '/matches/$matchId/present'
+    | '/matches/$matchId/questions'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -128,10 +200,12 @@ export interface RootRouteChildren {
   CreateGameRoute: typeof CreateGameRoute
   GamesRoute: typeof GamesRoute
   HistoryRoute: typeof HistoryRoute
+  MatchesRoute: typeof MatchesRouteWithChildren
   PlayersRoute: typeof PlayersRoute
   RankingRoute: typeof RankingRoute
   RoomsRoute: typeof RoomsRoute
   SettingsRoute: typeof SettingsRoute
+  PlayMatchIdRoute: typeof PlayMatchIdRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -164,6 +238,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof PlayersRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/matches': {
+      id: '/matches'
+      path: '/matches'
+      fullPath: '/matches'
+      preLoaderRoute: typeof MatchesRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/history': {
       id: '/history'
       path: '/history'
@@ -192,19 +273,83 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/play/$matchId': {
+      id: '/play/$matchId'
+      path: '/play/$matchId'
+      fullPath: '/play/$matchId'
+      preLoaderRoute: typeof PlayMatchIdRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/matches/new': {
+      id: '/matches/new'
+      path: '/new'
+      fullPath: '/matches/new'
+      preLoaderRoute: typeof MatchesNewRouteImport
+      parentRoute: typeof MatchesRoute
+    }
+    '/matches/$matchId/questions': {
+      id: '/matches/$matchId/questions'
+      path: '/$matchId/questions'
+      fullPath: '/matches/$matchId/questions'
+      preLoaderRoute: typeof MatchesMatchIdQuestionsRouteImport
+      parentRoute: typeof MatchesRoute
+    }
+    '/matches/$matchId/present': {
+      id: '/matches/$matchId/present'
+      path: '/$matchId/present'
+      fullPath: '/matches/$matchId/present'
+      preLoaderRoute: typeof MatchesMatchIdPresentRouteImport
+      parentRoute: typeof MatchesRoute
+    }
+    '/matches/$matchId/host': {
+      id: '/matches/$matchId/host'
+      path: '/$matchId/host'
+      fullPath: '/matches/$matchId/host'
+      preLoaderRoute: typeof MatchesMatchIdHostRouteImport
+      parentRoute: typeof MatchesRoute
+    }
   }
 }
+
+interface MatchesRouteChildren {
+  MatchesNewRoute: typeof MatchesNewRoute
+  MatchesMatchIdHostRoute: typeof MatchesMatchIdHostRoute
+  MatchesMatchIdPresentRoute: typeof MatchesMatchIdPresentRoute
+  MatchesMatchIdQuestionsRoute: typeof MatchesMatchIdQuestionsRoute
+}
+
+const MatchesRouteChildren: MatchesRouteChildren = {
+  MatchesNewRoute: MatchesNewRoute,
+  MatchesMatchIdHostRoute: MatchesMatchIdHostRoute,
+  MatchesMatchIdPresentRoute: MatchesMatchIdPresentRoute,
+  MatchesMatchIdQuestionsRoute: MatchesMatchIdQuestionsRoute,
+}
+
+const MatchesRouteWithChildren =
+  MatchesRoute._addFileChildren(MatchesRouteChildren)
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   CreateGameRoute: CreateGameRoute,
   GamesRoute: GamesRoute,
   HistoryRoute: HistoryRoute,
+  MatchesRoute: MatchesRouteWithChildren,
   PlayersRoute: PlayersRoute,
   RankingRoute: RankingRoute,
   RoomsRoute: RoomsRoute,
   SettingsRoute: SettingsRoute,
+  PlayMatchIdRoute: PlayMatchIdRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
+
+import type { getRouter } from './router.tsx'
+import type { startInstance } from './start.ts'
+declare module '@tanstack/react-start' {
+  interface Register {
+    ssr: true
+    router: Awaited<ReturnType<typeof getRouter>>
+    config: Awaited<ReturnType<typeof startInstance.getOptions>>
+  }
+}
