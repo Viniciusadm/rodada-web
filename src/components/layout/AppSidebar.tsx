@@ -9,6 +9,7 @@ import {
   PlusCircle,
   Settings,
   Sparkles,
+  Swords,
 } from "lucide-react";
 
 import {
@@ -30,6 +31,7 @@ const groups = [
     items: [
       { title: "Início", url: "/", icon: Home },
       { title: "Jogos", url: "/games", icon: Gamepad2 },
+      { title: "Partidas", url: "/matches", icon: Swords },
       { title: "Salas ao vivo", url: "/rooms", icon: Radio },
       { title: "Ranking", url: "/ranking", icon: Trophy },
     ],
@@ -44,7 +46,7 @@ const groups = [
   {
     label: "Gestão",
     items: [
-      { title: "Criar jogo", url: "/create-game", icon: PlusCircle },
+      { title: "Nova partida", url: "/matches/new", icon: PlusCircle },
       { title: "Configurações", url: "/settings", icon: Settings },
     ],
   },

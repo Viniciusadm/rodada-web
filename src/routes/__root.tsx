@@ -4,6 +4,7 @@ import {
   Link,
   createRootRouteWithContext,
   useRouter,
+  useRouterState,
   HeadContent,
   Scripts,
 } from "@tanstack/react-router";
@@ -99,18 +100,28 @@ function RootShell({ children }: { children: React.ReactNode }) {
 
 function RootComponent() {
   const { queryClient } = Route.useRouteContext();
+  const pathname = useRouterState({ select: (s) => s.location.pathname });
+  const isFullscreen =
+    pathname.includes("/present") || pathname.startsWith("/play/");
+
   return (
     <QueryClientProvider client={queryClient}>
       <ThemeProvider>
-        <SidebarProvider>
-          <AppSidebar />
-          <SidebarInset>
-            <Topbar />
-            <main className="flex-1 px-4 py-6 md:px-8 md:py-8">
-              <Outlet />
-            </main>
-          </SidebarInset>
-        </SidebarProvider>
+        {isFullscreen ? (
+          <div className="min-h-screen bg-background text-foreground">
+            <Outlet />
+          </div>
+        ) : (
+          <SidebarProvider>
+            <AppSidebar />
+            <SidebarInset>
+              <Topbar />
+              <main className="flex-1 px-4 py-6 md:px-8 md:py-8">
+                <Outlet />
+              </main>
+            </SidebarInset>
+          </SidebarProvider>
+        )}
         <Toaster />
       </ThemeProvider>
     </QueryClientProvider>
