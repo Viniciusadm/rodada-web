@@ -17,9 +17,9 @@ export const Route = createFileRoute("/matches")({
 });
 
 function MatchesPage() {
-  const matches = useMatchStore((s) => Object.values(s.matches));
+  const matchesMap = useMatchStore((s) => s.matches);
   const deleteMatch = useMatchStore((s) => s.deleteMatch);
-  const sorted = [...matches].sort((a, b) => b.createdAt - a.createdAt);
+  const sorted = Object.values(matchesMap).sort((a, b) => b.createdAt - a.createdAt);
 
   return (
     <div className="mx-auto max-w-6xl">
