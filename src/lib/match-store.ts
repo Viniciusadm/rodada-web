@@ -97,6 +97,9 @@ type Actions = {
 };
 
 function seed(): Record<string, Match> {
+  let n = 0;
+  const sid = () => `seed-${++n}`;
+  const baseTime = 1_700_000_000_000;
   const m1: Match = {
     id: "seed-aberta",
     name: "Quiz Bíblico — Jovens Betel",
@@ -106,20 +109,20 @@ function seed(): Record<string, Match> {
     remoteEnabled: true,
     status: "aguardando",
     questions: [
-      { id: uid(), text: "Quem construiu a arca?", answer: "Noé", points: 100, used: false },
-      { id: uid(), text: "Em quantos dias Deus criou o mundo?", answer: "6", points: 100, used: false },
-      { id: uid(), text: "Qual é o primeiro livro da Bíblia?", answer: "Gênesis", points: 100, used: false },
-      { id: uid(), text: "Quem traiu Jesus?", answer: "Judas Iscariotes", points: 150, used: false },
-      { id: uid(), text: "Quantos discípulos Jesus escolheu?", answer: "12", points: 100, used: false },
-      { id: uid(), text: "Em que cidade Jesus nasceu?", answer: "Belém", points: 100, used: false },
+      { id: sid(), text: "Quem construiu a arca?", answer: "Noé", points: 100, used: false },
+      { id: sid(), text: "Em quantos dias Deus criou o mundo?", answer: "6", points: 100, used: false },
+      { id: sid(), text: "Qual é o primeiro livro da Bíblia?", answer: "Gênesis", points: 100, used: false },
+      { id: sid(), text: "Quem traiu Jesus?", answer: "Judas Iscariotes", points: 150, used: false },
+      { id: sid(), text: "Quantos discípulos Jesus escolheu?", answer: "12", points: 100, used: false },
+      { id: sid(), text: "Em que cidade Jesus nasceu?", answer: "Belém", points: 100, used: false },
     ],
     players: [
-      { id: uid(), name: "Gabriel Santos", score: 0, eliminatedThisRound: false, remote: false },
-      { id: uid(), name: "Sarah Oliveira", score: 0, eliminatedThisRound: false, remote: false },
+      { id: sid(), name: "Gabriel Santos", score: 0, eliminatedThisRound: false, remote: false },
+      { id: sid(), name: "Sarah Oliveira", score: 0, eliminatedThisRound: false, remote: false },
     ],
     answerRevealed: false,
     joinPin: "482193",
-    createdAt: Date.now() - 1000 * 60 * 60,
+    createdAt: baseTime,
   };
 
   const m2: Match = {
@@ -130,19 +133,19 @@ function seed(): Record<string, Match> {
     remoteEnabled: false,
     status: "encerrada",
     questions: [
-      { id: uid(), text: "Davi escreveu todos os Salmos?", answer: "Falso", points: 100, used: true },
-      { id: uid(), text: "Moisés escreveu o Pentateuco?", answer: "Verdadeiro", points: 100, used: true },
-      { id: uid(), text: "Paulo era originalmente chamado Saulo?", answer: "Verdadeiro", points: 100, used: true },
+      { id: sid(), text: "Davi escreveu todos os Salmos?", answer: "Falso", points: 100, used: true },
+      { id: sid(), text: "Moisés escreveu o Pentateuco?", answer: "Verdadeiro", points: 100, used: true },
+      { id: sid(), text: "Paulo era originalmente chamado Saulo?", answer: "Verdadeiro", points: 100, used: true },
     ],
     players: [
-      { id: uid(), name: "Tiago Mendes", score: 800, eliminatedThisRound: false, remote: false },
-      { id: uid(), name: "Ana Clara", score: 700, eliminatedThisRound: false, remote: false },
-      { id: uid(), name: "Marcos Lima", score: 600, eliminatedThisRound: false, remote: false },
-      { id: uid(), name: "Beatriz Souza", score: 500, eliminatedThisRound: false, remote: false },
+      { id: sid(), name: "Tiago Mendes", score: 800, eliminatedThisRound: false, remote: false },
+      { id: sid(), name: "Ana Clara", score: 700, eliminatedThisRound: false, remote: false },
+      { id: sid(), name: "Marcos Lima", score: 600, eliminatedThisRound: false, remote: false },
+      { id: sid(), name: "Beatriz Souza", score: 500, eliminatedThisRound: false, remote: false },
     ],
     answerRevealed: false,
     joinPin: "917235",
-    createdAt: Date.now() - 1000 * 60 * 60 * 48,
+    createdAt: baseTime - 1000 * 60 * 60 * 47,
   };
 
   return { [m1.id]: m1, [m2.id]: m2 };
