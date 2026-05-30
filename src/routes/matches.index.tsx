@@ -6,7 +6,7 @@ import { PageHeader } from "@/components/common/PageHeader";
 import { MatchStatusBadge } from "@/components/match/MatchStatusBadge";
 import { useMatchStore, getModeLabel } from "@/lib/match-store";
 
-export const Route = createFileRoute("/matches")({
+export const Route = createFileRoute("/matches/")({
   head: () => ({
     meta: [
       { title: "Partidas — HolyPlay" },
