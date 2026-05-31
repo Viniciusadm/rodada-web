@@ -620,6 +620,22 @@ export async function loginRequest(email: string, password: string): Promise<Log
   });
 }
 
+export async function registerRequest(input: {
+  displayName: string;
+  email: string;
+  password: string;
+}): Promise<LoginResponse> {
+  return request<LoginResponse>("/api/v1/auth/register", {
+    auth: false,
+    method: "POST",
+    body: {
+      display_name: input.displayName,
+      email: input.email,
+      password: input.password,
+    },
+  });
+}
+
 export async function fetchMe(): Promise<AuthSession> {
   const payload = await request<ApiMeResponse>("/api/v1/auth/me");
   return {

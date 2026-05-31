@@ -133,33 +133,80 @@ function AuthGate({ children }: { children: React.ReactNode }) {
   return <FullscreenLoader />;
 }
 
+function PublicBootstrap({ children }: { children: React.ReactNode }) {
+  const bootstrap = useAuthStore((s) => s.bootstrap);
+  useEffect(() => {
+    void bootstrap();
+  }, [bootstrap]);
+  return <>{children}</>;
+}
+
+function AuthedShell({ children }: { children: React.ReactNode }) {
+  return (
+    <SidebarProvider>
+      <AppSidebar />
+      <SidebarInset>
+        <Topbar />
+        <main className="flex-1 px-4 py-6 md:px-8 md:py-8">{children}</main>
+      </SidebarInset>
+    </SidebarProvider>
+  );
+}
+
+function HomeShell() {
+  const status = useAuthStore((s) => s.status);
+  if (status === "authed") {
+    return (
+      <AuthedShell>
+        <Outlet />
+      </AuthedShell>
+    );
+  }
+  // Anon (and idle/loading): render the public landing standalone.
+  return (
+    <div className="min-h-screen bg-background text-foreground">
+      <Outlet />
+    </div>
+  );
+}
+
 function RootComponent() {
   const { queryClient } = Route.useRouteContext();
   const pathname = useRouterState({ select: (s) => s.location.pathname });
-  const isAuthRoute = pathname === "/login";
-  const isStandalone =
+  const isAuthRoute = pathname === "/login" || pathname === "/register";
+  const isHome = pathname === "/";
+  const isPublicStandalone =
     isAuthRoute || pathname.includes("/present") || pathname.startsWith("/play/");
+
+  let content: React.ReactNode;
+  if (isPublicStandalone) {
+    content = (
+      <PublicBootstrap>
+        <div className="min-h-screen bg-background text-foreground">
+          <Outlet />
+        </div>
+      </PublicBootstrap>
+    );
+  } else if (isHome) {
+    content = (
+      <PublicBootstrap>
+        <HomeShell />
+      </PublicBootstrap>
+    );
+  } else {
+    content = (
+      <AuthGate>
+        <AuthedShell>
+          <Outlet />
+        </AuthedShell>
+      </AuthGate>
+    );
+  }
 
   return (
     <QueryClientProvider client={queryClient}>
       <ThemeProvider>
-        {isStandalone ? (
-          <div className="min-h-screen bg-background text-foreground">
-            <Outlet />
-          </div>
-        ) : (
-          <AuthGate>
-            <SidebarProvider>
-              <AppSidebar />
-              <SidebarInset>
-                <Topbar />
-                <main className="flex-1 px-4 py-6 md:px-8 md:py-8">
-                  <Outlet />
-                </main>
-              </SidebarInset>
-            </SidebarProvider>
-          </AuthGate>
-        )}
+        {content}
         <Toaster />
       </ThemeProvider>
     </QueryClientProvider>

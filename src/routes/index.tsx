@@ -1,22 +1,34 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { ArrowRight, PlusCircle, Radio, Trophy } from "lucide-react";
+
 import { Button } from "@/components/ui/button";
 import { GameCard } from "@/components/games/GameCard";
 import { Skeleton } from "@/components/ui/skeleton";
+import { PublicLanding } from "@/components/landing/PublicLanding";
 import { useGamesQuery, useLiveRoomsQuery, useRankingQuery } from "@/features/holyplay-data";
+import { useAuthStore } from "@/stores/auth";
 
 export const Route = createFileRoute("/")({
   head: () => ({
     meta: [
-      { title: "Início — HolyPlay" },
+      { title: "HolyPlay — Hub de jogos cristãos" },
       {
         name: "description",
-        content: "Dashboard com jogos bíblicos, salas ao vivo e ranking da sua igreja.",
+        content:
+          "Jogos bíblicos interativos para sua igreja. Crie partidas ao vivo, engaje participantes e acompanhe o ranking da comunidade.",
       },
     ],
   }),
-  component: Dashboard,
+  component: HomeRoute,
 });
+
+function HomeRoute() {
+  const status = useAuthStore((s) => s.status);
+  if (status === "authed") {
+    return <Dashboard />;
+  }
+  return <PublicLanding />;
+}
 
 function Dashboard() {
   const { data: games = [], isLoading: gamesLoading } = useGamesQuery();
