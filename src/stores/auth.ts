@@ -4,6 +4,7 @@ import {
   fetchMe,
   loginRequest,
   onUnauthorized,
+  registerRequest,
   setAccessToken,
   setActiveOrganizationId,
   type AuthOrganization,
@@ -24,6 +25,7 @@ type AuthState = {
   error: string | null;
   bootstrap: () => Promise<void>;
   login: (email: string, password: string) => Promise<void>;
+  register: (input: { displayName: string; email: string; password: string }) => Promise<void>;
   logout: () => void;
 };
 
