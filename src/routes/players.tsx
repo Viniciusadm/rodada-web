@@ -72,6 +72,20 @@ function PlayersPage() {
                   <p className="truncate text-xs text-muted-foreground">{p.ministry}</p>
                 </div>
               </div>
+              <div className="mt-4 grid grid-cols-3 gap-2 border-t border-border pt-4 text-center">
+                <div>
+                  <p className="text-sm font-semibold">{p.points.toLocaleString("pt-BR")}</p>
+                  <p className="text-[11px] text-muted-foreground">Pontos</p>
+                </div>
+                <div>
+                  <p className="text-sm font-semibold">{p.matches}</p>
+                  <p className="text-[11px] text-muted-foreground">Partidas</p>
+                </div>
+                <div>
+                  <p className="text-sm font-semibold">Nv. {p.level}</p>
+                  <p className="text-[11px] text-muted-foreground">Nível</p>
+                </div>
+              </div>
             </div>
           ))}
         {!isLoading && !isError && filteredPlayers.length === 0 && (

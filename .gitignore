@@ -31,5 +31,4 @@ dist-ssr
 *.sln
 *.sw?
 
-backend/target
-backend/.env
+.env

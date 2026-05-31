@@ -24,6 +24,23 @@ import {
   SidebarMenuItem,
   SidebarFooter,
 } from "@/components/ui/sidebar";
+import { useAuthStore } from "@/stores/auth";
+
+const ROLE_LABELS: Record<string, string> = {
+  owner: "Proprietário",
+  admin: "Administrador",
+  host: "Apresentador",
+  member: "Membro",
+};
+
+function initialsOf(name: string) {
+  return name
+    .split(/\s+/)
+    .filter(Boolean)
+    .slice(0, 2)
+    .map((part) => part[0]?.toUpperCase() ?? "")
+    .join("");
+}
 
 const groups = [
   {
@@ -54,8 +71,14 @@ const groups = [
 
 export function AppSidebar() {
   const currentPath = useRouterState({ select: (r) => r.location.pathname });
+  const activeOrganization = useAuthStore((s) => s.activeOrganization);
   const isActive = (path: string) =>
     path === "/" ? currentPath === "/" : currentPath.startsWith(path);
+
+  const orgName = activeOrganization?.name ?? "HolyPlay";
+  const roleLabel = activeOrganization
+    ? (ROLE_LABELS[activeOrganization.role] ?? "Membro")
+    : "Hub de jogos";
 
   return (
     <Sidebar collapsible="icon">
@@ -98,11 +121,11 @@ export function AppSidebar() {
       <SidebarFooter>
         <div className="flex items-center gap-3 rounded-lg px-2 py-2 group-data-[collapsible=icon]:justify-center">
           <div className="flex size-8 shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-primary/30 to-primary-glow/30 text-xs font-semibold text-foreground">
-            IB
+            {initialsOf(orgName) || "HP"}
           </div>
           <div className="min-w-0 flex-1 group-data-[collapsible=icon]:hidden">
-            <p className="truncate text-sm font-medium">Igreja Betel</p>
-            <p className="truncate text-xs text-muted-foreground">Ministério Jovem</p>
+            <p className="truncate text-sm font-medium">{orgName}</p>
+            <p className="truncate text-xs text-muted-foreground">{roleLabel}</p>
           </div>
         </div>
       </SidebarFooter>

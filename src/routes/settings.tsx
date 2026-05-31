@@ -1,7 +1,13 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { Label } from "@/components/ui/label";
+import { Switch } from "@/components/ui/switch";
+import { Skeleton } from "@/components/ui/skeleton";
 import { PageHeader } from "@/components/common/PageHeader";
 import { useTheme } from "@/components/theme-provider";
+import {
+  useNotificationPreferencesQuery,
+  useSetNotificationPreference,
+} from "@/features/holyplay-data";
 
 export const Route = createFileRoute("/settings")({
   head: () => ({
@@ -13,11 +19,28 @@ export const Route = createFileRoute("/settings")({
   component: SettingsPage,
 });
 
+const PREFERENCE_LABELS: Record<string, { title: string; description: string }> = {
+  new_rooms: {
+    title: "Novas salas e partidas",
+    description: "Avise quando uma partida iniciar ou uma sala ficar ao vivo.",
+  },
+  ranking_updates: {
+    title: "Atualizações de ranking",
+    description: "Receba avisos quando o ranking mudar.",
+  },
+  weekly_summary: {
+    title: "Resumo semanal",
+    description: "Um panorama das atividades da semana.",
+  },
+};
+
 function SettingsPage() {
   const { theme, setTheme } = useTheme();
+  const { data: preferences = [], isLoading } = useNotificationPreferencesQuery();
+  const setPreference = useSetNotificationPreference();
 
   return (
-    <div className="mx-auto max-w-3xl">
+    <div className="mx-auto max-w-3xl space-y-6">
       <PageHeader title="Configurações" description="Ajuste as preferências disponíveis." />
 
       <div className="space-y-5 rounded-2xl border border-border bg-card p-6">
@@ -47,6 +70,49 @@ function SettingsPage() {
             ))}
           </div>
         </div>
+      </div>
+
+      <div className="rounded-2xl border border-border bg-card p-6">
+        <Label className="mb-1 block">Notificações</Label>
+        <p className="mb-4 text-xs text-muted-foreground">
+          Escolha sobre o que você quer ser avisado.
+        </p>
+
+        {isLoading && (
+          <div className="space-y-3">
+            {Array.from({ length: 3 }).map((_, index) => (
+              <Skeleton key={index} className="h-12 rounded-lg" />
+            ))}
+          </div>
+        )}
+
+        {!isLoading && (
+          <div className="divide-y divide-border">
+            {preferences.map((preference) => {
+              const meta = PREFERENCE_LABELS[preference.key] ?? {
+                title: preference.key,
+                description: "",
+              };
+              return (
+                <div key={preference.key} className="flex items-center justify-between py-3">
+                  <div className="pr-4">
+                    <p className="text-sm font-medium">{meta.title}</p>
+                    {meta.description && (
+                      <p className="text-xs text-muted-foreground">{meta.description}</p>
+                    )}
+                  </div>
+                  <Switch
+                    checked={preference.enabled}
+                    disabled={setPreference.isPending}
+                    onCheckedChange={(enabled) =>
+                      setPreference.mutate({ key: preference.key, enabled })
+                    }
+                  />
+                </div>
+              );
+            })}
+          </div>
+        )}
       </div>
     </div>
   );

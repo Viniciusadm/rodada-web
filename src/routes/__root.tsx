@@ -8,6 +8,8 @@ import {
   HeadContent,
   Scripts,
 } from "@tanstack/react-router";
+import { useEffect } from "react";
+import { Loader2 } from "lucide-react";
 
 import appCss from "../styles.css?url";
 import { SidebarProvider, SidebarInset } from "@/components/ui/sidebar";
@@ -15,6 +17,7 @@ import { AppSidebar } from "@/components/layout/AppSidebar";
 import { Topbar } from "@/components/layout/Topbar";
 import { ThemeProvider } from "@/components/theme-provider";
 import { Toaster } from "@/components/ui/sonner";
+import { useAuthStore } from "@/stores/auth";
 
 function NotFoundComponent() {
   return (
@@ -101,28 +104,61 @@ function RootShell({ children }: { children: React.ReactNode }) {
   );
 }
 
+function FullscreenLoader() {
+  return (
+    <div className="flex min-h-screen items-center justify-center bg-background text-foreground">
+      <Loader2 className="size-6 animate-spin text-muted-foreground" />
+    </div>
+  );
+}
+
+function AuthGate({ children }: { children: React.ReactNode }) {
+  const status = useAuthStore((s) => s.status);
+  const bootstrap = useAuthStore((s) => s.bootstrap);
+  const router = useRouter();
+
+  useEffect(() => {
+    void bootstrap();
+  }, [bootstrap]);
+
+  useEffect(() => {
+    if (status === "anon") {
+      void router.navigate({ to: "/login" });
+    }
+  }, [status, router]);
+
+  if (status === "authed") {
+    return <>{children}</>;
+  }
+  return <FullscreenLoader />;
+}
+
 function RootComponent() {
   const { queryClient } = Route.useRouteContext();
   const pathname = useRouterState({ select: (s) => s.location.pathname });
-  const isFullscreen = pathname.includes("/present") || pathname.startsWith("/play/");
+  const isAuthRoute = pathname === "/login";
+  const isStandalone =
+    isAuthRoute || pathname.includes("/present") || pathname.startsWith("/play/");
 
   return (
     <QueryClientProvider client={queryClient}>
       <ThemeProvider>
-        {isFullscreen ? (
+        {isStandalone ? (
           <div className="min-h-screen bg-background text-foreground">
             <Outlet />
           </div>
         ) : (
-          <SidebarProvider>
-            <AppSidebar />
-            <SidebarInset>
-              <Topbar />
-              <main className="flex-1 px-4 py-6 md:px-8 md:py-8">
-                <Outlet />
-              </main>
-            </SidebarInset>
-          </SidebarProvider>
+          <AuthGate>
+            <SidebarProvider>
+              <AppSidebar />
+              <SidebarInset>
+                <Topbar />
+                <main className="flex-1 px-4 py-6 md:px-8 md:py-8">
+                  <Outlet />
+                </main>
+              </SidebarInset>
+            </SidebarProvider>
+          </AuthGate>
         )}
         <Toaster />
       </ThemeProvider>

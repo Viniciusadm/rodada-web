@@ -26,9 +26,12 @@ export function GameCard({ game }: { game: Game }) {
       <h3 className="text-lg font-semibold tracking-tight">{game.name}</h3>
       <p className="mt-1 line-clamp-2 text-sm text-muted-foreground">{game.description}</p>
       <div className="mt-5 flex items-center justify-between border-t border-border/60 pt-4">
-        <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
-          <Users className="size-3.5" />
+        <div className="flex items-center gap-3 text-xs text-muted-foreground">
           <span>{game.modes.length} modos</span>
+          <span className="flex items-center gap-1.5">
+            <Users className="size-3.5" />
+            {game.players} {game.players === 1 ? "jogador" : "jogadores"}
+          </span>
         </div>
         <Button asChild size="sm" disabled={disabled} className="rounded-lg">
           <Link to="/matches/new">

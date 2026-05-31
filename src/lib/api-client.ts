@@ -135,6 +135,7 @@ type ApiGame = {
   description: string;
   status: string;
   icon_key: string | null;
+  player_count: number;
   modes: GameModeOption[];
 };
 
@@ -143,6 +144,9 @@ type ApiPlayer = {
   display_name: string;
   ministry_id: string | null;
   is_active: boolean;
+  total_points: number;
+  matches_played: number;
+  wins: number;
 };
 
 type ApiRankingEntry = {
@@ -225,33 +229,136 @@ type LoginResponse = {
   display_name: string;
 };
 
-let accessToken: string | null = import.meta.env.VITE_API_TOKEN ?? null;
-let loginPromise: Promise<string | null> | null = null;
+export type AuthUser = {
+  id: string;
+  displayName: string;
+  email: string;
+};
+
+export type AuthOrganization = {
+  id: string;
+  name: string;
+  slug: string;
+  role: string;
+};
+
+export type AuthSession = {
+  user: AuthUser;
+  organizations: AuthOrganization[];
+  activeOrganizationId: string | null;
+};
+
+export type Ministry = {
+  id: string;
+  name: string;
+  slug: string;
+  isActive: boolean;
+};
+
+export type SearchResults = {
+  games: Array<{ id: string; name: string; slug: string }>;
+  players: Array<{ id: string; displayName: string }>;
+  rooms: Array<{ matchId: string; name: string; pin: string }>;
+};
+
+export type AppNotification = {
+  id: string;
+  kind: string;
+  title: string;
+  body: string | null;
+  link: string | null;
+  read: boolean;
+  createdAt: string;
+};
+
+export type NotificationPreference = {
+  key: string;
+  enabled: boolean;
+};
+
+type ApiMeResponse = {
+  user: { id: string; display_name: string; email: string };
+  organizations: Array<{ id: string; name: string; slug: string; role: string }>;
+  active_organization_id: string | null;
+};
+
+type ApiMinistry = {
+  id: string;
+  name: string;
+  slug: string;
+  is_active: boolean;
+};
+
+type ApiSearchResponse = {
+  games: Array<{ id: string; name: string; slug: string }>;
+  players: Array<{ id: string; display_name: string; ministry_id: string | null }>;
+  rooms: Array<{ match_id: string; name: string; pin: string }>;
+};
+
+type ApiNotification = {
+  id: string;
+  kind: string;
+  title: string;
+  body: string | null;
+  link: string | null;
+  read: boolean;
+  created_at: string;
+};
+
+let accessToken: string | null = null;
+let activeOrganizationId: string | null = null;
+let unauthorizedHandler: (() => void) | null = null;
+
+export function setAccessToken(token: string | null) {
+  accessToken = token;
+}
+
+export function setActiveOrganizationId(id: string | null) {
+  activeOrganizationId = id;
+}
+
+export function getActiveOrganizationId(): string {
+  return activeOrganizationId ?? DEMO_ORGANIZATION_ID;
+}
+
+export function onUnauthorized(handler: (() => void) | null) {
+  unauthorizedHandler = handler;
+}
 
 export async function listGames(): Promise<Game[]> {
   const games = await request<ApiGame[]>("/api/v1/games", { auth: false });
   return games.map(mapGame);
 }
 
-export async function listPlayers(organizationId = DEMO_ORGANIZATION_ID): Promise<Player[]> {
+export async function listPlayers(
+  organizationId = getActiveOrganizationId(),
+  ministries?: Map<string, string>,
+): Promise<Player[]> {
   const players = await request<ApiPlayer[]>(`/api/v1/organizations/${organizationId}/players`);
-  return players.filter((player) => player.is_active).map(mapPlayer);
+  return players
+    .filter((player) => player.is_active)
+    .map((player) => mapPlayer(player, ministries));
 }
 
-export async function listRankings(organizationId = DEMO_ORGANIZATION_ID): Promise<RankingEntry[]> {
+export async function listRankings(
+  organizationId = getActiveOrganizationId(),
+  ministries?: Map<string, string>,
+): Promise<RankingEntry[]> {
   const params = new URLSearchParams({ organization_id: organizationId });
   const ranking = await request<ApiRankingEntry[]>(`/api/v1/rankings?${params}`);
-  return ranking.map(mapRankingEntry);
+  return ranking.map((entry) => mapRankingEntry(entry, ministries));
 }
 
-export async function listLiveRooms(): Promise<LiveRoom[]> {
-  const rooms = await request<ApiLiveRoom[]>(
-    `/api/v1/organizations/${DEMO_ORGANIZATION_ID}/rooms/live`,
-  );
+export async function listLiveRooms(
+  organizationId = getActiveOrganizationId(),
+): Promise<LiveRoom[]> {
+  const rooms = await request<ApiLiveRoom[]>(`/api/v1/organizations/${organizationId}/rooms/live`);
   return rooms.map(mapLiveRoom);
 }
 
-export async function listMatches(organizationId = DEMO_ORGANIZATION_ID): Promise<MatchSummary[]> {
+export async function listMatches(
+  organizationId = getActiveOrganizationId(),
+): Promise<MatchSummary[]> {
   const matches = await request<ApiMatch[]>(`/api/v1/organizations/${organizationId}/matches`);
   return matches.map(mapMatch);
 }
@@ -299,7 +406,7 @@ export async function createMatch(input: {
   const created = await request<ApiMatch>("/api/v1/matches", {
     method: "POST",
     body: {
-      organization_id: DEMO_ORGANIZATION_ID,
+      organization_id: getActiveOrganizationId(),
       game_id: gameId,
       game_mode_id: gameModeId,
       host_user_id: "resolved-from-token",
@@ -486,11 +593,8 @@ async function requestRaw(
   if (options.body !== undefined) {
     headers.set("content-type", "application/json");
   }
-  if (options.auth !== false) {
-    const token = await getAccessToken();
-    if (token) {
-      headers.set("authorization", `Bearer ${token}`);
-    }
+  if (options.auth !== false && accessToken) {
+    headers.set("authorization", `Bearer ${accessToken}`);
   }
 
   const response = await fetch(new URL(path, API_BASE_URL), {
@@ -499,44 +603,124 @@ async function requestRaw(
     body: options.body === undefined ? undefined : JSON.stringify(options.body),
   });
   if (!response.ok) {
+    if (response.status === 401 && options.auth !== false) {
+      unauthorizedHandler?.();
+    }
     throw new Error(await errorMessage(response));
   }
 
   return response;
 }
 
-async function getAccessToken(): Promise<string | null> {
-  if (accessToken) return accessToken;
-  const email = import.meta.env.VITE_DEMO_ADMIN_EMAIL;
-  const password = import.meta.env.VITE_DEMO_ADMIN_PASSWORD;
-  if (!email || !password) return null;
-
-  loginPromise ??= login(email, password)
-    .then((token) => {
-      accessToken = token;
-      return token;
-    })
-    .catch(() => null)
-    .finally(() => {
-      loginPromise = null;
-    });
-  return loginPromise;
+export async function loginRequest(email: string, password: string): Promise<LoginResponse> {
+  return request<LoginResponse>("/api/v1/auth/login", {
+    auth: false,
+    method: "POST",
+    body: { email, password },
+  });
 }
 
-async function login(email: string, password: string): Promise<string> {
-  const response = await fetch(new URL("/api/v1/auth/login", API_BASE_URL), {
-    method: "POST",
-    headers: {
-      accept: "application/json",
-      "content-type": "application/json",
+export async function fetchMe(): Promise<AuthSession> {
+  const payload = await request<ApiMeResponse>("/api/v1/auth/me");
+  return {
+    user: {
+      id: payload.user.id,
+      displayName: payload.user.display_name,
+      email: payload.user.email,
     },
-    body: JSON.stringify({ email, password }),
+    organizations: payload.organizations.map((org) => ({
+      id: org.id,
+      name: org.name,
+      slug: org.slug,
+      role: org.role,
+    })),
+    activeOrganizationId: payload.active_organization_id,
+  };
+}
+
+export async function listMinistries(
+  organizationId = getActiveOrganizationId(),
+): Promise<Ministry[]> {
+  const ministries = await request<ApiMinistry[]>(
+    `/api/v1/organizations/${organizationId}/ministries`,
+  );
+  return ministries.map((ministry) => ({
+    id: ministry.id,
+    name: ministry.name,
+    slug: ministry.slug,
+    isActive: ministry.is_active,
+  }));
+}
+
+export async function searchOrganization(
+  query: string,
+  organizationId = getActiveOrganizationId(),
+): Promise<SearchResults> {
+  const params = new URLSearchParams({ q: query });
+  const results = await request<ApiSearchResponse>(
+    `/api/v1/organizations/${organizationId}/search?${params}`,
+  );
+  return {
+    games: results.games.map((game) => ({ id: game.id, name: game.name, slug: game.slug })),
+    players: results.players.map((player) => ({
+      id: player.id,
+      displayName: player.display_name,
+    })),
+    rooms: results.rooms.map((room) => ({
+      matchId: room.match_id,
+      name: room.name,
+      pin: room.pin,
+    })),
+  };
+}
+
+export async function listNotifications(
+  organizationId = getActiveOrganizationId(),
+): Promise<AppNotification[]> {
+  const params = new URLSearchParams({ organization_id: organizationId });
+  const notifications = await request<ApiNotification[]>(`/api/v1/notifications?${params}`);
+  return notifications.map((notification) => ({
+    id: notification.id,
+    kind: notification.kind,
+    title: notification.title,
+    body: notification.body,
+    link: notification.link,
+    read: notification.read,
+    createdAt: notification.created_at,
+  }));
+}
+
+export async function markNotificationRead(
+  notificationId: string,
+  organizationId = getActiveOrganizationId(),
+) {
+  const params = new URLSearchParams({ organization_id: organizationId });
+  await requestNoContent(`/api/v1/notifications/${notificationId}/read?${params}`, {
+    method: "POST",
   });
-  if (!response.ok) {
-    throw new Error(await errorMessage(response));
-  }
-  const payload = (await response.json()) as LoginResponse;
-  return payload.access_token;
+}
+
+export async function markAllNotificationsRead(organizationId = getActiveOrganizationId()) {
+  const params = new URLSearchParams({ organization_id: organizationId });
+  await requestNoContent(`/api/v1/notifications/read-all?${params}`, { method: "POST" });
+}
+
+export async function getNotificationPreferences(
+  organizationId = getActiveOrganizationId(),
+): Promise<NotificationPreference[]> {
+  const params = new URLSearchParams({ organization_id: organizationId });
+  return request<NotificationPreference[]>(`/api/v1/notification-preferences?${params}`);
+}
+
+export async function setNotificationPreference(
+  key: string,
+  enabled: boolean,
+  organizationId = getActiveOrganizationId(),
+): Promise<NotificationPreference> {
+  return request<NotificationPreference>(`/api/v1/notification-preferences/${key}`, {
+    method: "PUT",
+    body: { organization_id: organizationId, enabled },
+  });
 }
 
 async function errorMessage(response: Response) {
@@ -557,21 +741,21 @@ function mapGame(game: ApiGame): Game {
     icon: visual.icon,
     iconColor: visual.iconColor,
     status: normalizeGameStatus(game.status),
-    players: 0,
+    players: game.player_count ?? 0,
     modes: game.modes ?? [],
   };
 }
 
-function mapPlayer(player: ApiPlayer): Player {
+function mapPlayer(player: ApiPlayer, ministries?: Map<string, string>): Player {
   const name = player.display_name;
   return {
     id: player.id,
     name,
     initials: initials(name),
-    ministry: ministryLabel(player.ministry_id),
-    points: 0,
-    matches: 0,
-    level: 1,
+    ministry: ministryLabel(player.ministry_id, ministries),
+    points: player.total_points,
+    matches: player.matches_played,
+    level: levelFromPoints(player.total_points),
     color: colorFor(player.id),
   };
 }
@@ -591,13 +775,13 @@ function mapLiveRoom(room: ApiLiveRoom): LiveRoom {
   };
 }
 
-function mapRankingEntry(entry: ApiRankingEntry): RankingEntry {
+function mapRankingEntry(entry: ApiRankingEntry, ministries?: Map<string, string>): RankingEntry {
   const name = entry.display_name === entry.player_id ? "Jogador" : entry.display_name;
   return {
     id: entry.player_id,
     name,
     initials: initials(name),
-    ministry: ministryLabel(entry.ministry_id),
+    ministry: ministryLabel(entry.ministry_id, ministries),
     points: entry.total_points,
     matches: entry.matches_played,
     level: levelFromPoints(entry.total_points),
@@ -704,11 +888,9 @@ function initials(name: string) {
     .join("");
 }
 
-function ministryLabel(ministryId: string | null) {
-  if (!ministryId) return "Sem ministerio";
-  if (ministryId.endsWith("0004")) return "Jovens";
-  if (ministryId.endsWith("0005")) return "EBD";
-  return "Ministerio";
+function ministryLabel(ministryId: string | null, ministries?: Map<string, string>) {
+  if (!ministryId) return "Sem ministério";
+  return ministries?.get(ministryId) ?? "Ministério";
 }
 
 function levelFromPoints(points: number) {
