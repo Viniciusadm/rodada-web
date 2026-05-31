@@ -15,7 +15,7 @@ export const Route = createFileRoute("/")({
       {
         name: "description",
         content:
-          "Jogos interativos para comunidades gamer. Crie partidas ao vivo, engaje participantes e acompanhe rankings.",
+          "Jogos interativos. Crie partidas ao vivo, engaje participantes e acompanhe rankings.",
       },
     ],
   }),

@@ -1,13 +1,5 @@
 import { Link } from "@tanstack/react-router";
-import {
-  ArrowRight,
-  Gamepad2,
-  Radio,
-  Sparkles,
-  Trophy,
-  Users,
-  type LucideIcon,
-} from "lucide-react";
+import { ArrowRight, Gamepad2, Radio, Trophy, Users, type LucideIcon } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 
@@ -42,13 +34,10 @@ export function PublicLanding() {
       <header className="mx-auto flex w-full max-w-7xl items-center justify-between px-4 py-5 md:px-8">
         <Link to="/" className="flex items-center gap-2.5">
           <div className="flex size-9 items-center justify-center rounded-xl bg-gradient-to-br from-primary to-primary-glow shadow-lg shadow-primary/20">
-            <Sparkles className="size-5 text-primary-foreground" />
+            <Gamepad2 className="size-5 text-primary-foreground" />
           </div>
           <div className="flex flex-col leading-none">
             <span className="text-base font-semibold tracking-tight">Games Hub</span>
-            <span className="text-[10px] font-medium uppercase tracking-wider text-muted-foreground">
-              Comunidade gamer
-            </span>
           </div>
         </Link>
         <nav className="flex items-center gap-2">

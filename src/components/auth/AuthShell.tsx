@@ -1,5 +1,5 @@
 import { Link } from "@tanstack/react-router";
-import { Sparkles } from "lucide-react";
+import { Gamepad2 } from "lucide-react";
 import type { ReactNode } from "react";
 
 export function AuthShell({
@@ -22,7 +22,7 @@ export function AuthShell({
             className="flex size-12 items-center justify-center rounded-2xl bg-gradient-to-br from-primary to-primary-glow shadow-lg shadow-primary/20"
             aria-label="Games Hub — voltar para a home"
           >
-            <Sparkles className="size-6 text-primary-foreground" />
+            <Gamepad2 className="size-6 text-primary-foreground" />
           </Link>
           <h1 className="mt-4 text-2xl font-semibold tracking-tight">{title}</h1>
           <p className="mt-1 text-sm text-muted-foreground">{subtitle}</p>

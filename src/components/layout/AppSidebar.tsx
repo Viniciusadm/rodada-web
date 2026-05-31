@@ -8,7 +8,6 @@ import {
   History,
   PlusCircle,
   Settings,
-  Sparkles,
   Swords,
 } from "lucide-react";
 
@@ -85,13 +84,10 @@ export function AppSidebar() {
       <SidebarHeader>
         <Link to="/" className="flex items-center gap-2.5 px-2 py-2">
           <div className="flex size-9 items-center justify-center rounded-xl bg-gradient-to-br from-primary to-primary-glow shadow-lg shadow-primary/20">
-            <Sparkles className="size-5 text-primary-foreground" />
+            <Gamepad2 className="size-5 text-primary-foreground" />
           </div>
           <div className="flex flex-col leading-none group-data-[collapsible=icon]:hidden">
             <span className="text-base font-semibold tracking-tight">Games Hub</span>
-            <span className="text-[10px] font-medium uppercase tracking-wider text-muted-foreground">
-              Comunidade gamer
-            </span>
           </div>
         </Link>
       </SidebarHeader>

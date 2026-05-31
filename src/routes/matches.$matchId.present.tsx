@@ -1,6 +1,6 @@
 import { createFileRoute, notFound } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
-import { Sparkles, Trophy } from "lucide-react";
+import { Gamepad2, Trophy } from "lucide-react";
 import { MatchStatusBadge } from "@/components/match/MatchStatusBadge";
 import { getMatchState } from "@/lib/api-client";
 
@@ -39,7 +39,7 @@ function PresentPage() {
         <header className="mb-8 flex items-center justify-between">
           <div className="flex items-center gap-3">
             <div className="flex size-12 items-center justify-center rounded-2xl bg-gradient-to-br from-primary to-primary-glow shadow-xl shadow-primary/30">
-              <Sparkles className="size-6 text-primary-foreground" />
+              <Gamepad2 className="size-6 text-primary-foreground" />
             </div>
             <div>
               <p className="text-xs font-medium uppercase tracking-widest text-muted-foreground">

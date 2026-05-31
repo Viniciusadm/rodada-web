@@ -1,6 +1,6 @@
 import { createFileRoute, notFound } from "@tanstack/react-router";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { Hand, Sparkles } from "lucide-react";
+import { Gamepad2, Hand } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
@@ -92,7 +92,7 @@ function PlayPage() {
     <div className="flex min-h-screen flex-col items-center justify-center bg-gradient-to-br from-background to-primary/10 px-6 text-center">
       <div className="mb-8 flex items-center gap-3">
         <div className="flex size-14 items-center justify-center rounded-2xl bg-gradient-to-br from-primary to-primary-glow shadow-xl shadow-primary/30">
-          <Sparkles className="size-7 text-primary-foreground" />
+          <Gamepad2 className="size-7 text-primary-foreground" />
         </div>
         <div className="text-left">
           <p className="text-xs font-medium uppercase tracking-widest text-muted-foreground">
