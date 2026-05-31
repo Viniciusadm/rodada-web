@@ -133,20 +133,31 @@ function AuthGate({ children }: { children: React.ReactNode }) {
   return <FullscreenLoader />;
 }
 
+function PublicBootstrap({ children }: { children: React.ReactNode }) {
+  const bootstrap = useAuthStore((s) => s.bootstrap);
+  useEffect(() => {
+    void bootstrap();
+  }, [bootstrap]);
+  return <>{children}</>;
+}
+
 function RootComponent() {
   const { queryClient } = Route.useRouteContext();
   const pathname = useRouterState({ select: (s) => s.location.pathname });
-  const isAuthRoute = pathname === "/login";
+  const isAuthRoute = pathname === "/login" || pathname === "/register";
+  const isHome = pathname === "/";
   const isStandalone =
-    isAuthRoute || pathname.includes("/present") || pathname.startsWith("/play/");
+    isAuthRoute || isHome || pathname.includes("/present") || pathname.startsWith("/play/");
 
   return (
     <QueryClientProvider client={queryClient}>
       <ThemeProvider>
         {isStandalone ? (
-          <div className="min-h-screen bg-background text-foreground">
-            <Outlet />
-          </div>
+          <PublicBootstrap>
+            <div className="min-h-screen bg-background text-foreground">
+              <Outlet />
+            </div>
+          </PublicBootstrap>
         ) : (
           <AuthGate>
             <SidebarProvider>
