@@ -115,6 +115,28 @@ export const useAuthStore = create<AuthState>((set, get) => ({
     }
   },
 
+  register: async ({ displayName, email, password }) => {
+    set({ status: "loading", error: null });
+    try {
+      const result = await registerRequest({ displayName, email, password });
+      writeToken(result.access_token);
+      setAccessToken(result.access_token);
+      const session = await fetchMe();
+      set({ token: result.access_token, ...sessionToState(session) });
+    } catch (error) {
+      writeToken(null);
+      setAccessToken(null);
+      setActiveOrganizationId(null);
+      set({
+        ...ANON_STATE,
+        error: error instanceof Error ? error.message : "Falha ao criar conta.",
+      });
+      throw error;
+    }
+  },
+
+
+
   logout: () => {
     writeToken(null);
     setAccessToken(null);
