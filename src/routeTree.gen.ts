@@ -11,6 +11,7 @@
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as SettingsRouteImport } from './routes/settings'
 import { Route as RoomsRouteImport } from './routes/rooms'
+import { Route as RegisterRouteImport } from './routes/register'
 import { Route as RankingRouteImport } from './routes/ranking'
 import { Route as PlayersRouteImport } from './routes/players'
 import { Route as LoginRouteImport } from './routes/login'
@@ -33,6 +34,11 @@ const SettingsRoute = SettingsRouteImport.update({
 const RoomsRoute = RoomsRouteImport.update({
   id: '/rooms',
   path: '/rooms',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const RegisterRoute = RegisterRouteImport.update({
+  id: '/register',
+  path: '/register',
   getParentRoute: () => rootRouteImport,
 } as any)
 const RankingRoute = RankingRouteImport.update({
@@ -109,6 +115,7 @@ export interface FileRoutesByFullPath {
   '/login': typeof LoginRoute
   '/players': typeof PlayersRoute
   '/ranking': typeof RankingRoute
+  '/register': typeof RegisterRoute
   '/rooms': typeof RoomsRoute
   '/settings': typeof SettingsRoute
   '/matches/new': typeof MatchesNewRoute
@@ -126,6 +133,7 @@ export interface FileRoutesByTo {
   '/login': typeof LoginRoute
   '/players': typeof PlayersRoute
   '/ranking': typeof RankingRoute
+  '/register': typeof RegisterRoute
   '/rooms': typeof RoomsRoute
   '/settings': typeof SettingsRoute
   '/matches/new': typeof MatchesNewRoute
@@ -144,6 +152,7 @@ export interface FileRoutesById {
   '/login': typeof LoginRoute
   '/players': typeof PlayersRoute
   '/ranking': typeof RankingRoute
+  '/register': typeof RegisterRoute
   '/rooms': typeof RoomsRoute
   '/settings': typeof SettingsRoute
   '/matches/new': typeof MatchesNewRoute
@@ -163,6 +172,7 @@ export interface FileRouteTypes {
     | '/login'
     | '/players'
     | '/ranking'
+    | '/register'
     | '/rooms'
     | '/settings'
     | '/matches/new'
@@ -180,6 +190,7 @@ export interface FileRouteTypes {
     | '/login'
     | '/players'
     | '/ranking'
+    | '/register'
     | '/rooms'
     | '/settings'
     | '/matches/new'
@@ -197,6 +208,7 @@ export interface FileRouteTypes {
     | '/login'
     | '/players'
     | '/ranking'
+    | '/register'
     | '/rooms'
     | '/settings'
     | '/matches/new'
@@ -215,6 +227,7 @@ export interface RootRouteChildren {
   LoginRoute: typeof LoginRoute
   PlayersRoute: typeof PlayersRoute
   RankingRoute: typeof RankingRoute
+  RegisterRoute: typeof RegisterRoute
   RoomsRoute: typeof RoomsRoute
   SettingsRoute: typeof SettingsRoute
   MatchesNewRoute: typeof MatchesNewRoute
@@ -239,6 +252,13 @@ declare module '@tanstack/react-router' {
       path: '/rooms'
       fullPath: '/rooms'
       preLoaderRoute: typeof RoomsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/register': {
+      id: '/register'
+      path: '/register'
+      fullPath: '/register'
+      preLoaderRoute: typeof RegisterRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/ranking': {
@@ -343,6 +363,7 @@ const rootRouteChildren: RootRouteChildren = {
   LoginRoute: LoginRoute,
   PlayersRoute: PlayersRoute,
   RankingRoute: RankingRoute,
+  RegisterRoute: RegisterRoute,
   RoomsRoute: RoomsRoute,
   SettingsRoute: SettingsRoute,
   MatchesNewRoute: MatchesNewRoute,
@@ -355,3 +376,13 @@ const rootRouteChildren: RootRouteChildren = {
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
+
+import type { getRouter } from './router.tsx'
+import type { startInstance } from './start.ts'
+declare module '@tanstack/react-start' {
+  interface Register {
+    ssr: true
+    router: Awaited<ReturnType<typeof getRouter>>
+    config: Awaited<ReturnType<typeof startInstance.getOptions>>
+  }
+}
