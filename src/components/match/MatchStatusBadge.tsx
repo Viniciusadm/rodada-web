@@ -1,5 +1,5 @@
 import { cn } from "@/lib/utils";
-import { getStatusLabel, type MatchStatus } from "@/lib/match-store";
+import { getStatusLabel, type MatchStatus } from "@/lib/match-types";
 
 const styles: Record<MatchStatus, string> = {
   aguardando: "bg-muted text-muted-foreground ring-border",

@@ -1,9 +1,9 @@
+import { Link } from "@tanstack/react-router";
 import { ArrowRight, Users } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { StatusBadge } from "@/components/games/StatusBadge";
 import { cn } from "@/lib/utils";
-import type { Game } from "@/lib/mock-data";
-import { toast } from "sonner";
+import type { Game } from "@/lib/api-client";
 
 export function GameCard({ game }: { game: Game }) {
   const Icon = game.icon;
@@ -28,16 +28,13 @@ export function GameCard({ game }: { game: Game }) {
       <div className="mt-5 flex items-center justify-between border-t border-border/60 pt-4">
         <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
           <Users className="size-3.5" />
-          <span>{game.players.toLocaleString("pt-BR")} jogadores</span>
+          <span>{game.modes.length} modos</span>
         </div>
-        <Button
-          size="sm"
-          disabled={disabled}
-          onClick={() => toast.success(`Entrando em ${game.name}…`)}
-          className="rounded-lg"
-        >
-          Entrar
-          <ArrowRight className="ml-1 size-4" />
+        <Button asChild size="sm" disabled={disabled} className="rounded-lg">
+          <Link to="/matches/new">
+            Criar partida
+            <ArrowRight className="ml-1 size-4" />
+          </Link>
         </Button>
       </div>
     </div>

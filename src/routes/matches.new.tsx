@@ -1,4 +1,5 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useState } from "react";
 import { ArrowLeft, ArrowRight, Check, Plus, Trash2 } from "lucide-react";
 import { toast } from "sonner";
@@ -15,7 +16,9 @@ import {
 import { Switch } from "@/components/ui/switch";
 import { PageHeader } from "@/components/common/PageHeader";
 import { CsvImport } from "@/components/match/CsvImport";
-import { useMatchStore, type GameMode } from "@/lib/match-store";
+import { createMatch } from "@/lib/api-client";
+import { useGamesQuery } from "@/features/holyplay-data";
+import type { GameMode } from "@/lib/match-types";
 import { cn } from "@/lib/utils";
 
 export const Route = createFileRoute("/matches/new")({
@@ -34,9 +37,20 @@ type DraftQ = { text: string; answer: string; points: number };
 
 function NewMatchPage() {
   const navigate = useNavigate();
-  const createMatch = useMatchStore((s) => s.createMatch);
+  const queryClient = useQueryClient();
+  const { data: games = [] } = useGamesQuery();
+  const createMatchMutation = useMutation({
+    mutationFn: createMatch,
+    onSuccess: async (match) => {
+      await queryClient.invalidateQueries({ queryKey: ["matches"] });
+      toast.success("Partida criada!");
+      navigate({ to: "/matches/$matchId/host", params: { matchId: match.id } });
+    },
+    onError: (error) => toast.error(error.message),
+  });
   const [step, setStep] = useState(0);
 
+  const [gameId, setGameId] = useState("");
   const [name, setName] = useState("Quiz dos Profetas");
   const [mode, setMode] = useState<GameMode>("classico");
   const [maxQuestions, setMaxQuestions] = useState<string>("10");
@@ -50,13 +64,13 @@ function NewMatchPage() {
   ]);
 
   function canAdvance() {
-    if (step === 0) return name.trim().length > 0;
+    if (step === 0) return name.trim().length > 0 && (gameId || games[0]?.id);
     if (step === 1) return questions.length > 0 && questions.every((q) => q.text && q.answer);
     return true;
   }
 
   function submit() {
-    const match = createMatch({
+    createMatchMutation.mutate({
       name: name.trim(),
       mode,
       maxQuestions: maxQuestions ? Number(maxQuestions) : undefined,
@@ -64,9 +78,8 @@ function NewMatchPage() {
       initialPoints: mode === "pontos-iniciais" ? Number(initialPoints) : undefined,
       remoteEnabled,
       questions,
+      gameId: gameId || games[0]?.id,
     });
-    toast.success("Partida criada!");
-    navigate({ to: "/matches/$matchId/host", params: { matchId: match.id } });
   }
 
   return (
@@ -105,6 +118,21 @@ function NewMatchPage() {
               <Input id="name" value={name} onChange={(e) => setName(e.target.value)} />
             </div>
             <div className="grid grid-cols-1 gap-5 md:grid-cols-2">
+              <div className="space-y-2">
+                <Label>Jogo</Label>
+                <Select value={gameId || games[0]?.id || ""} onValueChange={setGameId}>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Selecione um jogo" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {games.map((game) => (
+                      <SelectItem key={game.id} value={game.id}>
+                        {game.name}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
               <div className="space-y-2">
                 <Label>Modo de jogo</Label>
                 <Select value={mode} onValueChange={(v) => setMode(v as GameMode)}>
@@ -183,9 +211,7 @@ function NewMatchPage() {
                 size="sm"
                 variant="outline"
                 className="rounded-lg"
-                onClick={() =>
-                  setQuestions([...questions, { text: "", answer: "", points: 100 }])
-                }
+                onClick={() => setQuestions([...questions, { text: "", answer: "", points: 100 }])}
               >
                 <Plus className="mr-1 size-4" /> Adicionar
               </Button>
@@ -212,7 +238,9 @@ function NewMatchPage() {
                     value={q.text}
                     onChange={(e) =>
                       setQuestions(
-                        questions.map((qq, idx) => (idx === i ? { ...qq, text: e.target.value } : qq)),
+                        questions.map((qq, idx) =>
+                          idx === i ? { ...qq, text: e.target.value } : qq,
+                        ),
                       )
                     }
                     className="mb-2"
@@ -259,7 +287,15 @@ function NewMatchPage() {
               <div className="mt-4 grid grid-cols-2 gap-3 sm:grid-cols-4">
                 {[
                   { label: "Perguntas", value: questions.length },
-                  { label: "Modo", value: mode === "classico" ? "Clássico" : mode === "pontos-iniciais" ? "Pts iniciais" : "Eliminação" },
+                  {
+                    label: "Modo",
+                    value:
+                      mode === "classico"
+                        ? "Clássico"
+                        : mode === "pontos-iniciais"
+                          ? "Pts iniciais"
+                          : "Eliminação",
+                  },
                   { label: "Tempo/pergunta", value: timePerQuestion ? `${timePerQuestion}s` : "—" },
                   { label: "Remoto", value: remoteEnabled ? "Sim" : "Não" },
                 ].map((s) => (
@@ -271,7 +307,8 @@ function NewMatchPage() {
               </div>
             </div>
             <p className="text-sm text-muted-foreground">
-              Ao criar, você será direcionado ao painel para adicionar jogadores e iniciar a partida.
+              Ao criar, você será direcionado ao painel para adicionar jogadores e iniciar a
+              partida.
             </p>
           </div>
         )}
@@ -294,7 +331,11 @@ function NewMatchPage() {
               Próximo <ArrowRight className="ml-1 size-4" />
             </Button>
           ) : (
-            <Button onClick={submit} className="rounded-lg">
+            <Button
+              onClick={submit}
+              className="rounded-lg"
+              disabled={createMatchMutation.isPending}
+            >
               <Check className="mr-1 size-4" /> Criar partida
             </Button>
           )}

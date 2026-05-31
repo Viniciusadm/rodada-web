@@ -1,5 +1,12 @@
 import { cn } from "@/lib/utils";
-import { statusLabel, type GameStatus } from "@/lib/mock-data";
+import type { GameStatus } from "@/lib/api-client";
+
+const statusLabel: Record<GameStatus, string> = {
+  active: "Ativo",
+  beta: "Beta",
+  maintenance: "Manutenção",
+  "coming-soon": "Em breve",
+};
 
 const styles: Record<GameStatus, string> = {
   active: "bg-success/15 text-success ring-success/25",

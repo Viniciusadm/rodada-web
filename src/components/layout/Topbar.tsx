@@ -17,10 +17,21 @@ export function Topbar() {
         />
       </div>
       <div className="ml-auto flex items-center gap-2">
-        <Button variant="ghost" size="icon" className="rounded-full" onClick={toggle} aria-label="Alternar tema">
+        <Button
+          variant="ghost"
+          size="icon"
+          className="rounded-full"
+          onClick={toggle}
+          aria-label="Alternar tema"
+        >
           {theme === "dark" ? <Sun className="size-4" /> : <Moon className="size-4" />}
         </Button>
-        <Button variant="ghost" size="icon" className="relative rounded-full" aria-label="Notificações">
+        <Button
+          variant="ghost"
+          size="icon"
+          className="relative rounded-full"
+          aria-label="Notificações"
+        >
           <Bell className="size-4" />
           <span className="absolute right-2 top-2 size-1.5 rounded-full bg-primary" />
         </Button>

@@ -3,20 +3,25 @@ import { PlusCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { PageHeader } from "@/components/common/PageHeader";
 import { GameCard } from "@/components/games/GameCard";
-import { ComingSoonCard } from "@/components/games/ComingSoonCard";
-import { games } from "@/lib/mock-data";
+import { useGamesQuery } from "@/features/holyplay-data";
+import { Skeleton } from "@/components/ui/skeleton";
 
 export const Route = createFileRoute("/games")({
   head: () => ({
     meta: [
       { title: "Jogos — HolyPlay" },
-      { name: "description", content: "Biblioteca completa de jogos bíblicos disponíveis na HolyPlay." },
+      {
+        name: "description",
+        content: "Biblioteca completa de jogos bíblicos disponíveis na HolyPlay.",
+      },
     ],
   }),
   component: GamesPage,
 });
 
 function GamesPage() {
+  const { data: games = [], isLoading, isError } = useGamesQuery();
+
   return (
     <div className="mx-auto max-w-7xl">
       <PageHeader
@@ -31,9 +36,21 @@ function GamesPage() {
         }
       />
       <div className="grid grid-cols-1 gap-5 md:grid-cols-2 xl:grid-cols-3">
-        {games.map((g) => <GameCard key={g.id} game={g} />)}
-        <ComingSoonCard />
-        <ComingSoonCard title="Mais jogos em breve" description="Sugestões? Avise sua liderança." />
+        {isLoading &&
+          Array.from({ length: 6 }).map((_, index) => (
+            <Skeleton key={index} className="h-[218px] rounded-2xl" />
+          ))}
+        {isError && (
+          <div className="col-span-full rounded-2xl border border-border bg-card p-6 text-sm text-muted-foreground">
+            Não foi possível carregar os jogos da API.
+          </div>
+        )}
+        {!isLoading && !isError && games.map((g) => <GameCard key={g.id} game={g} />)}
+        {!isLoading && !isError && games.length === 0 && (
+          <div className="col-span-full rounded-2xl border border-border bg-card p-6 text-sm text-muted-foreground">
+            Nenhum jogo disponível.
+          </div>
+        )}
       </div>
     </div>
   );

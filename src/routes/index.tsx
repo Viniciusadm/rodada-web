@@ -2,22 +2,28 @@ import { createFileRoute, Link } from "@tanstack/react-router";
 import { ArrowRight, PlusCircle, Radio, Trophy } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { GameCard } from "@/components/games/GameCard";
-import { ComingSoonCard } from "@/components/games/ComingSoonCard";
-import { games, players, rooms } from "@/lib/mock-data";
+import { Skeleton } from "@/components/ui/skeleton";
+import { useGamesQuery, useLiveRoomsQuery, useRankingQuery } from "@/features/holyplay-data";
 
 export const Route = createFileRoute("/")({
   head: () => ({
     meta: [
       { title: "Início — HolyPlay" },
-      { name: "description", content: "Dashboard com jogos bíblicos, salas ao vivo e ranking da sua igreja." },
+      {
+        name: "description",
+        content: "Dashboard com jogos bíblicos, salas ao vivo e ranking da sua igreja.",
+      },
     ],
   }),
   component: Dashboard,
 });
 
 function Dashboard() {
+  const { data: games = [], isLoading: gamesLoading } = useGamesQuery();
+  const { data: ranking = [], isLoading: rankingLoading } = useRankingQuery();
+  const { data: rooms = [] } = useLiveRoomsQuery();
   const featured = games.slice(0, 6);
-  const top3 = players.slice(0, 3);
+  const top3 = ranking.slice(0, 3);
   const liveRooms = rooms.slice(0, 3);
 
   return (
@@ -35,8 +41,8 @@ function Dashboard() {
             Pronto para edificar e divertir sua comunidade?
           </h1>
           <p className="mt-3 max-w-xl text-base text-muted-foreground">
-            Explore a coleção de jogos bíblicos da HolyPlay, crie salas ao vivo e acompanhe o ranking
-            da sua igreja em tempo real.
+            Explore a coleção de jogos bíblicos da HolyPlay, crie salas ao vivo e acompanhe o
+            ranking da sua igreja em tempo real.
           </p>
           <div className="mt-6 flex flex-wrap gap-3">
             <Button asChild size="lg" className="rounded-xl">
@@ -58,7 +64,9 @@ function Dashboard() {
         <div className="mb-5 flex items-end justify-between">
           <div>
             <h2 className="text-xl font-semibold tracking-tight">Jogos disponíveis</h2>
-            <p className="text-sm text-muted-foreground">Escolha uma experiência para começar agora.</p>
+            <p className="text-sm text-muted-foreground">
+              Escolha uma experiência para começar agora.
+            </p>
           </div>
           <Link
             to="/games"
@@ -68,9 +76,16 @@ function Dashboard() {
           </Link>
         </div>
         <div className="grid grid-cols-1 gap-5 md:grid-cols-2 xl:grid-cols-3">
-          {featured.map((g) => <GameCard key={g.id} game={g} />)}
-          <ComingSoonCard />
-          <ComingSoonCard title="Novidade chegando" description="Trabalhando em mais um jogo bíblico." />
+          {gamesLoading &&
+            Array.from({ length: 3 }).map((_, index) => (
+              <Skeleton key={index} className="h-[218px] rounded-2xl" />
+            ))}
+          {!gamesLoading && featured.map((g) => <GameCard key={g.id} game={g} />)}
+          {!gamesLoading && featured.length === 0 && (
+            <div className="col-span-full rounded-2xl border border-border bg-card p-6 text-sm text-muted-foreground">
+              Nenhum jogo disponível na API.
+            </div>
+          )}
         </div>
       </section>
 
@@ -87,13 +102,24 @@ function Dashboard() {
             </Link>
           </div>
           <ul className="space-y-3">
+            {rankingLoading &&
+              Array.from({ length: 3 }).map((_, index) => (
+                <Skeleton key={index} className="h-[60px] rounded-xl" />
+              ))}
             {top3.map((p, i) => (
-              <li key={p.id} className="flex items-center justify-between rounded-xl bg-muted/40 px-4 py-3">
+              <li
+                key={p.id}
+                className="flex items-center justify-between rounded-xl bg-muted/40 px-4 py-3"
+              >
                 <div className="flex items-center gap-3">
-                  <span className={`w-6 text-base font-bold ${i === 0 ? "text-primary" : "text-muted-foreground"}`}>
+                  <span
+                    className={`w-6 text-base font-bold ${i === 0 ? "text-primary" : "text-muted-foreground"}`}
+                  >
                     {i + 1}
                   </span>
-                  <div className={`flex size-9 items-center justify-center rounded-full text-xs font-semibold ${p.color}`}>
+                  <div
+                    className={`flex size-9 items-center justify-center rounded-full text-xs font-semibold ${p.color}`}
+                  >
                     {p.initials}
                   </div>
                   <div>
@@ -102,10 +128,16 @@ function Dashboard() {
                   </div>
                 </div>
                 <span className="text-sm font-semibold tabular-nums">
-                  {p.points.toLocaleString("pt-BR")} <span className="text-xs text-muted-foreground">pts</span>
+                  {p.points.toLocaleString("pt-BR")}{" "}
+                  <span className="text-xs text-muted-foreground">pts</span>
                 </span>
               </li>
             ))}
+            {!rankingLoading && top3.length === 0 && (
+              <li className="rounded-xl bg-muted/40 px-4 py-3 text-sm text-muted-foreground">
+                Ranking ainda sem pontuação.
+              </li>
+            )}
           </ul>
         </section>
 

@@ -1,18 +1,21 @@
 import { useRef, useState } from "react";
 import { FileUp, Download } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { parseCsv } from "@/lib/match-store";
+import { parseCsv } from "@/lib/match-types";
 import { toast } from "sonner";
 
 type ParsedRow = { text: string; answer: string; points: number };
 
 export function CsvImport({
   onImport,
+  onImportCsv,
 }: {
-  onImport: (rows: ParsedRow[]) => void;
+  onImport?: (rows: ParsedRow[]) => void;
+  onImportCsv?: (csv: string) => void;
 }) {
   const inputRef = useRef<HTMLInputElement>(null);
   const [preview, setPreview] = useState<ParsedRow[] | null>(null);
+  const [csv, setCsv] = useState("");
 
   function handleFile(file: File) {
     const reader = new FileReader();
@@ -22,6 +25,7 @@ export function CsvImport({
         toast.error("Nenhuma pergunta válida encontrada no CSV.");
         return;
       }
+      setCsv(String(reader.result ?? ""));
       setPreview(rows);
     };
     reader.readAsText(file);
@@ -105,8 +109,10 @@ export function CsvImport({
                 size="sm"
                 className="rounded-lg"
                 onClick={() => {
-                  onImport(preview);
+                  onImportCsv?.(csv);
+                  onImport?.(preview);
                   setPreview(null);
+                  setCsv("");
                 }}
               >
                 Importar {preview.length}
