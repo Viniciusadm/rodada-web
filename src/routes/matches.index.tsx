@@ -34,7 +34,7 @@ function MatchesPage() {
 
       {isLoading ? (
         <div className="rounded-2xl border border-border bg-card p-8 text-sm text-muted-foreground">
-          Carregando partidas da API...
+          Carregando partidas...
         </div>
       ) : isError ? (
         <div className="rounded-2xl border border-border bg-card p-8 text-sm text-muted-foreground">
@@ -58,21 +58,18 @@ function MatchesPage() {
                 <h3 className="line-clamp-2 text-base font-semibold">{m.name}</h3>
                 <MatchStatusBadge status={m.status} />
               </div>
-              <p className="text-xs text-muted-foreground">
-                Modo: <span className="text-foreground">API</span>
-              </p>
               <div className="mt-4 grid grid-cols-3 gap-2 rounded-xl bg-muted/40 p-3 text-center text-xs">
                 <div>
                   <p className="flex items-center justify-center gap-1 text-muted-foreground">
                     <HelpCircle className="size-3" /> Perguntas
                   </p>
-                  <p className="mt-0.5 text-base font-semibold tabular-nums">API</p>
+                  <p className="mt-0.5 text-base font-semibold tabular-nums">-</p>
                 </div>
                 <div>
                   <p className="flex items-center justify-center gap-1 text-muted-foreground">
                     <Users className="size-3" /> Jogadores
                   </p>
-                  <p className="mt-0.5 text-base font-semibold tabular-nums">API</p>
+                  <p className="mt-0.5 text-base font-semibold tabular-nums">-</p>
                 </div>
                 <div>
                   <p className="text-muted-foreground">Rodada</p>

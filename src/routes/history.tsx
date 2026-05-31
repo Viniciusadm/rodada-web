@@ -32,7 +32,7 @@ function HistoryPage() {
         )}
         {isError && (
           <div className="p-6 text-sm text-muted-foreground">
-            Não foi possível carregar o histórico da API.
+            Não foi possível carregar o histórico.
           </div>
         )}
         {!isLoading && !isError && finished.length === 0 && (
@@ -48,14 +48,13 @@ function HistoryPage() {
               <div>
                 <div className="flex flex-wrap items-center gap-2">
                   <h3 className="text-base font-semibold">{m.name}</h3>
-                  <span className="text-xs text-muted-foreground">• API</span>
                 </div>
                 <div className="mt-2 flex flex-wrap gap-x-5 gap-y-1.5 text-xs text-muted-foreground">
                   <span className="flex items-center gap-1.5">
                     <Calendar className="size-3.5" /> Partida encerrada
                   </span>
                   <span className="flex items-center gap-1.5">
-                    <Users className="size-3.5" /> Participantes via API
+                    <Users className="size-3.5" /> Participantes registrados
                   </span>
                   <span className="flex items-center gap-1.5">
                     <Clock className="size-3.5" /> Duração calculada no backend

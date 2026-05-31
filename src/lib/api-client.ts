@@ -385,7 +385,7 @@ export async function createMatch(input: {
   const games = await listGames();
   const gameId = input.gameId ?? games[0]?.id;
   if (!gameId) {
-    throw new Error("Nenhum jogo disponível na API para criar a partida.");
+    throw new Error("Nenhum jogo disponível para criar a partida.");
   }
   const selectedGame = games.find((game) => game.id === gameId) ?? games[0];
   const modeCode =
@@ -399,7 +399,7 @@ export async function createMatch(input: {
     selectedGame?.modes.find((mode) => mode.code === modeCode)?.id ??
     selectedGame?.modes[0]?.id;
   if (!gameModeId) {
-    throw new Error("Nenhum modo disponível na API para o jogo selecionado.");
+    throw new Error("Nenhum modo disponível para o jogo selecionado.");
   }
   const created = await request<ApiMatch>("/api/v1/matches", {
     method: "POST",
@@ -736,9 +736,9 @@ export async function setNotificationPreference(
 async function errorMessage(response: Response) {
   try {
     const payload = (await response.json()) as { message?: string };
-    return payload.message ?? `API request failed with ${response.status}`;
+    return payload.message ?? `Falha na requisição (${response.status})`;
   } catch {
-    return `API request failed with ${response.status}`;
+    return `Falha na requisição (${response.status})`;
   }
 }
 

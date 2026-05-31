@@ -37,7 +37,7 @@ function RoomsPage() {
         )}
         {isError && (
           <div className="col-span-full rounded-2xl border border-border bg-card p-6 text-sm text-muted-foreground">
-            Não foi possível carregar salas ao vivo da API.
+            Não foi possível carregar salas ao vivo.
           </div>
         )}
         {!isLoading && !isError && rooms.length === 0 && (

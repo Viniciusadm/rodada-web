@@ -71,7 +71,7 @@ function RankingPage() {
         </div>
         {isError && (
           <div className="px-5 py-6 text-sm text-muted-foreground">
-            Não foi possível carregar o ranking da API.
+            Não foi possível carregar o ranking.
           </div>
         )}
         {!isLoading && !isError && ranking.length === 0 && (

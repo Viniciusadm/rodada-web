@@ -51,7 +51,7 @@ function PlayersPage() {
           ))}
         {isError && (
           <div className="col-span-full rounded-2xl border border-border bg-card p-6 text-sm text-muted-foreground">
-            Não foi possível carregar os jogadores da API.
+            Não foi possível carregar os jogadores.
           </div>
         )}
         {!isLoading &&

@@ -93,7 +93,7 @@ function Dashboard() {
           {!gamesLoading && featured.map((g) => <GameCard key={g.id} game={g} />)}
           {!gamesLoading && featured.length === 0 && (
             <div className="col-span-full rounded-2xl border border-border bg-card p-6 text-sm text-muted-foreground">
-              Nenhum jogo disponível na API.
+              Nenhum jogo disponível.
             </div>
           )}
         </div>
