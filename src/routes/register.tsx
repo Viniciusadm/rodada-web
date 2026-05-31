@@ -11,10 +11,10 @@ import { useAuthStore } from "@/stores/auth";
 export const Route = createFileRoute("/register")({
   head: () => ({
     meta: [
-      { title: "Criar conta — HolyPlay" },
+      { title: "Criar conta — Games Hub" },
       {
         name: "description",
-        content: "Crie sua conta no HolyPlay e comece a apresentar jogos bíblicos na sua igreja.",
+        content: "Crie sua conta no Games Hub e comece a apresentar jogos para sua comunidade.",
       },
     ],
   }),
@@ -96,7 +96,7 @@ function RegisterPage() {
   return (
     <AuthShell
       title="Criar conta"
-      subtitle="Comece a apresentar jogos bíblicos na sua igreja."
+      subtitle="Comece a apresentar jogos para sua comunidade."
       footer={
         <>
           Já tem uma conta?{" "}
@@ -125,7 +125,7 @@ function RegisterPage() {
           autoComplete="email"
           value={email}
           onChange={(event) => setEmail(event.target.value)}
-          placeholder="voce@igreja.com"
+          placeholder="email@email.com"
           error={fieldErrors.email}
           required
         />
@@ -153,9 +153,7 @@ function RegisterPage() {
         />
 
         {error && (
-          <p className="rounded-lg bg-destructive/10 px-3 py-2 text-sm text-destructive">
-            {error}
-          </p>
+          <p className="rounded-lg bg-destructive/10 px-3 py-2 text-sm text-destructive">{error}</p>
         )}
 
         <Button type="submit" className="w-full" disabled={submitting}>

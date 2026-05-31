@@ -6,7 +6,7 @@ import { getMatchState } from "@/lib/api-client";
 
 export const Route = createFileRoute("/matches/$matchId/present")({
   head: () => ({
-    meta: [{ title: "Apresentação — HolyPlay" }],
+    meta: [{ title: "Apresentação — Games Hub" }],
   }),
   component: PresentPage,
   notFoundComponent: () => <div className="p-8 text-center">Partida não encontrada.</div>,
@@ -43,7 +43,7 @@ function PresentPage() {
             </div>
             <div>
               <p className="text-xs font-medium uppercase tracking-widest text-muted-foreground">
-                HolyPlay
+                Games Hub
               </p>
               <h1 className="text-2xl font-semibold">{match.name}</h1>
             </div>

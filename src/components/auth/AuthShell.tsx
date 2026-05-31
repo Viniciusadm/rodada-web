@@ -20,7 +20,7 @@ export function AuthShell({
           <Link
             to="/"
             className="flex size-12 items-center justify-center rounded-2xl bg-gradient-to-br from-primary to-primary-glow shadow-lg shadow-primary/20"
-            aria-label="HolyPlay — voltar para a home"
+            aria-label="Games Hub — voltar para a home"
           >
             <Sparkles className="size-6 text-primary-foreground" />
           </Link>
@@ -28,9 +28,7 @@ export function AuthShell({
           <p className="mt-1 text-sm text-muted-foreground">{subtitle}</p>
         </div>
 
-        <div className="space-y-4 rounded-2xl border border-border bg-card p-6">
-          {children}
-        </div>
+        <div className="space-y-4 rounded-2xl border border-border bg-card p-6">{children}</div>
 
         <p className="mt-6 text-center text-sm text-muted-foreground">{footer}</p>
       </div>

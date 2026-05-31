@@ -3,13 +3,13 @@ import { Copy, Users } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { PageHeader } from "@/components/common/PageHeader";
-import { useLiveRoomsQuery } from "@/features/holyplay-data";
+import { useLiveRoomsQuery } from "@/features/games-hub-data";
 
 export const Route = createFileRoute("/rooms")({
   head: () => ({
     meta: [
-      { title: "Salas ao vivo — HolyPlay" },
-      { name: "description", content: "Salas de jogos bíblicos acontecendo agora na sua igreja." },
+      { title: "Salas ao vivo — Games Hub" },
+      { name: "description", content: "Salas de jogos acontecendo agora na sua comunidade." },
     ],
   }),
   component: RoomsPage,

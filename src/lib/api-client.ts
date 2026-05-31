@@ -1,4 +1,4 @@
-import { BookOpenText, CheckCircle2, Gamepad2, Quote, type LucideIcon } from "lucide-react";
+import { CheckCircle2, Gamepad2, Joystick, Puzzle, type LucideIcon } from "lucide-react";
 import type { MatchQuestionDraft, MatchStatus } from "@/lib/match-types";
 
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL ?? "https://games.isarchie.com.br/";
@@ -28,7 +28,7 @@ export type Player = {
   id: string;
   name: string;
   initials: string;
-  ministry: string;
+  team: string;
   points: number;
   matches: number;
   level: number;
@@ -248,7 +248,7 @@ export type AuthSession = {
   activeOrganizationId: string | null;
 };
 
-export type Ministry = {
+export type Team = {
   id: string;
   name: string;
   slug: string;
@@ -282,7 +282,7 @@ type ApiMeResponse = {
   active_organization_id: string | null;
 };
 
-type ApiMinistry = {
+type ApiTeam = {
   id: string;
   name: string;
   slug: string;
@@ -332,21 +332,19 @@ export async function listGames(): Promise<Game[]> {
 
 export async function listPlayers(
   organizationId = getActiveOrganizationId(),
-  ministries?: Map<string, string>,
+  teams?: Map<string, string>,
 ): Promise<Player[]> {
   const players = await request<ApiPlayer[]>(`/api/v1/organizations/${organizationId}/players`);
-  return players
-    .filter((player) => player.is_active)
-    .map((player) => mapPlayer(player, ministries));
+  return players.filter((player) => player.is_active).map((player) => mapPlayer(player, teams));
 }
 
 export async function listRankings(
   organizationId = getActiveOrganizationId(),
-  ministries?: Map<string, string>,
+  teams?: Map<string, string>,
 ): Promise<RankingEntry[]> {
   const params = new URLSearchParams({ organization_id: organizationId });
   const ranking = await request<ApiRankingEntry[]>(`/api/v1/rankings?${params}`);
-  return ranking.map((entry) => mapRankingEntry(entry, ministries));
+  return ranking.map((entry) => mapRankingEntry(entry, teams));
 }
 
 export async function listLiveRooms(
@@ -654,17 +652,13 @@ export async function fetchMe(): Promise<AuthSession> {
   };
 }
 
-export async function listMinistries(
-  organizationId = getActiveOrganizationId(),
-): Promise<Ministry[]> {
-  const ministries = await request<ApiMinistry[]>(
-    `/api/v1/organizations/${organizationId}/ministries`,
-  );
-  return ministries.map((ministry) => ({
-    id: ministry.id,
-    name: ministry.name,
-    slug: ministry.slug,
-    isActive: ministry.is_active,
+export async function listTeams(organizationId = getActiveOrganizationId()): Promise<Team[]> {
+  const teams = await request<ApiTeam[]>(`/api/v1/organizations/${organizationId}/ministries`);
+  return teams.map((team) => ({
+    id: team.id,
+    name: team.name,
+    slug: team.slug,
+    isActive: team.is_active,
   }));
 }
 
@@ -762,13 +756,13 @@ function mapGame(game: ApiGame): Game {
   };
 }
 
-function mapPlayer(player: ApiPlayer, ministries?: Map<string, string>): Player {
+function mapPlayer(player: ApiPlayer, teams?: Map<string, string>): Player {
   const name = player.display_name;
   return {
     id: player.id,
     name,
     initials: initials(name),
-    ministry: ministryLabel(player.ministry_id, ministries),
+    team: teamLabel(player.ministry_id, teams),
     points: player.total_points,
     matches: player.matches_played,
     level: levelFromPoints(player.total_points),
@@ -791,13 +785,13 @@ function mapLiveRoom(room: ApiLiveRoom): LiveRoom {
   };
 }
 
-function mapRankingEntry(entry: ApiRankingEntry, ministries?: Map<string, string>): RankingEntry {
+function mapRankingEntry(entry: ApiRankingEntry, teams?: Map<string, string>): RankingEntry {
   const name = entry.display_name === entry.player_id ? "Jogador" : entry.display_name;
   return {
     id: entry.player_id,
     name,
     initials: initials(name),
-    ministry: ministryLabel(entry.ministry_id, ministries),
+    team: teamLabel(entry.ministry_id, teams),
     points: entry.total_points,
     matches: entry.matches_played,
     level: levelFromPoints(entry.total_points),
@@ -883,14 +877,14 @@ function normalizeGameStatus(status: string): GameStatus {
 }
 
 function gameVisual(key: string): { icon: LucideIcon; iconColor: string } {
-  if (key.includes("quote") || key.includes("versiculo")) {
-    return { icon: Quote, iconColor: "text-amber-400 bg-amber-500/15" };
+  if (key.includes("word") || key.includes("palavra")) {
+    return { icon: Puzzle, iconColor: "text-amber-400 bg-amber-500/15" };
   }
   if (key.includes("check") || key.includes("verdadeiro")) {
     return { icon: CheckCircle2, iconColor: "text-emerald-400 bg-emerald-500/15" };
   }
   if (key.includes("book") || key.includes("quiz")) {
-    return { icon: BookOpenText, iconColor: "text-indigo-400 bg-indigo-500/15" };
+    return { icon: Joystick, iconColor: "text-indigo-400 bg-indigo-500/15" };
   }
   return { icon: Gamepad2, iconColor: "text-sky-400 bg-sky-500/15" };
 }
@@ -904,9 +898,9 @@ function initials(name: string) {
     .join("");
 }
 
-function ministryLabel(ministryId: string | null, ministries?: Map<string, string>) {
-  if (!ministryId) return "Sem ministério";
-  return ministries?.get(ministryId) ?? "Ministério";
+function teamLabel(teamId: string | null, teams?: Map<string, string>) {
+  if (!teamId) return "Sem time";
+  return teams?.get(teamId) ?? "Time";
 }
 
 function levelFromPoints(points: number) {

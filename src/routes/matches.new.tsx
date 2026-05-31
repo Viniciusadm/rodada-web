@@ -17,14 +17,14 @@ import { Switch } from "@/components/ui/switch";
 import { PageHeader } from "@/components/common/PageHeader";
 import { CsvImport } from "@/components/match/CsvImport";
 import { createMatch } from "@/lib/api-client";
-import { useGamesQuery } from "@/features/holyplay-data";
+import { useGamesQuery } from "@/features/games-hub-data";
 import type { GameMode } from "@/lib/match-types";
 import { cn } from "@/lib/utils";
 
 export const Route = createFileRoute("/matches/new")({
   head: () => ({
     meta: [
-      { title: "Nova partida — HolyPlay" },
+      { title: "Nova partida — Games Hub" },
       { name: "description", content: "Crie uma nova partida e configure suas regras." },
     ],
   }),

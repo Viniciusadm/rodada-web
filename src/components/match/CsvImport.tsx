@@ -34,8 +34,8 @@ export function CsvImport({
   function downloadTemplate() {
     const csv =
       "pergunta,resposta,pontos\n" +
-      '"Quem construiu a arca?","Noé",100\n' +
-      '"Em quantos dias Deus criou o mundo?","6",100\n';
+      '"Qual console popularizou controles com sensor de movimento?","Nintendo Wii",100\n' +
+      '"Qual gênero usa fases, chefes e progressão por níveis?","Plataforma",100\n';
     const blob = new Blob([csv], { type: "text/csv;charset=utf-8" });
     const url = URL.createObjectURL(blob);
     const a = document.createElement("a");

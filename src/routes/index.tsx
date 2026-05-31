@@ -5,17 +5,17 @@ import { Button } from "@/components/ui/button";
 import { GameCard } from "@/components/games/GameCard";
 import { Skeleton } from "@/components/ui/skeleton";
 import { PublicLanding } from "@/components/landing/PublicLanding";
-import { useGamesQuery, useLiveRoomsQuery, useRankingQuery } from "@/features/holyplay-data";
+import { useGamesQuery, useLiveRoomsQuery, useRankingQuery } from "@/features/games-hub-data";
 import { useAuthStore } from "@/stores/auth";
 
 export const Route = createFileRoute("/")({
   head: () => ({
     meta: [
-      { title: "HolyPlay — Hub de jogos cristãos" },
+      { title: "Games Hub — Plataforma de jogos" },
       {
         name: "description",
         content:
-          "Jogos bíblicos interativos para sua igreja. Crie partidas ao vivo, engaje participantes e acompanhe o ranking da comunidade.",
+          "Jogos interativos para comunidades gamer. Crie partidas ao vivo, engaje participantes e acompanhe rankings.",
       },
     ],
   }),
@@ -40,7 +40,6 @@ function Dashboard() {
 
   return (
     <div className="mx-auto max-w-7xl space-y-10">
-      {/* Hero */}
       <section className="relative overflow-hidden rounded-3xl border border-border bg-gradient-to-br from-primary/15 via-card to-card p-8 md:p-10">
         <div className="absolute -right-20 -top-20 size-72 rounded-full bg-primary/20 blur-3xl" />
         <div className="absolute -bottom-24 right-1/3 size-64 rounded-full bg-primary-glow/15 blur-3xl" />
@@ -50,11 +49,11 @@ function Dashboard() {
             Bem-vindo de volta
           </span>
           <h1 className="mt-4 text-3xl font-semibold tracking-tight md:text-4xl">
-            Pronto para edificar e divertir sua comunidade?
+            Pronto para jogar com sua comunidade?
           </h1>
           <p className="mt-3 max-w-xl text-base text-muted-foreground">
-            Explore a coleção de jogos bíblicos da HolyPlay, crie salas ao vivo e acompanhe o
-            ranking da sua igreja em tempo real.
+            Explore a coleção de jogos do Games Hub, crie salas ao vivo e acompanhe o ranking da sua
+            comunidade em tempo real.
           </p>
           <div className="mt-6 flex flex-wrap gap-3">
             <Button asChild size="lg" className="rounded-xl">
@@ -71,7 +70,6 @@ function Dashboard() {
         </div>
       </section>
 
-      {/* Games */}
       <section>
         <div className="mb-5 flex items-end justify-between">
           <div>
@@ -101,7 +99,6 @@ function Dashboard() {
         </div>
       </section>
 
-      {/* Ranking + Live */}
       <div className="grid grid-cols-1 gap-6 lg:grid-cols-5">
         <section className="rounded-2xl border border-border bg-card p-6 lg:col-span-3">
           <div className="mb-5 flex items-center justify-between">
@@ -136,7 +133,7 @@ function Dashboard() {
                   </div>
                   <div>
                     <p className="text-sm font-medium leading-tight">{p.name}</p>
-                    <p className="text-xs text-muted-foreground">{p.ministry}</p>
+                    <p className="text-xs text-muted-foreground">{p.team}</p>
                   </div>
                 </div>
                 <span className="text-sm font-semibold tabular-nums">
@@ -173,6 +170,11 @@ function Dashboard() {
                 </p>
               </li>
             ))}
+            {liveRooms.length === 0 && (
+              <li className="rounded-xl bg-muted/40 px-4 py-3 text-sm text-muted-foreground">
+                Nenhuma sala ativa agora.
+              </li>
+            )}
           </ul>
         </section>
       </div>

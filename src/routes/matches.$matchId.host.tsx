@@ -32,7 +32,7 @@ import {
 
 export const Route = createFileRoute("/matches/$matchId/host")({
   head: () => ({
-    meta: [{ title: "Painel do anfitrião — HolyPlay" }],
+    meta: [{ title: "Painel do anfitrião — Games Hub" }],
   }),
   component: HostPanel,
   notFoundComponent: () => <div className="p-8 text-center">Partida não encontrada.</div>,

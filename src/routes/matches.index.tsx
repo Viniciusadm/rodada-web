@@ -3,13 +3,13 @@ import { HelpCircle, ListChecks, Play, PlusCircle, Users } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { PageHeader } from "@/components/common/PageHeader";
 import { MatchStatusBadge } from "@/components/match/MatchStatusBadge";
-import { useMatchesQuery } from "@/features/holyplay-data";
+import { useMatchesQuery } from "@/features/games-hub-data";
 
 export const Route = createFileRoute("/matches/")({
   head: () => ({
     meta: [
-      { title: "Partidas — HolyPlay" },
-      { name: "description", content: "Gerencie e conduza partidas de jogos bíblicos." },
+      { title: "Partidas — Games Hub" },
+      { name: "description", content: "Gerencie e conduza partidas de jogos." },
     ],
   }),
   component: MatchesPage,
@@ -22,7 +22,7 @@ function MatchesPage() {
     <div className="mx-auto max-w-6xl">
       <PageHeader
         title="Partidas"
-        description="Crie, gerencie e conduza partidas de quiz para sua igreja."
+        description="Crie, gerencie e conduza partidas de quiz para sua comunidade."
         actions={
           <Button asChild className="rounded-lg">
             <Link to="/matches/new">

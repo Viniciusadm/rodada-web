@@ -2,13 +2,13 @@ import { createFileRoute } from "@tanstack/react-router";
 import { Crown, Medal, Trophy } from "lucide-react";
 import { PageHeader } from "@/components/common/PageHeader";
 import { Skeleton } from "@/components/ui/skeleton";
-import { useRankingQuery } from "@/features/holyplay-data";
+import { useRankingQuery } from "@/features/games-hub-data";
 
 export const Route = createFileRoute("/ranking")({
   head: () => ({
     meta: [
-      { title: "Ranking — HolyPlay" },
-      { name: "description", content: "Os jogadores mais engajados da sua igreja." },
+      { title: "Ranking — Games Hub" },
+      { name: "description", content: "Os jogadores mais engajados da sua comunidade." },
     ],
   }),
   component: RankingPage,
@@ -26,7 +26,7 @@ function RankingPage() {
     <div className="mx-auto max-w-5xl">
       <PageHeader
         title="Ranking geral"
-        description="Os jogadores que mais pontuaram este mês na HolyPlay."
+        description="Os jogadores que mais pontuaram este mês no Games Hub."
       />
 
       {/* Podium */}
@@ -95,7 +95,7 @@ function RankingPage() {
                 </div>
                 <div>
                   <p className="text-sm font-medium leading-tight">{p.name}</p>
-                  <p className="text-xs text-muted-foreground">{p.ministry}</p>
+                  <p className="text-xs text-muted-foreground">{p.team}</p>
                 </div>
               </div>
               <span className="text-right text-sm tabular-nums text-muted-foreground">

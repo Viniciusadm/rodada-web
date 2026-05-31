@@ -7,13 +7,13 @@ import { useTheme } from "@/components/theme-provider";
 import {
   useNotificationPreferencesQuery,
   useSetNotificationPreference,
-} from "@/features/holyplay-data";
+} from "@/features/games-hub-data";
 
 export const Route = createFileRoute("/settings")({
   head: () => ({
     meta: [
-      { title: "Configurações — HolyPlay" },
-      { name: "description", content: "Personalize sua experiência na HolyPlay." },
+      { title: "Configurações — Games Hub" },
+      { name: "description", content: "Personalize sua experiência no Games Hub." },
     ],
   }),
   component: SettingsPage,

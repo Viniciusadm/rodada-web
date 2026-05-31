@@ -1,13 +1,16 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { Calendar, Clock, Trophy, Users } from "lucide-react";
 import { PageHeader } from "@/components/common/PageHeader";
-import { useMatchesQuery } from "@/features/holyplay-data";
+import { useMatchesQuery } from "@/features/games-hub-data";
 
 export const Route = createFileRoute("/history")({
   head: () => ({
     meta: [
-      { title: "Histórico de partidas — HolyPlay" },
-      { name: "description", content: "Histórico completo das partidas jogadas na sua igreja." },
+      { title: "Histórico de partidas — Games Hub" },
+      {
+        name: "description",
+        content: "Histórico completo das partidas jogadas na sua comunidade.",
+      },
     ],
   }),
   component: HistoryPage,
@@ -21,7 +24,7 @@ function HistoryPage() {
     <div className="mx-auto max-w-5xl">
       <PageHeader
         title="Histórico de partidas"
-        description="Acompanhe as últimas atividades da HolyPlay na sua igreja."
+        description="Acompanhe as últimas atividades do Games Hub na sua comunidade."
       />
       <div className="overflow-hidden rounded-2xl border border-border bg-card">
         {isLoading && (

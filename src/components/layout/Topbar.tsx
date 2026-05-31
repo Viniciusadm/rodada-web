@@ -19,7 +19,7 @@ import {
   useMarkNotificationRead,
   useNotificationsQuery,
   useSearchQuery,
-} from "@/features/holyplay-data";
+} from "@/features/games-hub-data";
 import { useAuthStore } from "@/stores/auth";
 
 function initialsOf(name: string) {
@@ -39,7 +39,7 @@ export function Topbar() {
   const logout = useAuthStore((s) => s.logout);
 
   const userName = user?.displayName ?? "Conta";
-  const orgName = activeOrganization?.name ?? "HolyPlay";
+  const orgName = activeOrganization?.name ?? "Games Hub";
 
   return (
     <header className="sticky top-0 z-20 flex h-16 items-center gap-3 border-b border-border bg-background/80 px-4 backdrop-blur-md md:px-6">

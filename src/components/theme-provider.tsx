@@ -10,7 +10,7 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
 
   React.useEffect(() => {
     const stored = (typeof window !== "undefined" &&
-      localStorage.getItem("holyplay-theme")) as Theme | null;
+      localStorage.getItem("games-hub-theme")) as Theme | null;
     if (stored === "dark" || stored === "light") setTheme(stored);
   }, []);
 
@@ -18,7 +18,7 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
     if (typeof document === "undefined") return;
     document.documentElement.classList.toggle("dark", theme === "dark");
     try {
-      localStorage.setItem("holyplay-theme", theme);
+      localStorage.setItem("games-hub-theme", theme);
     } catch {
       /* noop */
     }

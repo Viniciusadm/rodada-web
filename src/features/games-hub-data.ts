@@ -5,10 +5,10 @@ import {
   listGames,
   listLiveRooms,
   listMatches,
-  listMinistries,
   listNotifications,
   listPlayers,
   listRankings,
+  listTeams,
   markAllNotificationsRead,
   markNotificationRead,
   searchOrganization,
@@ -17,11 +17,11 @@ import {
   type Game,
   type LiveRoom,
   type MatchSummary,
-  type Ministry,
   type NotificationPreference,
   type Player,
   type RankingEntry,
   type SearchResults,
+  type Team,
 } from "@/lib/api-client";
 import { useAuthStore } from "@/stores/auth";
 
@@ -37,11 +37,11 @@ export function useGamesQuery() {
   });
 }
 
-export function useMinistriesQuery() {
+export function useTeamsQuery() {
   const orgId = useActiveOrgId();
-  return useQuery<Ministry[]>({
-    queryKey: ["ministries", orgId],
-    queryFn: () => listMinistries(orgId!),
+  return useQuery<Team[]>({
+    queryKey: ["teams", orgId],
+    queryFn: () => listTeams(orgId!),
     enabled: !!orgId,
     staleTime: 300_000,
   });
@@ -52,8 +52,8 @@ export function usePlayersQuery() {
   return useQuery<Player[]>({
     queryKey: ["players", orgId],
     queryFn: async () => {
-      const ministries = await listMinistries(orgId!);
-      const map = new Map(ministries.map((ministry) => [ministry.id, ministry.name]));
+      const teams = await listTeams(orgId!);
+      const map = new Map(teams.map((team) => [team.id, team.name]));
       return listPlayers(orgId!, map);
     },
     enabled: !!orgId,
@@ -66,8 +66,8 @@ export function useRankingQuery() {
   return useQuery<RankingEntry[]>({
     queryKey: ["ranking", orgId],
     queryFn: async () => {
-      const ministries = await listMinistries(orgId!);
-      const map = new Map(ministries.map((ministry) => [ministry.id, ministry.name]));
+      const teams = await listTeams(orgId!);
+      const map = new Map(teams.map((team) => [team.id, team.name]));
       return listRankings(orgId!, map);
     },
     enabled: !!orgId,

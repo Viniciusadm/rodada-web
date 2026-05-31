@@ -14,9 +14,9 @@ import { Button } from "@/components/ui/button";
 const FEATURES: Array<{ icon: LucideIcon; title: string; description: string }> = [
   {
     icon: Gamepad2,
-    title: "Jogos bíblicos prontos",
+    title: "Jogos prontos",
     description:
-      "Uma coleção de experiências interativas para usar em cultos, células e eventos da igreja.",
+      "Uma coleção de experiências interativas para usar em encontros, salas e eventos da comunidade.",
   },
   {
     icon: Radio,
@@ -27,14 +27,12 @@ const FEATURES: Array<{ icon: LucideIcon; title: string; description: string }> 
   {
     icon: Trophy,
     title: "Ranking e engajamento",
-    description:
-      "Acompanhe a pontuação dos jogadores e ministérios para fortalecer a comunidade.",
+    description: "Acompanhe a pontuação dos jogadores e times para movimentar a comunidade.",
   },
   {
     icon: Users,
     title: "Multi-organização",
-    description:
-      "Gerencie sua igreja com papéis de apresentador, administrador e membro.",
+    description: "Gerencie sua comunidade com papéis de apresentador, administrador e membro.",
   },
 ];
 
@@ -47,9 +45,9 @@ export function PublicLanding() {
             <Sparkles className="size-5 text-primary-foreground" />
           </div>
           <div className="flex flex-col leading-none">
-            <span className="text-base font-semibold tracking-tight">HolyPlay</span>
+            <span className="text-base font-semibold tracking-tight">Games Hub</span>
             <span className="text-[10px] font-medium uppercase tracking-wider text-muted-foreground">
-              Hub de jogos cristãos
+              Comunidade gamer
             </span>
           </div>
         </Link>
@@ -70,14 +68,14 @@ export function PublicLanding() {
           <div className="relative max-w-2xl">
             <span className="inline-flex items-center gap-1.5 rounded-full bg-primary/15 px-3 py-1 text-xs font-semibold uppercase tracking-wider text-primary ring-1 ring-primary/20">
               <span className="size-1.5 rounded-full bg-primary animate-pulse" />
-              Para igrejas e ministérios
+              Para comunidades e times
             </span>
             <h1 className="mt-4 text-3xl font-semibold tracking-tight md:text-5xl">
-              Jogos bíblicos interativos para edificar sua comunidade
+              Jogos interativos para reunir sua comunidade
             </h1>
             <p className="mt-4 max-w-xl text-base text-muted-foreground md:text-lg">
               Crie partidas ao vivo, engaje participantes presenciais e remotos e acompanhe o
-              ranking da sua igreja em um só lugar.
+              ranking da sua comunidade em um só lugar.
             </p>
             <div className="mt-6 flex flex-wrap gap-3">
               <Button asChild size="lg" className="rounded-xl">
@@ -98,15 +96,12 @@ export function PublicLanding() {
               Tudo que você precisa para uma partida memorável
             </h2>
             <p className="mt-2 text-sm text-muted-foreground md:text-base">
-              Ferramentas pensadas para apresentadores de igreja, sem complicação.
+              Ferramentas pensadas para apresentadores de jogos, sem complicação.
             </p>
           </div>
           <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
             {FEATURES.map((feature) => (
-              <article
-                key={feature.title}
-                className="rounded-2xl border border-border bg-card p-5"
-              >
+              <article key={feature.title} className="rounded-2xl border border-border bg-card p-5">
                 <div className="flex size-10 items-center justify-center rounded-xl bg-primary/15 text-primary ring-1 ring-primary/20">
                   <feature.icon className="size-5" />
                 </div>
@@ -118,11 +113,9 @@ export function PublicLanding() {
         </section>
 
         <section className="mt-12 rounded-2xl border border-border bg-card p-8 text-center md:p-10">
-          <h2 className="text-xl font-semibold tracking-tight md:text-2xl">
-            Pronto para começar?
-          </h2>
+          <h2 className="text-xl font-semibold tracking-tight md:text-2xl">Pronto para começar?</h2>
           <p className="mx-auto mt-2 max-w-lg text-sm text-muted-foreground md:text-base">
-            Crie sua conta em poucos segundos e prepare a primeira partida para o próximo culto.
+            Crie sua conta em poucos segundos e prepare a primeira partida para o próximo evento.
           </p>
           <div className="mt-6 flex flex-wrap justify-center gap-3">
             <Button asChild size="lg" className="rounded-xl">
@@ -137,8 +130,8 @@ export function PublicLanding() {
 
       <footer className="border-t border-border">
         <div className="mx-auto flex w-full max-w-7xl flex-col items-center justify-between gap-2 px-4 py-6 text-xs text-muted-foreground md:flex-row md:px-8">
-          <span>© {new Date().getFullYear()} HolyPlay</span>
-          <span>Hub de jogos cristãos para sua igreja.</span>
+          <span>© {new Date().getFullYear()} Games Hub</span>
+          <span>Hub de jogos para sua comunidade.</span>
         </div>
       </footer>
     </div>

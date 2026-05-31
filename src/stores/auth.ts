@@ -12,7 +12,7 @@ import {
   type AuthUser,
 } from "@/lib/api-client";
 
-const TOKEN_KEY = "holyplay-token";
+const TOKEN_KEY = "games-hub-token";
 
 export type AuthStatus = "idle" | "loading" | "authed" | "anon";
 
@@ -134,8 +134,6 @@ export const useAuthStore = create<AuthState>((set, get) => ({
       throw error;
     }
   },
-
-
 
   logout: () => {
     writeToken(null);

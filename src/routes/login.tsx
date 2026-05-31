@@ -11,8 +11,8 @@ import { useAuthStore } from "@/stores/auth";
 export const Route = createFileRoute("/login")({
   head: () => ({
     meta: [
-      { title: "Entrar — HolyPlay" },
-      { name: "description", content: "Acesse o hub de jogos cristãos da sua igreja." },
+      { title: "Entrar — Games Hub" },
+      { name: "description", content: "Acesse o hub de jogos da sua comunidade." },
     ],
   }),
   component: LoginPage,
@@ -73,7 +73,7 @@ function LoginPage() {
   return (
     <AuthShell
       title="Entrar"
-      subtitle="Acesse o hub de jogos da sua igreja."
+      subtitle="Acesse o hub de jogos da sua comunidade."
       footer={
         <>
           Ainda não tem conta?{" "}
@@ -91,7 +91,7 @@ function LoginPage() {
           autoComplete="email"
           value={email}
           onChange={(event) => setEmail(event.target.value)}
-          placeholder="voce@igreja.com"
+          placeholder="email@email.com"
           error={fieldErrors.email}
           required
         />
@@ -108,9 +108,7 @@ function LoginPage() {
         />
 
         {error && (
-          <p className="rounded-lg bg-destructive/10 px-3 py-2 text-sm text-destructive">
-            {error}
-          </p>
+          <p className="rounded-lg bg-destructive/10 px-3 py-2 text-sm text-destructive">{error}</p>
         )}
 
         <Button type="submit" className="w-full" disabled={submitting}>

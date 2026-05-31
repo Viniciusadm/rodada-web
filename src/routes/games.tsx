@@ -3,16 +3,16 @@ import { PlusCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { PageHeader } from "@/components/common/PageHeader";
 import { GameCard } from "@/components/games/GameCard";
-import { useGamesQuery } from "@/features/holyplay-data";
+import { useGamesQuery } from "@/features/games-hub-data";
 import { Skeleton } from "@/components/ui/skeleton";
 
 export const Route = createFileRoute("/games")({
   head: () => ({
     meta: [
-      { title: "Jogos — HolyPlay" },
+      { title: "Jogos — Games Hub" },
       {
         name: "description",
-        content: "Biblioteca completa de jogos bíblicos disponíveis na HolyPlay.",
+        content: "Biblioteca completa de jogos disponíveis no Games Hub.",
       },
     ],
   }),
@@ -26,7 +26,7 @@ function GamesPage() {
     <div className="mx-auto max-w-7xl">
       <PageHeader
         title="Biblioteca de jogos"
-        description="Todos os jogos bíblicos prontos para usar com sua igreja, célula ou ministério."
+        description="Todos os jogos prontos para usar com sua comunidade, sala ou time."
         actions={
           <Button asChild className="rounded-xl">
             <Link to="/create-game">

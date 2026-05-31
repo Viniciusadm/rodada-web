@@ -4,13 +4,13 @@ import { useMemo, useState } from "react";
 import { Input } from "@/components/ui/input";
 import { PageHeader } from "@/components/common/PageHeader";
 import { Skeleton } from "@/components/ui/skeleton";
-import { usePlayersQuery } from "@/features/holyplay-data";
+import { usePlayersQuery } from "@/features/games-hub-data";
 
 export const Route = createFileRoute("/players")({
   head: () => ({
     meta: [
-      { title: "Jogadores — HolyPlay" },
-      { name: "description", content: "Membros da igreja participando da HolyPlay." },
+      { title: "Jogadores — Games Hub" },
+      { name: "description", content: "Jogadores participando do Games Hub." },
     ],
   }),
   component: PlayersPage,
@@ -23,7 +23,7 @@ function PlayersPage() {
     const term = search.trim().toLocaleLowerCase("pt-BR");
     if (!term) return players;
     return players.filter((player) =>
-      `${player.name} ${player.ministry}`.toLocaleLowerCase("pt-BR").includes(term),
+      `${player.name} ${player.team}`.toLocaleLowerCase("pt-BR").includes(term),
     );
   }, [players, search]);
 
@@ -31,7 +31,7 @@ function PlayersPage() {
     <div className="mx-auto max-w-7xl">
       <PageHeader
         title="Jogadores"
-        description="Todos os membros ativos da sua igreja registrados na HolyPlay."
+        description="Todos os jogadores ativos da sua comunidade registrados no Games Hub."
         actions={
           <div className="relative w-full max-w-xs">
             <Search className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
@@ -69,7 +69,7 @@ function PlayersPage() {
                 </div>
                 <div className="min-w-0">
                   <p className="truncate text-sm font-medium">{p.name}</p>
-                  <p className="truncate text-xs text-muted-foreground">{p.ministry}</p>
+                  <p className="truncate text-xs text-muted-foreground">{p.team}</p>
                 </div>
               </div>
               <div className="mt-4 grid grid-cols-3 gap-2 border-t border-border pt-4 text-center">

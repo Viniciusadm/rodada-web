@@ -75,7 +75,7 @@ export function AppSidebar() {
   const isActive = (path: string) =>
     path === "/" ? currentPath === "/" : currentPath.startsWith(path);
 
-  const orgName = activeOrganization?.name ?? "HolyPlay";
+  const orgName = activeOrganization?.name ?? "Games Hub";
   const roleLabel = activeOrganization
     ? (ROLE_LABELS[activeOrganization.role] ?? "Membro")
     : "Hub de jogos";
@@ -88,9 +88,9 @@ export function AppSidebar() {
             <Sparkles className="size-5 text-primary-foreground" />
           </div>
           <div className="flex flex-col leading-none group-data-[collapsible=icon]:hidden">
-            <span className="text-base font-semibold tracking-tight">HolyPlay</span>
+            <span className="text-base font-semibold tracking-tight">Games Hub</span>
             <span className="text-[10px] font-medium uppercase tracking-wider text-muted-foreground">
-              Hub de jogos cristãos
+              Comunidade gamer
             </span>
           </div>
         </Link>
@@ -121,7 +121,7 @@ export function AppSidebar() {
       <SidebarFooter>
         <div className="flex items-center gap-3 rounded-lg px-2 py-2 group-data-[collapsible=icon]:justify-center">
           <div className="flex size-8 shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-primary/30 to-primary-glow/30 text-xs font-semibold text-foreground">
-            {initialsOf(orgName) || "HP"}
+            {initialsOf(orgName) || "GH"}
           </div>
           <div className="min-w-0 flex-1 group-data-[collapsible=icon]:hidden">
             <p className="truncate text-sm font-medium">{orgName}</p>

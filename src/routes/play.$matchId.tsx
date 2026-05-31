@@ -9,7 +9,7 @@ import { getMatchState, joinMatch, sendPlayerAnswer } from "@/lib/api-client";
 
 export const Route = createFileRoute("/play/$matchId")({
   head: () => ({
-    meta: [{ title: "Jogar — HolyPlay" }],
+    meta: [{ title: "Jogar — Games Hub" }],
   }),
   component: PlayPage,
   notFoundComponent: () => <div className="p-8 text-center">Partida não encontrada.</div>,
@@ -18,7 +18,7 @@ export const Route = createFileRoute("/play/$matchId")({
 function PlayPage() {
   const { matchId } = Route.useParams();
   const queryClient = useQueryClient();
-  const storageKey = useMemo(() => `holyplay-participant:${matchId}`, [matchId]);
+  const storageKey = useMemo(() => `games-hub-participant:${matchId}`, [matchId]);
   const [name, setName] = useState("");
   const [token, setToken] = useState<string | null>(null);
   const [participantId, setParticipantId] = useState<string | null>(null);
@@ -96,7 +96,7 @@ function PlayPage() {
         </div>
         <div className="text-left">
           <p className="text-xs font-medium uppercase tracking-widest text-muted-foreground">
-            HolyPlay
+            Games Hub
           </p>
           <h1 className="text-xl font-semibold">{match.name}</h1>
         </div>
