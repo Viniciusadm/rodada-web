@@ -1,7 +1,7 @@
 import { BookOpenText, CheckCircle2, Gamepad2, Quote, type LucideIcon } from "lucide-react";
 import type { MatchQuestionDraft, MatchStatus } from "@/lib/match-types";
 
-const API_BASE_URL = import.meta.env.VITE_API_BASE_URL ?? "http://127.0.0.1:3001";
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL ?? "https://games.isarchie.com.br/";
 export const DEMO_ORGANIZATION_ID =
   import.meta.env.VITE_DEMO_ORGANIZATION_ID ?? "10000000-0000-0000-0000-000000000001";
 
