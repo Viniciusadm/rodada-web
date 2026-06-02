@@ -1,9 +1,6 @@
 import { useEffect, useState } from "react";
 import { cn } from "@/lib/utils";
 
-/// Local countdown seeded from the server's snapshot. Re-mount it (via a `key` on
-/// the round id) when a new round opens so it always starts from the server's
-/// authoritative value; polling/realtime keeps the snapshot honest.
 export function RoundTimer({
   initialSeconds,
   className,
@@ -11,8 +8,6 @@ export function RoundTimer({
 }: {
   initialSeconds: number;
   className?: string;
-  /// Fired when the local countdown reaches zero, so the parent can mirror the
-  /// server's time enforcement (which already rejects late answers).
   onExpire?: () => void;
 }) {
   const [seconds, setSeconds] = useState(initialSeconds);

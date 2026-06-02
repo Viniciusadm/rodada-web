@@ -58,8 +58,6 @@ function NewMatchPage() {
   const [initialPoints, setInitialPoints] = useState<string>("500");
   const [remoteEnabled, setRemoteEnabled] = useState(true);
 
-  // Only offer modes the selected game actually has, so the host can never pick
-  // a mode that would silently fall back to another one at creation time.
   const selectedGame = useMemo(
     () => games.find((g) => g.id === gameId) ?? games[0],
     [games, gameId],
@@ -77,7 +75,8 @@ function NewMatchPage() {
     return modes.length > 0 ? Array.from(new Set(modes)) : ["classico"];
   }, [selectedGame]);
 
-  // Keep the selected mode valid when the game (and thus its modes) changes.
+  const gameKind = selectedGame?.kind ?? "buzzer";
+
   useEffect(() => {
     if (!availableModes.includes(mode)) {
       setMode(availableModes[0]);
@@ -167,7 +166,6 @@ function NewMatchPage() {
                   onValueChange={(v) => {
                     const next = v as GameMode;
                     setMode(next);
-                    // Sensible defaults: lives are small counts, initial points are large.
                     if (next === "eliminacao") setInitialPoints("3");
                     else if (next === "pontos-iniciais") setInitialPoints("500");
                   }}
@@ -260,7 +258,12 @@ function NewMatchPage() {
                 size="sm"
                 variant="outline"
                 className="rounded-lg"
-                onClick={() => setQuestions([...questions, { text: "", answer: "", points: 100 }])}
+                onClick={() =>
+                  setQuestions([
+                    ...questions,
+                    { text: "", answer: gameKind === "true_false" ? "false" : "", points: 100 },
+                  ])
+                }
               >
                 <Plus className="mr-1 size-4" /> Adicionar
               </Button>
@@ -283,7 +286,13 @@ function NewMatchPage() {
                     </Button>
                   </div>
                   <Input
-                    placeholder="Pergunta"
+                    placeholder={
+                      gameKind === "true_false"
+                        ? "Afirmação"
+                        : gameKind === "word_complete"
+                          ? "Frase com a palavra a completar"
+                          : "Pergunta"
+                    }
                     value={q.text}
                     onChange={(e) =>
                       setQuestions(
@@ -295,18 +304,41 @@ function NewMatchPage() {
                     className="mb-2"
                   />
                   <div className="grid grid-cols-3 gap-2">
-                    <Input
-                      placeholder="Resposta correta"
-                      value={q.answer}
-                      onChange={(e) =>
-                        setQuestions(
-                          questions.map((qq, idx) =>
-                            idx === i ? { ...qq, answer: e.target.value } : qq,
-                          ),
-                        )
-                      }
-                      className="col-span-2"
-                    />
+                    {gameKind === "true_false" ? (
+                      <Select
+                        value={q.answer === "true" ? "true" : "false"}
+                        onValueChange={(v) =>
+                          setQuestions(
+                            questions.map((qq, idx) => (idx === i ? { ...qq, answer: v } : qq)),
+                          )
+                        }
+                      >
+                        <SelectTrigger className="col-span-2">
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="true">Verdadeiro</SelectItem>
+                          <SelectItem value="false">Falso</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    ) : (
+                      <Input
+                        placeholder={
+                          gameKind === "word_complete"
+                            ? "Resposta(s) aceitas — separe variações com |"
+                            : "Resposta correta"
+                        }
+                        value={q.answer}
+                        onChange={(e) =>
+                          setQuestions(
+                            questions.map((qq, idx) =>
+                              idx === i ? { ...qq, answer: e.target.value } : qq,
+                            ),
+                          )
+                        }
+                        className="col-span-2"
+                      />
+                    )}
                     <Input
                       type="number"
                       placeholder="Pontos"

@@ -1,10 +1,7 @@
-import { createFileRoute, Link } from "@tanstack/react-router";
-import { Settings2 } from "lucide-react";
-import { Button } from "@/components/ui/button";
+import { createFileRoute } from "@tanstack/react-router";
 import { PageHeader } from "@/components/common/PageHeader";
 import { GameCard } from "@/components/games/GameCard";
 import { useGamesQuery } from "@/features/games-hub-data";
-import { useCanManageOrg } from "@/hooks/use-active-role";
 import { Skeleton } from "@/components/ui/skeleton";
 
 export const Route = createFileRoute("/games")({
@@ -22,22 +19,12 @@ export const Route = createFileRoute("/games")({
 
 function GamesPage() {
   const { data: games = [], isLoading, isError } = useGamesQuery();
-  const canManage = useCanManageOrg();
 
   return (
     <div className="mx-auto max-w-7xl">
       <PageHeader
         title="Biblioteca de jogos"
         description="Todos os jogos prontos para usar com sua comunidade, sala ou time."
-        actions={
-          canManage ? (
-            <Button asChild className="rounded-xl">
-              <Link to="/create-game">
-                <Settings2 className="mr-2 size-4" /> Gerenciar jogos
-              </Link>
-            </Button>
-          ) : undefined
-        }
       />
       <div className="grid grid-cols-1 gap-5 md:grid-cols-2 xl:grid-cols-3">
         {isLoading &&

@@ -7,12 +7,15 @@ export const DEMO_ORGANIZATION_ID =
 
 export type GameStatus = "active" | "beta" | "maintenance" | "coming-soon" | "archived";
 
+export type GameKind = "buzzer" | "true_false" | "word_complete";
+
 export type Game = {
   id: string;
   organizationId: string | null;
   slug: string;
   name: string;
   description: string;
+  kind: GameKind;
   icon: LucideIcon;
   iconColor: string;
   status: GameStatus;
@@ -171,6 +174,7 @@ export type MatchState = {
   match: MatchSummary;
   settings: {
     mode: string;
+    gameKind: GameKind;
     maxRounds: number | null;
     timePerRoundSeconds: number | null;
     initialPoints: number;
@@ -211,6 +215,7 @@ type ApiGame = {
   name: string;
   description: string;
   status: string;
+  kind: string;
   icon_key: string | null;
   player_count: number;
   modes: ApiGameMode[];
@@ -285,6 +290,7 @@ type ApiMatchState = {
   match_data: ApiMatch;
   settings: {
     mode: string;
+    game_kind: string;
     max_rounds: number | null;
     time_per_round_seconds: number | null;
     initial_points: number;
@@ -455,96 +461,6 @@ export async function listGamesForAdmin(
   return games.map(mapGame);
 }
 
-export type GameInput = {
-  name: string;
-  description: string;
-  status: string;
-  slug?: string;
-  sortOrder?: number;
-  iconKey?: string | null;
-};
-
-export async function createGame(
-  input: GameInput,
-  organizationId = getActiveOrganizationId(),
-): Promise<string> {
-  const created = await request<{ id: string }>("/api/v1/games", {
-    method: "POST",
-    body: {
-      organization_id: organizationId,
-      slug: input.slug,
-      name: input.name,
-      description: input.description,
-      status: input.status,
-      icon_key: input.iconKey ?? null,
-      sort_order: input.sortOrder ?? 0,
-    },
-  });
-  return created.id;
-}
-
-export async function updateGame(gameId: string, input: GameInput): Promise<void> {
-  await requestNoContent(`/api/v1/games/${gameId}`, {
-    method: "PATCH",
-    body: {
-      name: input.name,
-      description: input.description,
-      status: input.status,
-      icon_key: input.iconKey ?? null,
-      sort_order: input.sortOrder ?? 0,
-    },
-  });
-}
-
-export async function archiveGame(gameId: string): Promise<void> {
-  await requestNoContent(`/api/v1/games/${gameId}`, { method: "DELETE" });
-}
-
-export type GameModeInput = {
-  code: string;
-  name: string;
-  description?: string | null;
-  defaultInitialPoints?: number | null;
-  defaultTimePerQuestionSeconds?: number | null;
-  isActive?: boolean;
-};
-
-export async function createGameMode(gameId: string, input: GameModeInput): Promise<string> {
-  const created = await request<{ id: string }>(`/api/v1/games/${gameId}/modes`, {
-    method: "POST",
-    body: {
-      game_id: gameId,
-      code: input.code,
-      name: input.name,
-      description: input.description ?? null,
-      default_initial_points: input.defaultInitialPoints ?? null,
-      default_time_per_question_seconds: input.defaultTimePerQuestionSeconds ?? null,
-    },
-  });
-  return created.id;
-}
-
-export async function updateGameMode(
-  gameId: string,
-  modeId: string,
-  input: GameModeInput,
-): Promise<void> {
-  await requestNoContent(`/api/v1/games/${gameId}/modes/${modeId}`, {
-    method: "PATCH",
-    body: {
-      name: input.name,
-      description: input.description ?? null,
-      default_initial_points: input.defaultInitialPoints ?? null,
-      default_time_per_question_seconds: input.defaultTimePerQuestionSeconds ?? null,
-      is_active: input.isActive ?? true,
-    },
-  });
-}
-
-export async function archiveGameMode(gameId: string, modeId: string): Promise<void> {
-  await requestNoContent(`/api/v1/games/${gameId}/modes/${modeId}`, { method: "DELETE" });
-}
-
 export async function listPlayers(
   organizationId = getActiveOrganizationId(),
   teams?: Map<string, string>,
@@ -627,8 +543,7 @@ export async function createMatch(input: {
       : input.mode === "eliminacao"
         ? "elimination"
         : "classic";
-  // Resolve to the exact mode the host picked. Never fall back to another mode
-  // silently — that would create a different game than the user asked for.
+
   const gameModeId =
     input.gameModeId ?? selectedGame?.modes.find((mode) => mode.code === modeCode)?.id;
   if (!gameModeId) {
@@ -778,13 +693,18 @@ export async function joinByPin(pin: string, participantName: string): Promise<J
   };
 }
 
-export async function sendPlayerAnswer(matchId: string, roundId: string, participantToken: string) {
-  return request<{ accepted: boolean }>(
+export async function sendPlayerAnswer(
+  matchId: string,
+  roundId: string,
+  participantToken: string,
+  answer?: string,
+) {
+  return request<{ accepted: boolean; correct: boolean | null }>(
     `/api/v1/matches/${matchId}/rounds/${roundId}/player-answer`,
     {
       auth: false,
       method: "POST",
-      body: { participant_token: participantToken },
+      body: { participant_token: participantToken, answer: answer ?? null },
     },
   );
 }
@@ -882,7 +802,6 @@ async function requestRaw(
       body: options.body === undefined ? undefined : JSON.stringify(options.body),
     });
   } catch {
-    // fetch só rejeita em falha de rede/CORS — sem resposta HTTP.
     throw new ApiError("Sem conexão. Verifique sua internet e tente novamente.", 0, null);
   }
   if (!response.ok) {
@@ -1154,6 +1073,7 @@ function mapGame(game: ApiGame): Game {
     slug: game.slug,
     name: game.name,
     description: game.description,
+    kind: normalizeGameKind(game.kind),
     icon: visual.icon,
     iconColor: visual.iconColor,
     status: normalizeGameStatus(game.status),
@@ -1223,6 +1143,7 @@ function mapMatchState(state: ApiMatchState): MatchState {
     match: mapMatch(state.match_data),
     settings: {
       mode: state.settings.mode,
+      gameKind: normalizeGameKind(state.settings.game_kind),
       maxRounds: state.settings.max_rounds,
       timePerRoundSeconds: state.settings.time_per_round_seconds,
       initialPoints: state.settings.initial_points,
@@ -1315,6 +1236,11 @@ function normalizeGameStatus(status: string): GameStatus {
   if (status === "archived") return "archived";
   if (status === "coming_soon" || status === "coming-soon") return "coming-soon";
   return "coming-soon";
+}
+
+function normalizeGameKind(kind: string): GameKind {
+  if (kind === "true_false" || kind === "word_complete") return kind;
+  return "buzzer";
 }
 
 function gameVisual(key: string): { icon: LucideIcon; iconColor: string } {

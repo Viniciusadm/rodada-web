@@ -57,8 +57,8 @@ function Dashboard() {
           </p>
           <div className="mt-6 flex flex-wrap gap-3">
             <Button asChild size="lg" className="rounded-xl">
-              <Link to="/create-game">
-                <PlusCircle className="mr-2 size-4" /> Criar novo jogo
+              <Link to="/matches/new">
+                <PlusCircle className="mr-2 size-4" /> Nova partida
               </Link>
             </Button>
             <Button asChild size="lg" variant="outline" className="rounded-xl">

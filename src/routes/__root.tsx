@@ -116,8 +116,6 @@ function PublicBootstrap({ children }: { children: React.ReactNode }) {
 
 function AuthedShell({ children }: { children: React.ReactNode }) {
   const orgId = useAuthStore((s) => s.activeOrganization?.id ?? null);
-  // Mantém listas (partidas, salas ao vivo, ranking, jogadores) atualizadas ao
-  // vivo mesmo quando o usuário não está numa tela de partida.
   useRealtimeInvalidation({
     channel: orgId ? `organization:${orgId}` : null,
     organizationId: orgId,
@@ -143,7 +141,6 @@ function HomeShell() {
       </AuthedShell>
     );
   }
-  // Anon (and idle/loading): render the public landing standalone.
   return (
     <div className="min-h-screen bg-background text-foreground">
       <Outlet />

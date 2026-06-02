@@ -30,11 +30,10 @@ function PlayPage() {
   const [name, setName] = useState("");
   const [token, setToken] = useState<string | null>(null);
   const [participantId, setParticipantId] = useState<string | null>(null);
-  // Rodada cujo tempo expirou no relógio local; espelha a regra do servidor,
-  // que já rejeita respostas após o tempo da pergunta acabar.
   const [expiredRoundId, setExpiredRoundId] = useState<string | null>(null);
-  // Evita que a checagem de token expirado dispare no curto intervalo entre
-  // entrar (setParticipantId) e o refetch trazer o participante na lista.
+  const [answeredRoundId, setAnsweredRoundId] = useState<string | null>(null);
+  const [lastResult, setLastResult] = useState<"correct" | "incorrect" | null>(null);
+  const [wordAnswer, setWordAnswer] = useState("");
   const justJoinedRef = useRef(false);
   const realtime = useRealtimeInvalidation({ channel: `match:${matchId}`, matchId });
   const query = useQuery({
@@ -75,14 +74,25 @@ function PlayPage() {
     onError: (error) => toast.error(errorToMessage(error)),
   });
   const answerMutation = useMutation({
-    mutationFn: async () => {
+    mutationFn: async (answer?: string) => {
       const round = query.data?.currentRound;
       if (!round || !token) throw new Error("Não há pergunta aberta para responder.");
-      return sendPlayerAnswer(matchId, round.id, token);
+      return sendPlayerAnswer(matchId, round.id, token, answer);
     },
     onSuccess: async (result) => {
+      const roundId = query.data?.currentRound?.id ?? null;
+      if (result.correct === null) {
+        // Buzzer: ninguém julga ainda, só registra quem apertou primeiro.
+        toast.success(result.accepted ? "Resposta enviada." : "Alguém respondeu antes.");
+      } else if (result.accepted) {
+        if (roundId) setAnsweredRoundId(roundId);
+        setLastResult(result.correct ? "correct" : "incorrect");
+        toast.success(result.correct ? "Acertou!" : "Resposta incorreta.");
+      } else {
+        if (roundId) setAnsweredRoundId(roundId);
+        toast.error("Você já respondeu esta pergunta.");
+      }
       await queryClient.invalidateQueries({ queryKey: ["match-state", matchId] });
-      toast.success(result.accepted ? "Resposta enviada." : "Alguém respondeu antes.");
     },
     onError: (error) => {
       // Token inválido/revogado (ex.: partida resetada): limpa a sessão local
@@ -134,6 +144,13 @@ function PlayPage() {
     }
   }, [participantId, query.isFetching, query.data, clearSession]);
 
+  // Limpa o veredito/entrada ao virar a rodada.
+  const currentRoundId = query.data?.currentRound?.id ?? null;
+  useEffect(() => {
+    setLastResult(null);
+    setWordAnswer("");
+  }, [currentRoundId]);
+
   if (query.isLoading) {
     return <div className="p-8 text-center text-muted-foreground">Carregando partida...</div>;
   }
@@ -142,8 +159,10 @@ function PlayPage() {
   const state = query.data;
   const match = state.match;
   const round = state.currentRound;
+  const gameKind = state.settings.gameKind;
   const participant = state.participants.find((item) => item.id === participantId);
   const selected = state.participants.find((item) => item.id === round?.selectedParticipantId);
+  const answeredThisRound = Boolean(round && answeredRoundId === round.id);
   // Espelha a regra do servidor: rodada aberta cujo tempo chegou a zero (pelo
   // snapshot do servidor ou pelo relógio local) não aceita mais "Eu sei".
   const roundExpired =
@@ -218,27 +237,100 @@ function PlayPage() {
                 <p className="text-lg font-semibold">{round.question.prompt}</p>
                 {round.answerRevealed && (
                   <p className="rounded-lg bg-muted/40 p-3 text-sm">
-                    {round.question.expectedAnswer}
+                    {gameKind === "true_false"
+                      ? round.question.expectedAnswer === "true"
+                        ? "Verdadeiro"
+                        : "Falso"
+                      : round.question.expectedAnswer}
                   </p>
                 )}
-                <Button
-                  className="h-24 w-24 rounded-full text-base"
-                  disabled={
-                    answerMutation.isPending || Boolean(round.selectedParticipantId) || roundExpired
-                  }
-                  onClick={() => answerMutation.mutate()}
-                >
-                  <Hand className="mr-1 size-5" /> Eu sei
-                </Button>
-                {roundExpired && !round.selectedParticipantId && (
-                  <p className="text-sm text-destructive">Tempo esgotado. Aguarde o anfitrião.</p>
-                )}
-                {selected && (
-                  <p className="text-sm text-muted-foreground">
-                    {selected.id === participantId
-                      ? "Sua resposta foi recebida."
-                      : `${selected.displayName} respondeu primeiro.`}
+
+                {gameKind === "buzzer" ? (
+                  <>
+                    <Button
+                      className="h-24 w-24 rounded-full text-base"
+                      disabled={
+                        answerMutation.isPending ||
+                        Boolean(round.selectedParticipantId) ||
+                        roundExpired
+                      }
+                      onClick={() => answerMutation.mutate(undefined)}
+                    >
+                      <Hand className="mr-1 size-5" /> Eu sei
+                    </Button>
+                    {roundExpired && !round.selectedParticipantId && (
+                      <p className="text-sm text-destructive">
+                        Tempo esgotado. Aguarde o anfitrião.
+                      </p>
+                    )}
+                    {selected && (
+                      <p className="text-sm text-muted-foreground">
+                        {selected.id === participantId
+                          ? "Sua resposta foi recebida."
+                          : `${selected.displayName} respondeu primeiro.`}
+                      </p>
+                    )}
+                  </>
+                ) : answeredThisRound ? (
+                  <p
+                    className={`rounded-lg p-3 text-sm font-medium ${
+                      lastResult === "correct"
+                        ? "bg-emerald-500/15 text-emerald-500"
+                        : lastResult === "incorrect"
+                          ? "bg-destructive/10 text-destructive"
+                          : "bg-muted/40 text-muted-foreground"
+                    }`}
+                  >
+                    {lastResult === "correct"
+                      ? "Você acertou! 🎉"
+                      : lastResult === "incorrect"
+                        ? "Resposta incorreta."
+                        : "Resposta registrada."}
                   </p>
+                ) : roundExpired ? (
+                  <p className="text-sm text-destructive">Tempo esgotado.</p>
+                ) : gameKind === "true_false" ? (
+                  <div className="flex justify-center gap-3">
+                    <Button
+                      className="rounded-xl"
+                      disabled={answerMutation.isPending}
+                      onClick={() => answerMutation.mutate("true")}
+                    >
+                      Verdadeiro
+                    </Button>
+                    <Button
+                      variant="outline"
+                      className="rounded-xl"
+                      disabled={answerMutation.isPending}
+                      onClick={() => answerMutation.mutate("false")}
+                    >
+                      Falso
+                    </Button>
+                  </div>
+                ) : (
+                  <div className="space-y-2">
+                    <Input
+                      value={wordAnswer}
+                      onChange={(event) => setWordAnswer(event.target.value)}
+                      onKeyDown={(event) => {
+                        if (
+                          event.key === "Enter" &&
+                          wordAnswer.trim() &&
+                          !answerMutation.isPending
+                        ) {
+                          answerMutation.mutate(wordAnswer);
+                        }
+                      }}
+                      placeholder="Sua resposta"
+                    />
+                    <Button
+                      className="w-full rounded-lg"
+                      disabled={!wordAnswer.trim() || answerMutation.isPending}
+                      onClick={() => answerMutation.mutate(wordAnswer)}
+                    >
+                      Responder
+                    </Button>
+                  </div>
                 )}
               </div>
             ) : (

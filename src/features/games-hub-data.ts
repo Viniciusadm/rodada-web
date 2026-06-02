@@ -2,11 +2,7 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 
 import {
   addMember,
-  archiveGame,
-  archiveGameMode,
   archiveTeam,
-  createGame,
-  createGameMode,
   createPlayer,
   createTeam,
   getNotificationPreferences,
@@ -26,16 +22,12 @@ import {
   removeMember,
   searchOrganization,
   setNotificationPreference,
-  updateGame,
-  updateGameMode,
   updateMemberRole,
   updateOrganization,
   updatePlayer,
   updateTeam,
   type AppNotification,
   type Game,
-  type GameInput,
-  type GameModeInput,
   type LiveRoom,
   type MatchRoundDetail,
   type MatchSummary,
@@ -68,74 +60,6 @@ export function useAdminGamesQuery() {
     queryFn: () => listGamesForAdmin(orgId!),
     enabled: !!orgId,
     staleTime: 30_000,
-  });
-}
-
-function useInvalidateGames() {
-  const queryClient = useQueryClient();
-  const orgId = useActiveOrgId();
-  return () =>
-    Promise.all([
-      queryClient.invalidateQueries({ queryKey: ["games"] }),
-      queryClient.invalidateQueries({ queryKey: ["admin-games", orgId] }),
-    ]);
-}
-
-export function useCreateGame() {
-  const invalidate = useInvalidateGames();
-  return useMutation({
-    mutationFn: (input: GameInput) => createGame(input),
-    onSuccess: invalidate,
-  });
-}
-
-export function useUpdateGame() {
-  const invalidate = useInvalidateGames();
-  return useMutation({
-    mutationFn: (input: { gameId: string } & GameInput) => {
-      const { gameId, ...rest } = input;
-      return updateGame(gameId, rest);
-    },
-    onSuccess: invalidate,
-  });
-}
-
-export function useArchiveGame() {
-  const invalidate = useInvalidateGames();
-  return useMutation({
-    mutationFn: (gameId: string) => archiveGame(gameId),
-    onSuccess: invalidate,
-  });
-}
-
-export function useCreateGameMode() {
-  const invalidate = useInvalidateGames();
-  return useMutation({
-    mutationFn: (input: { gameId: string } & GameModeInput) => {
-      const { gameId, ...rest } = input;
-      return createGameMode(gameId, rest);
-    },
-    onSuccess: invalidate,
-  });
-}
-
-export function useUpdateGameMode() {
-  const invalidate = useInvalidateGames();
-  return useMutation({
-    mutationFn: (input: { gameId: string; modeId: string } & GameModeInput) => {
-      const { gameId, modeId, ...rest } = input;
-      return updateGameMode(gameId, modeId, rest);
-    },
-    onSuccess: invalidate,
-  });
-}
-
-export function useArchiveGameMode() {
-  const invalidate = useInvalidateGames();
-  return useMutation({
-    mutationFn: (input: { gameId: string; modeId: string }) =>
-      archiveGameMode(input.gameId, input.modeId),
-    onSuccess: invalidate,
   });
 }
 

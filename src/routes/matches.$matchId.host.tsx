@@ -130,11 +130,12 @@ function HostPanel() {
   const state = query.data;
   const match = state.match;
   const round = state.currentRound;
+  const gameKind = state.settings.gameKind;
   const selected = state.participants.find((player) => player.id === round?.selectedParticipantId);
   const remainingQuestions = state.questions.filter((question) => !question.used).length;
   const canStart = match.status === "aguardando" && state.participants.length > 0;
   const origin = typeof window === "undefined" ? "" : window.location.origin;
-  // Link público: visitante digita o PIN (ou abre já preenchido) e entra na sala.
+
   const joinUrl = state.room?.pin
     ? `${origin}/entrar?pin=${state.room.pin}`
     : `${origin}/play/${matchId}`;
@@ -222,23 +223,34 @@ function HostPanel() {
           >
             <CheckCircle2 className="mr-1 size-4" /> Revelar resposta
           </Button>
-          <div className="grid grid-cols-2 gap-2">
+          {gameKind === "buzzer" ? (
+            <div className="grid grid-cols-2 gap-2">
+              <Button
+                className="rounded-lg"
+                disabled={answerMutation.isPending || !round}
+                onClick={() => answerMutation.mutate({ result: "correct" })}
+              >
+                Correta
+              </Button>
+              <Button
+                className="rounded-lg"
+                variant="outline"
+                disabled={answerMutation.isPending || !round}
+                onClick={() => answerMutation.mutate({ result: "incorrect" })}
+              >
+                Incorreta
+              </Button>
+            </div>
+          ) : (
             <Button
-              className="rounded-lg"
-              disabled={answerMutation.isPending || !round}
-              onClick={() => answerMutation.mutate({ result: "correct" })}
-            >
-              Correta
-            </Button>
-            <Button
-              className="rounded-lg"
+              className="w-full rounded-lg"
               variant="outline"
               disabled={answerMutation.isPending || !round}
-              onClick={() => answerMutation.mutate({ result: "incorrect" })}
+              onClick={() => answerMutation.mutate({ result: "skipped" })}
             >
-              Incorreta
+              Encerrar rodada
             </Button>
-          </div>
+          )}
           <ConfirmDialog
             trigger={
               <Button
@@ -311,15 +323,25 @@ function HostPanel() {
                 <p className="text-sm text-muted-foreground">
                   Resposta:{" "}
                   <span className="font-medium text-foreground">
-                    {round.question.expectedAnswer}
+                    {gameKind === "true_false"
+                      ? round.question.expectedAnswer === "true"
+                        ? "Verdadeiro"
+                        : "Falso"
+                      : round.question.expectedAnswer}
                   </span>
                 </p>
-                <p className="text-sm text-muted-foreground">
-                  Selecionado:{" "}
-                  <span className="font-medium text-foreground">
-                    {selected?.displayName ?? "aguardando resposta"}
-                  </span>
-                </p>
+                {gameKind === "buzzer" ? (
+                  <p className="text-sm text-muted-foreground">
+                    Selecionado:{" "}
+                    <span className="font-medium text-foreground">
+                      {selected?.displayName ?? "aguardando resposta"}
+                    </span>
+                  </p>
+                ) : (
+                  <p className="text-sm text-muted-foreground">
+                    Os jogadores respondem pelo celular; o placar atualiza automaticamente.
+                  </p>
+                )}
               </div>
             ) : (
               <p className="mt-3 text-sm text-muted-foreground">

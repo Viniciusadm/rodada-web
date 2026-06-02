@@ -60,8 +60,6 @@ function writeToken(token: string | null) {
 }
 
 function sessionToState(session: AuthSession) {
-  // Prefer the org the user last switched to (persisted locally), as long as it
-  // is still one they belong to; otherwise fall back to the session default.
   const persisted = readActiveOrg();
   const active =
     session.organizations.find((org) => org.id === persisted) ??
@@ -173,7 +171,6 @@ export const useAuthStore = create<AuthState>((set, get) => ({
   },
 }));
 
-// When any authenticated request comes back 401, drop the session.
 onUnauthorized(() => {
   const state = useAuthStore.getState();
   if (state.status !== "anon") {
