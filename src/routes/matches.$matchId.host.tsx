@@ -99,10 +99,28 @@ function HostPanel() {
   if (query.isLoading) {
     return (
       <div className="mx-auto max-w-7xl space-y-6">
-        <Skeleton className="h-9 w-72" />
+        <div className="space-y-2">
+          <Skeleton className="h-8 w-72" />
+          <Skeleton className="h-4 w-56" />
+        </div>
         <div className="grid grid-cols-1 gap-6 lg:grid-cols-[360px_1fr]">
-          <Skeleton className="h-[440px] rounded-2xl" />
-          <Skeleton className="h-[440px] rounded-2xl" />
+          <section className="space-y-3 rounded-2xl border border-border bg-card p-5">
+            <Skeleton className="h-4 w-24" />
+            <Skeleton className="h-11 w-full rounded-lg" />
+            <Skeleton className="h-11 w-full rounded-lg" />
+            <Skeleton className="h-10 w-full rounded-lg" />
+            <div className="grid grid-cols-2 gap-2">
+              <Skeleton className="h-10 rounded-lg" />
+              <Skeleton className="h-10 rounded-lg" />
+            </div>
+          </section>
+          <section className="space-y-5 rounded-2xl border border-border bg-card p-6">
+            <Skeleton className="h-28 w-full rounded-xl" />
+            <Skeleton className="h-5 w-20" />
+            {Array.from({ length: 3 }).map((_, index) => (
+              <Skeleton key={index} className="h-12 w-full rounded-xl" />
+            ))}
+          </section>
         </div>
       </div>
     );
@@ -113,6 +131,7 @@ function HostPanel() {
   const match = state.match;
   const round = state.currentRound;
   const selected = state.participants.find((player) => player.id === round?.selectedParticipantId);
+  const remainingQuestions = state.questions.filter((question) => !question.used).length;
   const canStart = match.status === "aguardando" && state.participants.length > 0;
   const origin = typeof window === "undefined" ? "" : window.location.origin;
   // Link público: visitante digita o PIN (ou abre já preenchido) e entra na sala.
@@ -141,9 +160,7 @@ function HostPanel() {
           <div className="flex flex-wrap items-center gap-3 text-sm text-muted-foreground">
             <span>{state.participants.length} participantes</span>
             <span>•</span>
-            <span>
-              {state.questions.filter((question) => !question.used).length} perguntas restantes
-            </span>
+            <span>{remainingQuestions} perguntas restantes</span>
             {state.room && (
               <>
                 <span>•</span>
@@ -306,7 +323,13 @@ function HostPanel() {
               </div>
             ) : (
               <p className="mt-3 text-sm text-muted-foreground">
-                Nenhuma pergunta aberta no momento.
+                {match.status === "aguardando"
+                  ? "Inicie a partida para sortear a primeira pergunta."
+                  : match.status === "encerrada"
+                    ? "Partida encerrada."
+                    : remainingQuestions === 0
+                      ? "Todas as perguntas foram usadas. Encerre a partida ou adicione mais perguntas."
+                      : "Sorteie a próxima pergunta para continuar."}
               </p>
             )}
           </div>
@@ -357,11 +380,11 @@ function ParticipantRow({
         (participant.eliminated ? " opacity-50" : "")
       }
     >
-      <div>
+      <div className="min-w-0">
         <p className="flex items-center gap-2 text-sm font-medium">
-          {participant.displayName}
+          <span className="truncate">{participant.displayName}</span>
           {participant.eliminated && (
-            <span className="rounded bg-destructive/15 px-1.5 py-0.5 text-[10px] font-semibold uppercase text-destructive">
+            <span className="shrink-0 rounded bg-destructive/15 px-1.5 py-0.5 text-[10px] font-semibold uppercase text-destructive">
               Eliminado
             </span>
           )}
@@ -375,7 +398,7 @@ function ParticipantRow({
           )}
         </p>
       </div>
-      <div className="flex items-center gap-2">
+      <div className="flex shrink-0 items-center gap-2">
         <Button size="icon" variant="ghost" disabled={disabled} onClick={() => onAdjust(-50)}>
           <XCircle className="size-4" />
         </Button>

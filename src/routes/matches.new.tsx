@@ -1,6 +1,6 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { ArrowLeft, ArrowRight, Check, Plus, Trash2 } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
@@ -57,6 +57,32 @@ function NewMatchPage() {
   const [timePerQuestion, setTimePerQuestion] = useState<string>("20");
   const [initialPoints, setInitialPoints] = useState<string>("500");
   const [remoteEnabled, setRemoteEnabled] = useState(true);
+
+  // Only offer modes the selected game actually has, so the host can never pick
+  // a mode that would silently fall back to another one at creation time.
+  const selectedGame = useMemo(
+    () => games.find((g) => g.id === gameId) ?? games[0],
+    [games, gameId],
+  );
+  const availableModes = useMemo<GameMode[]>(() => {
+    const byCode: Record<string, GameMode> = {
+      classic: "classico",
+      initial_points: "pontos-iniciais",
+      elimination: "eliminacao",
+    };
+    const modes = (selectedGame?.modes ?? [])
+      .filter((m) => m.isActive)
+      .map((m) => byCode[m.code])
+      .filter((m): m is GameMode => Boolean(m));
+    return modes.length > 0 ? Array.from(new Set(modes)) : ["classico"];
+  }, [selectedGame]);
+
+  // Keep the selected mode valid when the game (and thus its modes) changes.
+  useEffect(() => {
+    if (!availableModes.includes(mode)) {
+      setMode(availableModes[0]);
+    }
+  }, [availableModes, mode]);
 
   const [questions, setQuestions] = useState<DraftQ[]>([
     { text: "Quem foi o profeta levado ao céu em um carro de fogo?", answer: "Elias", points: 100 },
@@ -150,9 +176,15 @@ function NewMatchPage() {
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="classico">Clássico — acúmulo de pontos</SelectItem>
-                    <SelectItem value="pontos-iniciais">Pontos iniciais</SelectItem>
-                    <SelectItem value="eliminacao">Eliminação por erro</SelectItem>
+                    {availableModes.includes("classico") && (
+                      <SelectItem value="classico">Clássico — acúmulo de pontos</SelectItem>
+                    )}
+                    {availableModes.includes("pontos-iniciais") && (
+                      <SelectItem value="pontos-iniciais">Pontos iniciais</SelectItem>
+                    )}
+                    {availableModes.includes("eliminacao") && (
+                      <SelectItem value="eliminacao">Eliminação por erro</SelectItem>
+                    )}
                   </SelectContent>
                 </Select>
               </div>

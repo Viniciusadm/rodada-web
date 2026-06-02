@@ -34,10 +34,6 @@ const PREFERENCE_LABELS: Record<string, { title: string; description: string }> 
     title: "Atualizações de ranking",
     description: "Receba avisos quando o ranking mudar.",
   },
-  weekly_summary: {
-    title: "Resumo semanal",
-    description: "Um panorama das atividades da semana.",
-  },
 };
 
 function SettingsPage() {
@@ -95,7 +91,7 @@ function SettingsPage() {
 
         {isLoading && (
           <div className="space-y-3">
-            {Array.from({ length: 3 }).map((_, index) => (
+            {Array.from({ length: 2 }).map((_, index) => (
               <Skeleton key={index} className="h-12 rounded-lg" />
             ))}
           </div>

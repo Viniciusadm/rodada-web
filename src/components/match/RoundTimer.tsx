@@ -7,9 +7,13 @@ import { cn } from "@/lib/utils";
 export function RoundTimer({
   initialSeconds,
   className,
+  onExpire,
 }: {
   initialSeconds: number;
   className?: string;
+  /// Fired when the local countdown reaches zero, so the parent can mirror the
+  /// server's time enforcement (which already rejects late answers).
+  onExpire?: () => void;
 }) {
   const [seconds, setSeconds] = useState(initialSeconds);
   useEffect(() => {
@@ -20,6 +24,9 @@ export function RoundTimer({
     return () => clearInterval(interval);
   }, [initialSeconds]);
   const expired = seconds <= 0;
+  useEffect(() => {
+    if (expired) onExpire?.();
+  }, [expired, onExpire]);
   return (
     <span
       className={cn(

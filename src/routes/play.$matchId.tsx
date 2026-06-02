@@ -30,6 +30,9 @@ function PlayPage() {
   const [name, setName] = useState("");
   const [token, setToken] = useState<string | null>(null);
   const [participantId, setParticipantId] = useState<string | null>(null);
+  // Rodada cujo tempo expirou no relógio local; espelha a regra do servidor,
+  // que já rejeita respostas após o tempo da pergunta acabar.
+  const [expiredRoundId, setExpiredRoundId] = useState<string | null>(null);
   // Evita que a checagem de token expirado dispare no curto intervalo entre
   // entrar (setParticipantId) e o refetch trazer o participante na lista.
   const justJoinedRef = useRef(false);
@@ -88,6 +91,11 @@ function PlayPage() {
         clearSession("Sua sessão expirou. Entre novamente.");
         return;
       }
+      // O servidor recusa respostas após o tempo da pergunta expirar (409).
+      if (error instanceof ApiError && error.status === 409 && /expired/i.test(error.message)) {
+        toast.error("Tempo esgotado para esta pergunta.");
+        return;
+      }
       toast.error(errorToMessage(error));
     },
   });
@@ -136,6 +144,10 @@ function PlayPage() {
   const round = state.currentRound;
   const participant = state.participants.find((item) => item.id === participantId);
   const selected = state.participants.find((item) => item.id === round?.selectedParticipantId);
+  // Espelha a regra do servidor: rodada aberta cujo tempo chegou a zero (pelo
+  // snapshot do servidor ou pelo relógio local) não aceita mais "Eu sei".
+  const roundExpired =
+    round?.status === "open" && (round.timeRemainingSeconds === 0 || expiredRoundId === round.id);
 
   return (
     <div className="flex min-h-screen flex-col items-center justify-center bg-gradient-to-br from-background to-primary/10 px-6 text-center">
@@ -200,6 +212,7 @@ function PlayPage() {
                     key={round.id}
                     initialSeconds={round.timeRemainingSeconds}
                     className="text-base"
+                    onExpire={() => setExpiredRoundId(round.id)}
                   />
                 )}
                 <p className="text-lg font-semibold">{round.question.prompt}</p>
@@ -210,11 +223,16 @@ function PlayPage() {
                 )}
                 <Button
                   className="h-24 w-24 rounded-full text-base"
-                  disabled={answerMutation.isPending || Boolean(round.selectedParticipantId)}
+                  disabled={
+                    answerMutation.isPending || Boolean(round.selectedParticipantId) || roundExpired
+                  }
                   onClick={() => answerMutation.mutate()}
                 >
                   <Hand className="mr-1 size-5" /> Eu sei
                 </Button>
+                {roundExpired && !round.selectedParticipantId && (
+                  <p className="text-sm text-destructive">Tempo esgotado. Aguarde o anfitrião.</p>
+                )}
                 {selected && (
                   <p className="text-sm text-muted-foreground">
                     {selected.id === participantId

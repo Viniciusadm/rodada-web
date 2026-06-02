@@ -627,12 +627,14 @@ export async function createMatch(input: {
       : input.mode === "eliminacao"
         ? "elimination"
         : "classic";
+  // Resolve to the exact mode the host picked. Never fall back to another mode
+  // silently — that would create a different game than the user asked for.
   const gameModeId =
-    input.gameModeId ??
-    selectedGame?.modes.find((mode) => mode.code === modeCode)?.id ??
-    selectedGame?.modes[0]?.id;
+    input.gameModeId ?? selectedGame?.modes.find((mode) => mode.code === modeCode)?.id;
   if (!gameModeId) {
-    throw new Error("Nenhum modo disponível para o jogo selecionado.");
+    throw new Error(
+      `O jogo "${selectedGame?.name ?? "selecionado"}" não oferece o modo escolhido. Escolha outro modo.`,
+    );
   }
   const created = await request<ApiMatch>("/api/v1/matches", {
     method: "POST",
