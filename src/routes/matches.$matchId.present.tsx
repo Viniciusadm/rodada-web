@@ -1,6 +1,6 @@
 import { createFileRoute, notFound } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
-import { Gamepad2, Trophy } from "lucide-react";
+import { Gamepad2, Loader2, Trophy } from "lucide-react";
 import { MatchStatusBadge } from "@/components/match/MatchStatusBadge";
 import { RoundTimer } from "@/components/match/RoundTimer";
 import { useRealtimeInvalidation } from "@/hooks/use-realtime-invalidation";
@@ -24,7 +24,11 @@ function PresentPage() {
   });
 
   if (query.isLoading) {
-    return <div className="p-8 text-center text-muted-foreground">Carregando apresentação...</div>;
+    return (
+      <div className="flex min-h-screen items-center justify-center bg-gradient-to-br from-background via-background to-primary/10">
+        <Loader2 className="size-8 animate-spin text-muted-foreground" />
+      </div>
+    );
   }
   if (query.isError || !query.data) throw notFound();
 
@@ -38,7 +42,7 @@ function PresentPage() {
 
   return (
     <div className="relative min-h-screen overflow-hidden bg-gradient-to-br from-background via-background to-primary/10">
-      <div className="relative mx-auto flex min-h-screen max-w-7xl flex-col p-8">
+      <div className="relative mx-auto flex min-h-screen max-w-7xl flex-col p-4 sm:p-8">
         <header className="mb-8 flex items-center justify-between">
           <div className="flex items-center gap-3">
             <div className="flex size-12 items-center justify-center rounded-2xl bg-gradient-to-br from-primary to-primary-glow shadow-xl shadow-primary/30">
@@ -70,9 +74,11 @@ function PresentPage() {
                     />
                   </div>
                 )}
-                <h2 className="text-5xl font-semibold leading-tight">{round.question.prompt}</h2>
+                <h2 className="text-3xl font-semibold leading-tight sm:text-4xl lg:text-5xl">
+                  {round.question.prompt}
+                </h2>
                 {round.answerRevealed && (
-                  <p className="mt-8 text-3xl font-medium text-primary">
+                  <p className="mt-8 text-2xl font-medium text-primary sm:text-3xl">
                     {round.question.expectedAnswer}
                   </p>
                 )}
@@ -85,7 +91,7 @@ function PresentPage() {
             ) : (
               <>
                 <Trophy className="mx-auto mb-6 size-16 text-primary" />
-                <h2 className="text-5xl font-semibold">
+                <h2 className="text-3xl font-semibold sm:text-4xl lg:text-5xl">
                   {match.status === "encerrada"
                     ? "Partida encerrada"
                     : match.status === "em-andamento"

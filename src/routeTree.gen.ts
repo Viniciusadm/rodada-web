@@ -17,6 +17,7 @@ import { Route as PlayersRouteImport } from './routes/players'
 import { Route as LoginRouteImport } from './routes/login'
 import { Route as HistoryRouteImport } from './routes/history'
 import { Route as GamesRouteImport } from './routes/games'
+import { Route as EntrarRouteImport } from './routes/entrar'
 import { Route as CreateGameRouteImport } from './routes/create-game'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as MatchesIndexRouteImport } from './routes/matches.index'
@@ -66,6 +67,11 @@ const GamesRoute = GamesRouteImport.update({
   path: '/games',
   getParentRoute: () => rootRouteImport,
 } as any)
+const EntrarRoute = EntrarRouteImport.update({
+  id: '/entrar',
+  path: '/entrar',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const CreateGameRoute = CreateGameRouteImport.update({
   id: '/create-game',
   path: '/create-game',
@@ -110,6 +116,7 @@ const MatchesMatchIdHostRoute = MatchesMatchIdHostRouteImport.update({
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/create-game': typeof CreateGameRoute
+  '/entrar': typeof EntrarRoute
   '/games': typeof GamesRoute
   '/history': typeof HistoryRoute
   '/login': typeof LoginRoute
@@ -128,6 +135,7 @@ export interface FileRoutesByFullPath {
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/create-game': typeof CreateGameRoute
+  '/entrar': typeof EntrarRoute
   '/games': typeof GamesRoute
   '/history': typeof HistoryRoute
   '/login': typeof LoginRoute
@@ -147,6 +155,7 @@ export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
   '/create-game': typeof CreateGameRoute
+  '/entrar': typeof EntrarRoute
   '/games': typeof GamesRoute
   '/history': typeof HistoryRoute
   '/login': typeof LoginRoute
@@ -167,6 +176,7 @@ export interface FileRouteTypes {
   fullPaths:
     | '/'
     | '/create-game'
+    | '/entrar'
     | '/games'
     | '/history'
     | '/login'
@@ -185,6 +195,7 @@ export interface FileRouteTypes {
   to:
     | '/'
     | '/create-game'
+    | '/entrar'
     | '/games'
     | '/history'
     | '/login'
@@ -203,6 +214,7 @@ export interface FileRouteTypes {
     | '__root__'
     | '/'
     | '/create-game'
+    | '/entrar'
     | '/games'
     | '/history'
     | '/login'
@@ -222,6 +234,7 @@ export interface FileRouteTypes {
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   CreateGameRoute: typeof CreateGameRoute
+  EntrarRoute: typeof EntrarRoute
   GamesRoute: typeof GamesRoute
   HistoryRoute: typeof HistoryRoute
   LoginRoute: typeof LoginRoute
@@ -296,6 +309,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof GamesRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/entrar': {
+      id: '/entrar'
+      path: '/entrar'
+      fullPath: '/entrar'
+      preLoaderRoute: typeof EntrarRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/create-game': {
       id: '/create-game'
       path: '/create-game'
@@ -358,6 +378,7 @@ declare module '@tanstack/react-router' {
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   CreateGameRoute: CreateGameRoute,
+  EntrarRoute: EntrarRoute,
   GamesRoute: GamesRoute,
   HistoryRoute: HistoryRoute,
   LoginRoute: LoginRoute,

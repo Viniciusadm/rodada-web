@@ -157,7 +157,10 @@ function RootComponent() {
   const isAuthRoute = pathname === "/login" || pathname === "/register";
   const isHome = pathname === "/";
   const isPublicStandalone =
-    isAuthRoute || pathname.includes("/present") || pathname.startsWith("/play/");
+    isAuthRoute ||
+    pathname.includes("/present") ||
+    pathname.startsWith("/play/") ||
+    pathname === "/entrar";
 
   let content: React.ReactNode;
   if (isPublicStandalone) {

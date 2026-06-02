@@ -16,6 +16,8 @@ import { useState } from "react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { Skeleton } from "@/components/ui/skeleton";
+import { ConfirmDialog } from "@/components/common/ConfirmDialog";
 import { MatchStatusBadge } from "@/components/match/MatchStatusBadge";
 import { RoundTimer } from "@/components/match/RoundTimer";
 import { useRealtimeInvalidation } from "@/hooks/use-realtime-invalidation";
@@ -24,6 +26,7 @@ import {
   adjustScore,
   drawMatchQuestion,
   endMatch,
+  errorToMessage,
   getMatchState,
   registerAnswer,
   resetMatch,
@@ -66,7 +69,7 @@ function HostPanel() {
       return revealAnswer(matchId, roundId);
     },
     onSuccess: refresh,
-    onError: (error) => toast.error(error.message),
+    onError: (error) => toast.error(errorToMessage(error)),
   });
   const participantMutation = useMutation({
     mutationFn: (name: string) => addParticipant(matchId, name),
@@ -75,13 +78,13 @@ function HostPanel() {
       await refresh();
       toast.success("Participante adicionado.");
     },
-    onError: (error) => toast.error(error.message),
+    onError: (error) => toast.error(errorToMessage(error)),
   });
   const scoreMutation = useMutation({
     mutationFn: (input: { participantId: string; delta: number }) =>
       adjustScore(matchId, input.participantId, input.delta, "Ajuste pelo painel do anfitrião"),
     onSuccess: refresh,
-    onError: (error) => toast.error(error.message),
+    onError: (error) => toast.error(errorToMessage(error)),
   });
   const answerMutation = useMutation({
     mutationFn: (input: { result: "correct" | "incorrect" | "skipped" }) => {
@@ -90,12 +93,18 @@ function HostPanel() {
       return registerAnswer(matchId, round.id, round.selectedParticipantId, input.result);
     },
     onSuccess: refresh,
-    onError: (error) => toast.error(error.message),
+    onError: (error) => toast.error(errorToMessage(error)),
   });
 
   if (query.isLoading) {
     return (
-      <div className="mx-auto max-w-7xl text-sm text-muted-foreground">Carregando partida...</div>
+      <div className="mx-auto max-w-7xl space-y-6">
+        <Skeleton className="h-9 w-72" />
+        <div className="grid grid-cols-1 gap-6 lg:grid-cols-[360px_1fr]">
+          <Skeleton className="h-[440px] rounded-2xl" />
+          <Skeleton className="h-[440px] rounded-2xl" />
+        </div>
+      </div>
     );
   }
   if (query.isError || !query.data) throw notFound();
@@ -105,10 +114,11 @@ function HostPanel() {
   const round = state.currentRound;
   const selected = state.participants.find((player) => player.id === round?.selectedParticipantId);
   const canStart = match.status === "aguardando" && state.participants.length > 0;
-  const joinUrl =
-    typeof window === "undefined"
-      ? `/play/${matchId}`
-      : `${window.location.origin}/play/${matchId}`;
+  const origin = typeof window === "undefined" ? "" : window.location.origin;
+  // Link público: visitante digita o PIN (ou abre já preenchido) e entra na sala.
+  const joinUrl = state.room?.pin
+    ? `${origin}/entrar?pin=${state.room.pin}`
+    : `${origin}/play/${matchId}`;
 
   function run(kind: "start" | "draw" | "end" | "reset" | "reveal", message: string) {
     action.mutate(kind, { onSuccess: () => toast.success(message) });
@@ -145,8 +155,8 @@ function HostPanel() {
               variant="ghost"
               className="size-6"
               onClick={() => {
-                navigator.clipboard?.writeText(state.room?.pin ?? joinUrl);
-                toast.success("Entrada copiada.");
+                navigator.clipboard?.writeText(joinUrl);
+                toast.success("Link de entrada copiado.");
               }}
             >
               <Copy className="size-3" />
@@ -212,22 +222,34 @@ function HostPanel() {
               Incorreta
             </Button>
           </div>
-          <Button
-            className="w-full rounded-lg text-destructive hover:text-destructive"
-            variant="outline"
-            disabled={action.isPending || match.status === "encerrada"}
-            onClick={() => run("end", "Partida encerrada.")}
-          >
-            <StopCircle className="mr-1 size-4" /> Encerrar
-          </Button>
-          <Button
-            className="w-full rounded-lg"
-            variant="ghost"
-            disabled={action.isPending}
-            onClick={() => run("reset", "Partida resetada.")}
-          >
-            <RotateCcw className="mr-1 size-4" /> Resetar
-          </Button>
+          <ConfirmDialog
+            trigger={
+              <Button
+                className="w-full rounded-lg text-destructive hover:text-destructive"
+                variant="outline"
+                disabled={action.isPending || match.status === "encerrada"}
+              >
+                <StopCircle className="mr-1 size-4" /> Encerrar
+              </Button>
+            }
+            title="Encerrar partida?"
+            description="A partida será finalizada e o vencedor definido pelo placar atual. Esta ação não pode ser desfeita."
+            confirmLabel="Encerrar"
+            destructive
+            onConfirm={() => run("end", "Partida encerrada.")}
+          />
+          <ConfirmDialog
+            trigger={
+              <Button className="w-full rounded-lg" variant="ghost" disabled={action.isPending}>
+                <RotateCcw className="mr-1 size-4" /> Resetar
+              </Button>
+            }
+            title="Resetar partida?"
+            description="Rodadas, respostas e pontuações serão zeradas e a partida volta ao estado inicial. Esta ação não pode ser desfeita."
+            confirmLabel="Resetar"
+            destructive
+            onConfirm={() => run("reset", "Partida resetada.")}
+          />
 
           <div className="border-t border-border pt-4">
             <p className="mb-2 text-sm font-semibold">Adicionar participante</p>
@@ -291,7 +313,7 @@ function HostPanel() {
 
           <div>
             <h2 className="mb-3 text-base font-semibold">Placar</h2>
-            <div className="space-y-2">
+            <div className="max-h-[60vh] space-y-2 overflow-y-auto pr-1">
               {state.participants.map((participant) => (
                 <ParticipantRow
                   key={participant.id}

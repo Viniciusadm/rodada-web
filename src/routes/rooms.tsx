@@ -1,7 +1,9 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { Copy, Users } from "lucide-react";
+import { Copy, Radio, Users } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
+import { Skeleton } from "@/components/ui/skeleton";
+import { EmptyState } from "@/components/common/EmptyState";
 import { PageHeader } from "@/components/common/PageHeader";
 import { useLiveRoomsQuery } from "@/features/games-hub-data";
 
@@ -29,22 +31,31 @@ function RoomsPage() {
           </Button>
         }
       />
+      {isLoading && (
+        <div className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-3">
+          {Array.from({ length: 3 }).map((_, index) => (
+            <Skeleton key={index} className="h-[280px] rounded-2xl" />
+          ))}
+        </div>
+      )}
+      {isError && (
+        <div className="rounded-2xl border border-border bg-card p-6 text-sm text-muted-foreground">
+          Não foi possível carregar salas ao vivo.
+        </div>
+      )}
+      {!isLoading && !isError && rooms.length === 0 && (
+        <EmptyState
+          icon={Radio}
+          title="Nenhuma sala ao vivo no momento"
+          description="Quando uma partida começar, ela aparece aqui com o PIN para os jogadores entrarem."
+          action={
+            <Button asChild className="rounded-lg">
+              <Link to="/matches/new">Criar sala</Link>
+            </Button>
+          }
+        />
+      )}
       <div className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-3">
-        {isLoading && (
-          <div className="col-span-full rounded-2xl border border-border bg-card p-6 text-sm text-muted-foreground">
-            Carregando salas ao vivo...
-          </div>
-        )}
-        {isError && (
-          <div className="col-span-full rounded-2xl border border-border bg-card p-6 text-sm text-muted-foreground">
-            Não foi possível carregar salas ao vivo.
-          </div>
-        )}
-        {!isLoading && !isError && rooms.length === 0 && (
-          <div className="col-span-full rounded-2xl border border-dashed border-border bg-card/50 p-8 text-center text-sm text-muted-foreground">
-            Nenhuma sala ao vivo no momento.
-          </div>
-        )}
         {!isLoading &&
           !isError &&
           rooms.map((r) => (
@@ -75,9 +86,14 @@ function RoomsPage() {
                 <Button
                   size="icon"
                   variant="ghost"
+                  title="Copiar link de entrada"
                   onClick={() => {
-                    navigator.clipboard?.writeText(r.pin);
-                    toast.success("PIN copiado");
+                    const link =
+                      typeof window === "undefined"
+                        ? `/entrar?pin=${r.pin}`
+                        : `${window.location.origin}/entrar?pin=${r.pin}`;
+                    navigator.clipboard?.writeText(link);
+                    toast.success("Link de entrada copiado");
                   }}
                 >
                   <Copy className="size-4" />

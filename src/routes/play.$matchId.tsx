@@ -1,13 +1,19 @@
 import { createFileRoute, notFound } from "@tanstack/react-router";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { Gamepad2, Hand } from "lucide-react";
-import { useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { RoundTimer } from "@/components/match/RoundTimer";
 import { useRealtimeInvalidation } from "@/hooks/use-realtime-invalidation";
-import { getMatchState, joinMatch, sendPlayerAnswer } from "@/lib/api-client";
+import {
+  ApiError,
+  errorToMessage,
+  getMatchState,
+  joinMatch,
+  sendPlayerAnswer,
+} from "@/lib/api-client";
 
 export const Route = createFileRoute("/play/$matchId")({
   head: () => ({
@@ -24,15 +30,31 @@ function PlayPage() {
   const [name, setName] = useState("");
   const [token, setToken] = useState<string | null>(null);
   const [participantId, setParticipantId] = useState<string | null>(null);
+  // Evita que a checagem de token expirado dispare no curto intervalo entre
+  // entrar (setParticipantId) e o refetch trazer o participante na lista.
+  const justJoinedRef = useRef(false);
   const realtime = useRealtimeInvalidation({ channel: `match:${matchId}`, matchId });
   const query = useQuery({
     queryKey: ["match-state", matchId],
     queryFn: () => getMatchState(matchId),
     refetchInterval: realtime.connected ? false : 5_000,
   });
+
+  const clearSession = useCallback(
+    (message?: string) => {
+      if (typeof window !== "undefined") localStorage.removeItem(storageKey);
+      setToken(null);
+      setParticipantId(null);
+      justJoinedRef.current = false;
+      if (message) toast.error(message);
+    },
+    [storageKey],
+  );
+
   const joinMutation = useMutation({
     mutationFn: () => joinMatch(matchId, name.trim()),
     onSuccess: async (result) => {
+      justJoinedRef.current = true;
       setToken(result.participantToken);
       setParticipantId(result.participant.id);
       if (typeof window !== "undefined") {
@@ -47,7 +69,7 @@ function PlayPage() {
       }
       await queryClient.invalidateQueries({ queryKey: ["match-state", matchId] });
     },
-    onError: (error) => toast.error(error.message),
+    onError: (error) => toast.error(errorToMessage(error)),
   });
   const answerMutation = useMutation({
     mutationFn: async () => {
@@ -59,7 +81,15 @@ function PlayPage() {
       await queryClient.invalidateQueries({ queryKey: ["match-state", matchId] });
       toast.success(result.accepted ? "Resposta enviada." : "Alguém respondeu antes.");
     },
-    onError: (error) => toast.error(error.message),
+    onError: (error) => {
+      // Token inválido/revogado (ex.: partida resetada): limpa a sessão local
+      // e volta ao formulário de entrada em vez de mostrar um erro genérico.
+      if (error instanceof ApiError && (error.status === 401 || error.status === 404)) {
+        clearSession("Sua sessão expirou. Entre novamente.");
+        return;
+      }
+      toast.error(errorToMessage(error));
+    },
   });
 
   useEffect(() => {
@@ -79,6 +109,22 @@ function PlayPage() {
       localStorage.removeItem(storageKey);
     }
   }, [storageKey]);
+
+  // Recuperação de token: se temos uma sessão salva mas o participante não está
+  // mais na partida (host resetou, token revogado) e a partida não encerrou,
+  // limpamos e voltamos ao formulário de entrada.
+  useEffect(() => {
+    if (!participantId || query.isFetching || !query.data) return;
+    const stillThere = query.data.participants.some((item) => item.id === participantId);
+    if (stillThere) {
+      justJoinedRef.current = false;
+      return;
+    }
+    if (justJoinedRef.current) return;
+    if (query.data.match.status !== "encerrada") {
+      clearSession("Sua sessão expirou. Entre novamente.");
+    }
+  }, [participantId, query.isFetching, query.data, clearSession]);
 
   if (query.isLoading) {
     return <div className="p-8 text-center text-muted-foreground">Carregando partida...</div>;

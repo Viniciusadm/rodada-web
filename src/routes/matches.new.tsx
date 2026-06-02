@@ -16,7 +16,7 @@ import {
 import { Switch } from "@/components/ui/switch";
 import { PageHeader } from "@/components/common/PageHeader";
 import { CsvImport } from "@/components/match/CsvImport";
-import { createMatch } from "@/lib/api-client";
+import { createMatch, errorToMessage } from "@/lib/api-client";
 import { useGamesQuery } from "@/features/games-hub-data";
 import type { GameMode } from "@/lib/match-types";
 import { cn } from "@/lib/utils";
@@ -46,7 +46,7 @@ function NewMatchPage() {
       toast.success("Partida criada!");
       navigate({ to: "/matches/$matchId/host", params: { matchId: match.id } });
     },
-    onError: (error) => toast.error(error.message),
+    onError: (error) => toast.error(errorToMessage(error)),
   });
   const [step, setStep] = useState(0);
 

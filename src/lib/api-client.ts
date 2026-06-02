@@ -74,6 +74,7 @@ export type ApiMatch = {
   mode_name?: string;
   question_count?: number;
   participant_count?: number;
+  rounds_played?: number;
   current_round_number?: number | null;
   current_round_status?: "open" | "answer_revealed" | "closed" | null;
   started_at?: string | null;
@@ -96,6 +97,7 @@ export type MatchSummary = {
   modeName: string;
   questionCount: number;
   participantCount: number;
+  roundsPlayed: number;
   currentRoundNumber: number | null;
   currentRoundStatus: "open" | "answer_revealed" | "closed" | null;
   startedAt: string | null;
@@ -113,6 +115,34 @@ export type MatchQuestion = {
   points: number;
   used: boolean;
   position: number;
+};
+
+export type MatchRoundAnswer = {
+  participantId: string | null;
+  displayName: string | null;
+  result: "correct" | "incorrect" | "skipped";
+  pointsApplied: number;
+};
+
+export type MatchRoundDetail = {
+  roundNumber: number;
+  status: string;
+  prompt: string | null;
+  expectedAnswer: string | null;
+  answers: MatchRoundAnswer[];
+};
+
+type ApiMatchRoundDetail = {
+  round_number: number;
+  status: string;
+  prompt: string | null;
+  expected_answer: string | null;
+  answers: Array<{
+    participant_id: string | null;
+    display_name: string | null;
+    result: "correct" | "incorrect" | "skipped";
+    points_applied: number;
+  }>;
 };
 
 export type MatchParticipant = {
@@ -360,6 +390,39 @@ let accessToken: string | null = null;
 let activeOrganizationId: string | null = null;
 let unauthorizedHandler: (() => void) | null = null;
 
+/**
+ * Erro de requisição que carrega o status HTTP e o `code` curto do backend
+ * (ex.: "conflict", "forbidden", "not_found"), permitindo que a UI distinga
+ * permissão, conflito e falha de rede em vez de mostrar sempre um texto genérico.
+ */
+export class ApiError extends Error {
+  readonly status: number;
+  readonly code: string | null;
+
+  constructor(message: string, status: number, code: string | null) {
+    super(message);
+    this.name = "ApiError";
+    this.status = status;
+    this.code = code;
+  }
+
+  /** Sem status: tipicamente uma falha de rede (fetch rejeitado). */
+  get isNetwork() {
+    return this.status === 0;
+  }
+}
+
+/** Converte qualquer erro em uma mensagem amigável e diferenciada para o usuário. */
+export function errorToMessage(error: unknown): string {
+  if (error instanceof ApiError) {
+    if (error.isNetwork) return "Sem conexão. Verifique sua internet e tente novamente.";
+    if (error.status === 403) return "Você não tem permissão para essa ação.";
+    return error.message;
+  }
+  if (error instanceof Error) return error.message;
+  return "Algo deu errado. Tente novamente.";
+}
+
 export function setAccessToken(token: string | null) {
   accessToken = token;
 }
@@ -511,6 +574,24 @@ export async function listMatches(
 ): Promise<MatchSummary[]> {
   const matches = await request<ApiMatch[]>(`/api/v1/organizations/${organizationId}/matches`);
   return matches.map(mapMatch);
+}
+
+export async function listMatchRounds(matchId: string): Promise<MatchRoundDetail[]> {
+  const rounds = await request<ApiMatchRoundDetail[]>(`/api/v1/matches/${matchId}/rounds`, {
+    auth: false,
+  });
+  return rounds.map((round) => ({
+    roundNumber: round.round_number,
+    status: round.status,
+    prompt: round.prompt,
+    expectedAnswer: round.expected_answer,
+    answers: round.answers.map((answer) => ({
+      participantId: answer.participant_id,
+      displayName: answer.display_name,
+      result: answer.result,
+      pointsApplied: answer.points_applied,
+    })),
+  }));
 }
 
 export async function getMatch(matchId: string): Promise<MatchSummary> {
@@ -683,6 +764,18 @@ export async function joinMatch(
   };
 }
 
+export async function joinByPin(pin: string, participantName: string): Promise<JoinMatchResult> {
+  const result = await request<ApiJoinMatchResult>(`/api/v1/rooms/join`, {
+    auth: false,
+    method: "POST",
+    body: { pin, participant_name: participantName },
+  });
+  return {
+    participant: mapParticipant(result.participant),
+    participantToken: result.participant_token,
+  };
+}
+
 export async function sendPlayerAnswer(matchId: string, roundId: string, participantToken: string) {
   return request<{ accepted: boolean }>(
     `/api/v1/matches/${matchId}/rounds/${roundId}/player-answer`,
@@ -779,16 +872,23 @@ async function requestRaw(
     headers.set("authorization", `Bearer ${accessToken}`);
   }
 
-  const response = await fetch(new URL(path, API_BASE_URL), {
-    method: options.method ?? "GET",
-    headers,
-    body: options.body === undefined ? undefined : JSON.stringify(options.body),
-  });
+  let response: Response;
+  try {
+    response = await fetch(new URL(path, API_BASE_URL), {
+      method: options.method ?? "GET",
+      headers,
+      body: options.body === undefined ? undefined : JSON.stringify(options.body),
+    });
+  } catch {
+    // fetch só rejeita em falha de rede/CORS — sem resposta HTTP.
+    throw new ApiError("Sem conexão. Verifique sua internet e tente novamente.", 0, null);
+  }
   if (!response.ok) {
     if (response.status === 401 && options.auth !== false) {
       unauthorizedHandler?.();
     }
-    throw new Error(await errorMessage(response));
+    const { message, code } = await errorBody(response);
+    throw new ApiError(message, response.status, code);
   }
 
   return response;
@@ -1032,12 +1132,15 @@ export async function setNotificationPreference(
   });
 }
 
-async function errorMessage(response: Response) {
+async function errorBody(response: Response): Promise<{ message: string; code: string | null }> {
   try {
-    const payload = (await response.json()) as { message?: string };
-    return payload.message ?? `Falha na requisição (${response.status})`;
+    const payload = (await response.json()) as { message?: string; code?: string };
+    return {
+      message: payload.message ?? `Falha na requisição (${response.status})`,
+      code: payload.code ?? null,
+    };
   } catch {
-    return `Falha na requisição (${response.status})`;
+    return { message: `Falha na requisição (${response.status})`, code: null };
   }
 }
 
@@ -1182,6 +1285,7 @@ function mapMatch(match: ApiMatch): MatchSummary {
     modeName: match.mode_name ?? "",
     questionCount: match.question_count ?? 0,
     participantCount: match.participant_count ?? 0,
+    roundsPlayed: match.rounds_played ?? 0,
     currentRoundNumber: match.current_round_number ?? null,
     currentRoundStatus: match.current_round_status ?? null,
     startedAt: match.started_at ?? null,

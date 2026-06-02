@@ -1,6 +1,9 @@
-import { createFileRoute } from "@tanstack/react-router";
-import { Calendar, Clock, Trophy, Users } from "lucide-react";
+import { createFileRoute, Link } from "@tanstack/react-router";
+import { Calendar, Clock, History, Layers, Trophy, Users } from "lucide-react";
 import { useState } from "react";
+import { Button } from "@/components/ui/button";
+import { Skeleton } from "@/components/ui/skeleton";
+import { EmptyState } from "@/components/common/EmptyState";
 import { PageHeader } from "@/components/common/PageHeader";
 import { MatchHistoryDetailDialog } from "@/components/match/MatchHistoryDetailDialog";
 import { useMatchesQuery } from "@/features/games-hub-data";
@@ -31,21 +34,33 @@ function HistoryPage() {
         title="Histórico de partidas"
         description="Acompanhe as últimas atividades do Games Hub na sua comunidade."
       />
-      <div className="overflow-hidden rounded-2xl border border-border bg-card">
-        {isLoading && (
-          <div className="p-6 text-sm text-muted-foreground">Carregando histórico...</div>
-        )}
-        {isError && (
-          <div className="p-6 text-sm text-muted-foreground">
-            Não foi possível carregar o histórico.
-          </div>
-        )}
-        {!isLoading && !isError && finished.length === 0 && (
-          <div className="p-6 text-sm text-muted-foreground">Nenhuma partida encerrada.</div>
-        )}
-        {!isLoading &&
-          !isError &&
-          finished.map((m) => (
+      {isLoading && (
+        <div className="space-y-2">
+          {Array.from({ length: 5 }).map((_, index) => (
+            <Skeleton key={index} className="h-24 rounded-2xl" />
+          ))}
+        </div>
+      )}
+      {isError && (
+        <div className="rounded-2xl border border-border bg-card p-6 text-sm text-muted-foreground">
+          Não foi possível carregar o histórico.
+        </div>
+      )}
+      {!isLoading && !isError && finished.length === 0 && (
+        <EmptyState
+          icon={History}
+          title="Nenhuma partida encerrada"
+          description="Quando você encerrar uma partida, ela aparece aqui com placar, duração e vencedor."
+          action={
+            <Button asChild className="rounded-lg">
+              <Link to="/matches/new">Nova partida</Link>
+            </Button>
+          }
+        />
+      )}
+      {!isLoading && !isError && finished.length > 0 && (
+        <div className="overflow-hidden rounded-2xl border border-border bg-card">
+          {finished.map((m) => (
             <button
               key={m.id}
               type="button"
@@ -67,6 +82,9 @@ function HistoryPage() {
                     <Users className="size-3.5" /> {m.participantCount} participantes
                   </span>
                   <span className="flex items-center gap-1.5">
+                    <Layers className="size-3.5" /> {m.roundsPlayed} rodadas
+                  </span>
+                  <span className="flex items-center gap-1.5">
                     <Clock className="size-3.5" /> {formatDuration(m.durationSeconds)}
                   </span>
                 </div>
@@ -84,7 +102,8 @@ function HistoryPage() {
               </div>
             </button>
           ))}
-      </div>
+        </div>
+      )}
 
       <MatchHistoryDetailDialog
         match={selected}

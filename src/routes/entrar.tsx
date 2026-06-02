@@ -1,0 +1,128 @@
+import { createFileRoute, useNavigate } from "@tanstack/react-router";
+import { useMutation } from "@tanstack/react-query";
+import { Gamepad2, KeyRound } from "lucide-react";
+import { useState } from "react";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { InputOTP, InputOTPGroup, InputOTPSlot } from "@/components/ui/input-otp";
+import { ApiError, joinByPin } from "@/lib/api-client";
+
+type EntrarSearch = { pin?: string };
+
+export const Route = createFileRoute("/entrar")({
+  head: () => ({
+    meta: [{ title: "Entrar com PIN — Games Hub" }],
+  }),
+  validateSearch: (search: Record<string, unknown>): EntrarSearch => {
+    const pin = typeof search.pin === "string" ? search.pin.replace(/\D/g, "").slice(0, 6) : "";
+    return pin ? { pin } : {};
+  },
+  component: EntrarPage,
+});
+
+/** Mensagens específicas por tipo de falha ao entrar por PIN. */
+function joinErrorMessage(error: unknown): string {
+  if (error instanceof ApiError) {
+    if (error.isNetwork) return "Sem conexão. Verifique sua internet e tente novamente.";
+    if (error.status === 404) return "PIN não encontrado. A sala pode ter sido encerrada.";
+    if (error.status === 409) {
+      return error.message.includes("full")
+        ? "Sala lotada. Não há mais vagas nesta partida."
+        : "Esse nome já está em uso nesta sala. Escolha outro.";
+    }
+    if (error.status === 403 || error.status === 422) {
+      return "Esta sala não aceita entrada remota.";
+    }
+    return error.message;
+  }
+  return "Não foi possível entrar. Tente novamente.";
+}
+
+function EntrarPage() {
+  const navigate = useNavigate();
+  const search = Route.useSearch();
+  const [pin, setPin] = useState(search.pin ?? "");
+  const [name, setName] = useState("");
+
+  const joinMutation = useMutation({
+    mutationFn: () => joinByPin(pin, name.trim()),
+    onSuccess: (result) => {
+      const matchId = result.participant.matchId;
+      if (typeof window !== "undefined") {
+        localStorage.setItem(
+          `games-hub-participant:${matchId}`,
+          JSON.stringify({
+            token: result.participantToken,
+            participantId: result.participant.id,
+            name: result.participant.displayName,
+          }),
+        );
+      }
+      void navigate({ to: "/play/$matchId", params: { matchId } });
+    },
+  });
+
+  const canSubmit = pin.length === 6 && name.trim().length > 0 && !joinMutation.isPending;
+
+  return (
+    <div className="flex min-h-screen flex-col items-center justify-center bg-gradient-to-br from-background to-primary/10 px-6 text-center">
+      <div className="mb-8 flex items-center gap-3">
+        <div className="flex size-14 items-center justify-center rounded-2xl bg-gradient-to-br from-primary to-primary-glow shadow-xl shadow-primary/30">
+          <Gamepad2 className="size-7 text-primary-foreground" />
+        </div>
+        <div className="text-left">
+          <p className="text-xs font-medium uppercase tracking-widest text-muted-foreground">
+            Games Hub
+          </p>
+          <h1 className="text-xl font-semibold">Entrar em uma partida</h1>
+        </div>
+      </div>
+
+      <div className="w-full max-w-sm space-y-5 rounded-2xl border border-border bg-card p-6">
+        <KeyRound className="mx-auto size-12 text-primary" />
+        <div className="space-y-2">
+          <p className="text-sm font-medium">Digite o PIN da sala</p>
+          <div className="flex justify-center">
+            <InputOTP
+              maxLength={6}
+              value={pin}
+              onChange={(value) => setPin(value.replace(/\D/g, ""))}
+              onComplete={() => {
+                if (name.trim()) joinMutation.mutate();
+              }}
+            >
+              <InputOTPGroup>
+                {Array.from({ length: 6 }).map((_, index) => (
+                  <InputOTPSlot key={index} index={index} className="h-11 w-10 text-lg" />
+                ))}
+              </InputOTPGroup>
+            </InputOTP>
+          </div>
+        </div>
+
+        <Input
+          value={name}
+          onChange={(event) => setName(event.target.value)}
+          onKeyDown={(event) => {
+            if (event.key === "Enter" && canSubmit) joinMutation.mutate();
+          }}
+          placeholder="Seu nome"
+        />
+
+        {joinMutation.isError && (
+          <p className="rounded-lg bg-destructive/10 px-3 py-2 text-sm text-destructive">
+            {joinErrorMessage(joinMutation.error)}
+          </p>
+        )}
+
+        <Button
+          className="w-full rounded-lg"
+          disabled={!canSubmit}
+          onClick={() => joinMutation.mutate()}
+        >
+          {joinMutation.isPending ? "Entrando..." : "Entrar"}
+        </Button>
+      </div>
+    </div>
+  );
+}

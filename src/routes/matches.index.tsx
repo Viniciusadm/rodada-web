@@ -1,6 +1,8 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { HelpCircle, ListChecks, Play, PlusCircle, Users } from "lucide-react";
+import { Gamepad2, HelpCircle, ListChecks, Play, PlusCircle, Users } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { Skeleton } from "@/components/ui/skeleton";
+import { EmptyState } from "@/components/common/EmptyState";
 import { PageHeader } from "@/components/common/PageHeader";
 import { MatchStatusBadge } from "@/components/match/MatchStatusBadge";
 import { useMatchesQuery } from "@/features/games-hub-data";
@@ -44,20 +46,26 @@ function MatchesPage() {
       />
 
       {isLoading ? (
-        <div className="rounded-2xl border border-border bg-card p-8 text-sm text-muted-foreground">
-          Carregando partidas...
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
+          {Array.from({ length: 6 }).map((_, index) => (
+            <Skeleton key={index} className="h-[212px] rounded-2xl" />
+          ))}
         </div>
       ) : isError ? (
         <div className="rounded-2xl border border-border bg-card p-8 text-sm text-muted-foreground">
           Não foi possível carregar as partidas.
         </div>
       ) : matches.length === 0 ? (
-        <div className="rounded-2xl border border-dashed border-border bg-card/50 p-12 text-center">
-          <p className="text-sm text-muted-foreground">Nenhuma partida criada ainda.</p>
-          <Button asChild className="mt-4 rounded-lg">
-            <Link to="/matches/new">Criar primeira partida</Link>
-          </Button>
-        </div>
+        <EmptyState
+          icon={Gamepad2}
+          title="Nenhuma partida criada ainda"
+          description="Crie sua primeira partida para reunir seu grupo e começar a jogar."
+          action={
+            <Button asChild className="rounded-lg">
+              <Link to="/matches/new">Criar primeira partida</Link>
+            </Button>
+          }
+        />
       ) : (
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
           {matches.map((m) => (

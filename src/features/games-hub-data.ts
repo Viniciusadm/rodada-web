@@ -15,6 +15,7 @@ import {
   listGamesForAdmin,
   listLiveRooms,
   listMatches,
+  listMatchRounds,
   listMembers,
   listNotifications,
   listPlayers,
@@ -36,6 +37,7 @@ import {
   type GameInput,
   type GameModeInput,
   type LiveRoom,
+  type MatchRoundDetail,
   type MatchSummary,
   type NotificationPreference,
   type OrganizationDetail,
@@ -302,6 +304,15 @@ export function useMatchesQuery() {
     queryFn: () => listMatches(orgId!),
     enabled: !!orgId,
     staleTime: 10_000,
+  });
+}
+
+export function useMatchRoundsQuery(matchId: string | null, options?: { enabled?: boolean }) {
+  return useQuery<MatchRoundDetail[]>({
+    queryKey: ["match-rounds", matchId],
+    queryFn: () => listMatchRounds(matchId!),
+    enabled: !!matchId && (options?.enabled ?? true),
+    staleTime: 30_000,
   });
 }
 
