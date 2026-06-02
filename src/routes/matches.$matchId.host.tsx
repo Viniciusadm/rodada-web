@@ -17,6 +17,7 @@ import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { MatchStatusBadge } from "@/components/match/MatchStatusBadge";
+import { useRealtimeInvalidation } from "@/hooks/use-realtime-invalidation";
 import {
   addParticipant,
   adjustScore,
@@ -42,10 +43,11 @@ function HostPanel() {
   const { matchId } = Route.useParams();
   const queryClient = useQueryClient();
   const [participantName, setParticipantName] = useState("");
+  const realtime = useRealtimeInvalidation({ channel: `match:${matchId}`, matchId });
   const query = useQuery({
     queryKey: ["match-state", matchId],
     queryFn: () => getMatchState(matchId),
-    refetchInterval: 2000,
+    refetchInterval: realtime.connected ? false : 10_000,
   });
   const refresh = async () => {
     await queryClient.invalidateQueries({ queryKey: ["match-state", matchId] });

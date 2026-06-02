@@ -27,12 +27,14 @@ export type GameModeOption = {
 export type Player = {
   id: string;
   name: string;
+  ministryId: string | null;
   initials: string;
   team: string;
   points: number;
   matches: number;
   level: number;
   color: string;
+  isActive: boolean;
 };
 
 export type RankingEntry = Player & {
@@ -62,6 +64,18 @@ export type ApiMatch = {
   status: string;
   current_round_id: string | null;
   winner_participant_id: string | null;
+  game_name?: string;
+  mode_name?: string;
+  question_count?: number;
+  participant_count?: number;
+  current_round_number?: number | null;
+  current_round_status?: "open" | "answer_revealed" | "closed" | null;
+  started_at?: string | null;
+  ended_at?: string | null;
+  duration_seconds?: number | null;
+  winner_name?: string | null;
+  winner_score?: number | null;
+  top_scores?: Array<{ participant_id: string; display_name: string; score: number }>;
 };
 
 export type MatchSummary = {
@@ -72,6 +86,18 @@ export type MatchSummary = {
   gameModeId: string;
   currentRoundId: string | null;
   winnerParticipantId: string | null;
+  gameName: string;
+  modeName: string;
+  questionCount: number;
+  participantCount: number;
+  currentRoundNumber: number | null;
+  currentRoundStatus: "open" | "answer_revealed" | "closed" | null;
+  startedAt: string | null;
+  endedAt: string | null;
+  durationSeconds: number | null;
+  winnerName: string | null;
+  winnerScore: number | null;
+  topScores: Array<{ participantId: string; displayName: string; score: number }>;
 };
 
 export type MatchQuestion = {
@@ -313,6 +339,10 @@ export function setAccessToken(token: string | null) {
   accessToken = token;
 }
 
+export function getAccessToken() {
+  return accessToken;
+}
+
 export function setActiveOrganizationId(id: string | null) {
   activeOrganizationId = id;
 }
@@ -335,7 +365,7 @@ export async function listPlayers(
   teams?: Map<string, string>,
 ): Promise<Player[]> {
   const players = await request<ApiPlayer[]>(`/api/v1/organizations/${organizationId}/players`);
-  return players.filter((player) => player.is_active).map((player) => mapPlayer(player, teams));
+  return players.map((player) => mapPlayer(player, teams));
 }
 
 export async function listRankings(
@@ -422,6 +452,38 @@ export async function createMatch(input: {
     },
   });
   return mapMatch(created);
+}
+
+export async function createPlayer(input: {
+  displayName: string;
+  ministryId: string | null;
+  organizationId?: string;
+}): Promise<Player> {
+  const result = await request<ApiPlayer>("/api/v1/players", {
+    method: "POST",
+    body: {
+      organization_id: input.organizationId ?? getActiveOrganizationId(),
+      user_id: null,
+      ministry_id: input.ministryId,
+      display_name: input.displayName,
+    },
+  });
+  return mapPlayer(result);
+}
+
+export async function updatePlayer(
+  playerId: string,
+  input: { displayName?: string; ministryId?: string | null; isActive?: boolean },
+): Promise<Player> {
+  const result = await request<ApiPlayer>(`/api/v1/players/${playerId}`, {
+    method: "PATCH",
+    body: {
+      display_name: input.displayName,
+      ministry_id: input.ministryId,
+      is_active: input.isActive,
+    },
+  });
+  return mapPlayer(result);
 }
 
 export async function addParticipant(matchId: string, displayName: string) {
@@ -761,12 +823,14 @@ function mapPlayer(player: ApiPlayer, teams?: Map<string, string>): Player {
   return {
     id: player.id,
     name,
+    ministryId: player.ministry_id,
     initials: initials(name),
     team: teamLabel(player.ministry_id, teams),
     points: player.total_points,
     matches: player.matches_played,
     level: levelFromPoints(player.total_points),
     color: colorFor(player.id),
+    isActive: player.is_active,
   };
 }
 
@@ -790,12 +854,14 @@ function mapRankingEntry(entry: ApiRankingEntry, teams?: Map<string, string>): R
   return {
     id: entry.player_id,
     name,
+    ministryId: entry.ministry_id,
     initials: initials(name),
     team: teamLabel(entry.ministry_id, teams),
     points: entry.total_points,
     matches: entry.matches_played,
     level: levelFromPoints(entry.total_points),
     color: colorFor(entry.player_id),
+    isActive: true,
     position: entry.position,
   };
 }
@@ -861,6 +927,23 @@ function mapMatch(match: ApiMatch): MatchSummary {
     gameModeId: match.game_mode_id,
     currentRoundId: match.current_round_id,
     winnerParticipantId: match.winner_participant_id,
+    gameName: match.game_name ?? "",
+    modeName: match.mode_name ?? "",
+    questionCount: match.question_count ?? 0,
+    participantCount: match.participant_count ?? 0,
+    currentRoundNumber: match.current_round_number ?? null,
+    currentRoundStatus: match.current_round_status ?? null,
+    startedAt: match.started_at ?? null,
+    endedAt: match.ended_at ?? null,
+    durationSeconds: match.duration_seconds ?? null,
+    winnerName: match.winner_name ?? null,
+    winnerScore: match.winner_score ?? null,
+    topScores:
+      match.top_scores?.map((score) => ({
+        participantId: score.participant_id,
+        displayName: score.display_name,
+        score: score.score,
+      })) ?? [],
   };
 }
 

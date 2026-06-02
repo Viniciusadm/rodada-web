@@ -15,6 +15,17 @@ export const Route = createFileRoute("/matches/")({
   component: MatchesPage,
 });
 
+function roundStatusLabel(status: "open" | "answer_revealed" | "closed"): string {
+  switch (status) {
+    case "open":
+      return "Aberta";
+    case "answer_revealed":
+      return "Resposta revelada";
+    case "closed":
+      return "Fechada";
+  }
+}
+
 function MatchesPage() {
   const { data: matches = [], isLoading, isError } = useMatchesQuery();
 
@@ -63,19 +74,26 @@ function MatchesPage() {
                   <p className="flex items-center justify-center gap-1 text-muted-foreground">
                     <HelpCircle className="size-3" /> Perguntas
                   </p>
-                  <p className="mt-0.5 text-base font-semibold tabular-nums">-</p>
+                  <p className="mt-0.5 text-base font-semibold tabular-nums">{m.questionCount}</p>
                 </div>
                 <div>
                   <p className="flex items-center justify-center gap-1 text-muted-foreground">
                     <Users className="size-3" /> Jogadores
                   </p>
-                  <p className="mt-0.5 text-base font-semibold tabular-nums">-</p>
+                  <p className="mt-0.5 text-base font-semibold tabular-nums">
+                    {m.participantCount}
+                  </p>
                 </div>
                 <div>
                   <p className="text-muted-foreground">Rodada</p>
                   <p className="mt-0.5 text-base font-semibold tabular-nums">
-                    {m.currentRoundId ? "Aberta" : "—"}
+                    {m.currentRoundNumber ? `${m.currentRoundNumber}ª` : "—"}
                   </p>
+                  {m.currentRoundStatus && (
+                    <p className="text-[11px] font-normal text-muted-foreground">
+                      {roundStatusLabel(m.currentRoundStatus)}
+                    </p>
+                  )}
                 </div>
               </div>
               <div className="mt-4 flex gap-2">

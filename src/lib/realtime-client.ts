@@ -16,6 +16,7 @@ export function connectRealtime<T>(params: {
   token: string;
   channel: string;
   onEvent: (event: RealtimeEvent<T>) => void;
+  onConnect?: () => void;
   onError?: (error: { code: string; message: string; connection_id?: string }) => void;
   onDisconnect?: () => void;
 }): RealtimeConnection {
@@ -35,6 +36,7 @@ export function connectRealtime<T>(params: {
     socket = new WebSocket(url);
     socket.addEventListener("open", () => {
       reconnectAttempt = 0;
+      params.onConnect?.();
       for (const channel of joinedChannels) {
         if (channel !== params.channel) send({ type: "join", channel });
       }

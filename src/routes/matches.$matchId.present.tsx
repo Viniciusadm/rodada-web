@@ -2,6 +2,7 @@ import { createFileRoute, notFound } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
 import { Gamepad2, Trophy } from "lucide-react";
 import { MatchStatusBadge } from "@/components/match/MatchStatusBadge";
+import { useRealtimeInvalidation } from "@/hooks/use-realtime-invalidation";
 import { getMatchState } from "@/lib/api-client";
 
 export const Route = createFileRoute("/matches/$matchId/present")({
@@ -14,10 +15,11 @@ export const Route = createFileRoute("/matches/$matchId/present")({
 
 function PresentPage() {
   const { matchId } = Route.useParams();
+  const realtime = useRealtimeInvalidation({ channel: `match:${matchId}`, matchId });
   const query = useQuery({
     queryKey: ["match-state", matchId],
     queryFn: () => getMatchState(matchId),
-    refetchInterval: 1500,
+    refetchInterval: realtime.connected ? false : 10_000,
   });
 
   if (query.isLoading) {

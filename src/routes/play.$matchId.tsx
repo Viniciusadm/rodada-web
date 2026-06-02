@@ -5,6 +5,7 @@ import { useEffect, useMemo, useState } from "react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { useRealtimeInvalidation } from "@/hooks/use-realtime-invalidation";
 import { getMatchState, joinMatch, sendPlayerAnswer } from "@/lib/api-client";
 
 export const Route = createFileRoute("/play/$matchId")({
@@ -22,10 +23,11 @@ function PlayPage() {
   const [name, setName] = useState("");
   const [token, setToken] = useState<string | null>(null);
   const [participantId, setParticipantId] = useState<string | null>(null);
+  const realtime = useRealtimeInvalidation({ channel: `match:${matchId}`, matchId });
   const query = useQuery({
     queryKey: ["match-state", matchId],
     queryFn: () => getMatchState(matchId),
-    refetchInterval: 1500,
+    refetchInterval: realtime.connected ? false : 5_000,
   });
   const joinMutation = useMutation({
     mutationFn: () => joinMatch(matchId, name.trim()),

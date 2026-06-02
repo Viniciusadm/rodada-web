@@ -14,6 +14,7 @@ import { AppSidebar } from "@/components/layout/AppSidebar";
 import { Topbar } from "@/components/layout/Topbar";
 import { ThemeProvider } from "@/components/theme-provider";
 import { Toaster } from "@/components/ui/sonner";
+import { useRealtimeInvalidation } from "@/hooks/use-realtime-invalidation";
 import { useAuthStore } from "@/stores/auth";
 
 function NotFoundComponent() {
@@ -114,6 +115,14 @@ function PublicBootstrap({ children }: { children: React.ReactNode }) {
 }
 
 function AuthedShell({ children }: { children: React.ReactNode }) {
+  const orgId = useAuthStore((s) => s.activeOrganization?.id ?? null);
+  // Mantém listas (partidas, salas ao vivo, ranking, jogadores) atualizadas ao
+  // vivo mesmo quando o usuário não está numa tela de partida.
+  useRealtimeInvalidation({
+    channel: orgId ? `organization:${orgId}` : null,
+    organizationId: orgId,
+  });
+
   return (
     <SidebarProvider>
       <AppSidebar />

@@ -1,6 +1,7 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 
 import {
+  createPlayer,
   getNotificationPreferences,
   listGames,
   listLiveRooms,
@@ -13,6 +14,7 @@ import {
   markNotificationRead,
   searchOrganization,
   setNotificationPreference,
+  updatePlayer,
   type AppNotification,
   type Game,
   type LiveRoom,
@@ -58,6 +60,30 @@ export function usePlayersQuery() {
     },
     enabled: !!orgId,
     staleTime: 30_000,
+  });
+}
+
+export function useCreatePlayer() {
+  const queryClient = useQueryClient();
+  const orgId = useActiveOrgId();
+  return useMutation({
+    mutationFn: (input: { displayName: string; ministryId: string | null }) =>
+      createPlayer({ ...input, organizationId: orgId! }),
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: ["players", orgId] }),
+  });
+}
+
+export function useUpdatePlayer() {
+  const queryClient = useQueryClient();
+  const orgId = useActiveOrgId();
+  return useMutation({
+    mutationFn: (input: {
+      playerId: string;
+      displayName?: string;
+      ministryId?: string | null;
+      isActive?: boolean;
+    }) => updatePlayer(input.playerId, input),
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: ["players", orgId] }),
   });
 }
 
