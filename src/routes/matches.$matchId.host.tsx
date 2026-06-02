@@ -17,6 +17,7 @@ import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { MatchStatusBadge } from "@/components/match/MatchStatusBadge";
+import { RoundTimer } from "@/components/match/RoundTimer";
 import { useRealtimeInvalidation } from "@/hooks/use-realtime-invalidation";
 import {
   addParticipant,
@@ -258,7 +259,16 @@ function HostPanel() {
             </p>
             {round?.question ? (
               <div className="mt-3 space-y-3">
-                <h2 className="text-2xl font-semibold">{round.question.prompt}</h2>
+                <div className="flex items-start justify-between gap-3">
+                  <h2 className="text-2xl font-semibold">{round.question.prompt}</h2>
+                  {round.status === "open" && round.timeRemainingSeconds !== null && (
+                    <RoundTimer
+                      key={round.id}
+                      initialSeconds={round.timeRemainingSeconds}
+                      className="text-lg"
+                    />
+                  )}
+                </div>
                 <p className="text-sm text-muted-foreground">
                   Resposta:{" "}
                   <span className="font-medium text-foreground">
@@ -286,6 +296,7 @@ function HostPanel() {
                 <ParticipantRow
                   key={participant.id}
                   participant={participant}
+                  mode={state.settings.mode}
                   disabled={scoreMutation.isPending}
                   onAdjust={(delta) =>
                     scoreMutation.mutate({ participantId: participant.id, delta })
@@ -307,19 +318,39 @@ function HostPanel() {
 
 function ParticipantRow({
   participant,
+  mode,
   disabled,
   onAdjust,
 }: {
   participant: MatchParticipant;
+  mode: string;
   disabled: boolean;
   onAdjust: (delta: number) => void;
 }) {
+  const isElimination = mode === "elimination";
   return (
-    <div className="flex items-center justify-between rounded-xl bg-muted/40 px-4 py-3">
+    <div
+      className={
+        "flex items-center justify-between rounded-xl bg-muted/40 px-4 py-3" +
+        (participant.eliminated ? " opacity-50" : "")
+      }
+    >
       <div>
-        <p className="text-sm font-medium">{participant.displayName}</p>
+        <p className="flex items-center gap-2 text-sm font-medium">
+          {participant.displayName}
+          {participant.eliminated && (
+            <span className="rounded bg-destructive/15 px-1.5 py-0.5 text-[10px] font-semibold uppercase text-destructive">
+              Eliminado
+            </span>
+          )}
+        </p>
         <p className="text-xs text-muted-foreground">
           {participant.joinSource === "remote" ? "Remoto" : "Local"}
+          {isElimination && participant.livesRemaining !== null && (
+            <span className="ml-2 text-rose-500">
+              {"♥".repeat(Math.max(0, participant.livesRemaining)) || "—"}
+            </span>
+          )}
         </p>
       </div>
       <div className="flex items-center gap-2">

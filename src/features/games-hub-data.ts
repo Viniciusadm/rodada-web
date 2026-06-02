@@ -1,25 +1,45 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 
 import {
+  addMember,
+  archiveGame,
+  archiveGameMode,
+  archiveTeam,
+  createGame,
+  createGameMode,
   createPlayer,
+  createTeam,
   getNotificationPreferences,
+  getOrganization,
   listGames,
+  listGamesForAdmin,
   listLiveRooms,
   listMatches,
+  listMembers,
   listNotifications,
   listPlayers,
   listRankings,
   listTeams,
   markAllNotificationsRead,
   markNotificationRead,
+  removeMember,
   searchOrganization,
   setNotificationPreference,
+  updateGame,
+  updateGameMode,
+  updateMemberRole,
+  updateOrganization,
   updatePlayer,
+  updateTeam,
   type AppNotification,
   type Game,
+  type GameInput,
+  type GameModeInput,
   type LiveRoom,
   type MatchSummary,
   type NotificationPreference,
+  type OrganizationDetail,
+  type OrgMember,
   type Player,
   type RankingEntry,
   type SearchResults,
@@ -39,6 +59,84 @@ export function useGamesQuery() {
   });
 }
 
+export function useAdminGamesQuery() {
+  const orgId = useActiveOrgId();
+  return useQuery<Game[]>({
+    queryKey: ["admin-games", orgId],
+    queryFn: () => listGamesForAdmin(orgId!),
+    enabled: !!orgId,
+    staleTime: 30_000,
+  });
+}
+
+function useInvalidateGames() {
+  const queryClient = useQueryClient();
+  const orgId = useActiveOrgId();
+  return () =>
+    Promise.all([
+      queryClient.invalidateQueries({ queryKey: ["games"] }),
+      queryClient.invalidateQueries({ queryKey: ["admin-games", orgId] }),
+    ]);
+}
+
+export function useCreateGame() {
+  const invalidate = useInvalidateGames();
+  return useMutation({
+    mutationFn: (input: GameInput) => createGame(input),
+    onSuccess: invalidate,
+  });
+}
+
+export function useUpdateGame() {
+  const invalidate = useInvalidateGames();
+  return useMutation({
+    mutationFn: (input: { gameId: string } & GameInput) => {
+      const { gameId, ...rest } = input;
+      return updateGame(gameId, rest);
+    },
+    onSuccess: invalidate,
+  });
+}
+
+export function useArchiveGame() {
+  const invalidate = useInvalidateGames();
+  return useMutation({
+    mutationFn: (gameId: string) => archiveGame(gameId),
+    onSuccess: invalidate,
+  });
+}
+
+export function useCreateGameMode() {
+  const invalidate = useInvalidateGames();
+  return useMutation({
+    mutationFn: (input: { gameId: string } & GameModeInput) => {
+      const { gameId, ...rest } = input;
+      return createGameMode(gameId, rest);
+    },
+    onSuccess: invalidate,
+  });
+}
+
+export function useUpdateGameMode() {
+  const invalidate = useInvalidateGames();
+  return useMutation({
+    mutationFn: (input: { gameId: string; modeId: string } & GameModeInput) => {
+      const { gameId, modeId, ...rest } = input;
+      return updateGameMode(gameId, modeId, rest);
+    },
+    onSuccess: invalidate,
+  });
+}
+
+export function useArchiveGameMode() {
+  const invalidate = useInvalidateGames();
+  return useMutation({
+    mutationFn: (input: { gameId: string; modeId: string }) =>
+      archiveGameMode(input.gameId, input.modeId),
+    onSuccess: invalidate,
+  });
+}
+
 export function useTeamsQuery() {
   const orgId = useActiveOrgId();
   return useQuery<Team[]>({
@@ -46,6 +144,92 @@ export function useTeamsQuery() {
     queryFn: () => listTeams(orgId!),
     enabled: !!orgId,
     staleTime: 300_000,
+  });
+}
+
+export function useCreateTeam() {
+  const queryClient = useQueryClient();
+  const orgId = useActiveOrgId();
+  return useMutation({
+    mutationFn: (name: string) => createTeam(name, orgId!),
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: ["teams", orgId] }),
+  });
+}
+
+export function useUpdateTeam() {
+  const queryClient = useQueryClient();
+  const orgId = useActiveOrgId();
+  return useMutation({
+    mutationFn: (input: { teamId: string; name?: string; isActive?: boolean }) =>
+      updateTeam(input.teamId, { name: input.name, isActive: input.isActive }, orgId!),
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: ["teams", orgId] }),
+  });
+}
+
+export function useArchiveTeam() {
+  const queryClient = useQueryClient();
+  const orgId = useActiveOrgId();
+  return useMutation({
+    mutationFn: (teamId: string) => archiveTeam(teamId, orgId!),
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: ["teams", orgId] }),
+  });
+}
+
+export function useMembersQuery() {
+  const orgId = useActiveOrgId();
+  return useQuery<OrgMember[]>({
+    queryKey: ["members", orgId],
+    queryFn: () => listMembers(orgId!),
+    enabled: !!orgId,
+    staleTime: 30_000,
+  });
+}
+
+export function useAddMember() {
+  const queryClient = useQueryClient();
+  const orgId = useActiveOrgId();
+  return useMutation({
+    mutationFn: (input: { email: string; role: string }) => addMember(input, orgId!),
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: ["members", orgId] }),
+  });
+}
+
+export function useUpdateMemberRole() {
+  const queryClient = useQueryClient();
+  const orgId = useActiveOrgId();
+  return useMutation({
+    mutationFn: (input: { userId: string; role: string }) =>
+      updateMemberRole(input.userId, input.role, orgId!),
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: ["members", orgId] }),
+  });
+}
+
+export function useRemoveMember() {
+  const queryClient = useQueryClient();
+  const orgId = useActiveOrgId();
+  return useMutation({
+    mutationFn: (userId: string) => removeMember(userId, orgId!),
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: ["members", orgId] }),
+  });
+}
+
+export function useOrganizationQuery() {
+  const orgId = useActiveOrgId();
+  return useQuery<OrganizationDetail>({
+    queryKey: ["organization", orgId],
+    queryFn: () => getOrganization(orgId!),
+    enabled: !!orgId,
+    staleTime: 60_000,
+  });
+}
+
+export function useUpdateOrganization() {
+  const queryClient = useQueryClient();
+  const orgId = useActiveOrgId();
+  return useMutation({
+    mutationFn: (input: { name: string; contactEmail: string | null }) =>
+      updateOrganization(input, orgId!),
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: ["organization", orgId] }),
   });
 }
 

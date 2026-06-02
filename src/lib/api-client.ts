@@ -5,10 +5,12 @@ const API_BASE_URL = import.meta.env.VITE_API_BASE_URL ?? "https://games.isarchi
 export const DEMO_ORGANIZATION_ID =
   import.meta.env.VITE_DEMO_ORGANIZATION_ID ?? "10000000-0000-0000-0000-000000000001";
 
-export type GameStatus = "active" | "beta" | "maintenance" | "coming-soon";
+export type GameStatus = "active" | "beta" | "maintenance" | "coming-soon" | "archived";
 
 export type Game = {
   id: string;
+  organizationId: string | null;
+  slug: string;
   name: string;
   description: string;
   icon: LucideIcon;
@@ -22,6 +24,10 @@ export type GameModeOption = {
   id: string;
   code: string;
   name: string;
+  description: string | null;
+  defaultInitialPoints: number | null;
+  defaultTimePerQuestionSeconds: number | null;
+  isActive: boolean;
 };
 
 export type Player = {
@@ -116,6 +122,8 @@ export type MatchParticipant = {
   displayName: string;
   joinSource: "local" | "remote";
   currentScore: number;
+  livesRemaining: number | null;
+  eliminated: boolean;
 };
 
 export type MatchRound = {
@@ -125,12 +133,14 @@ export type MatchRound = {
   status: "open" | "answer_revealed" | "closed";
   selectedParticipantId: string | null;
   answerRevealed: boolean;
+  timeRemainingSeconds: number | null;
   question: MatchQuestion | null;
 };
 
 export type MatchState = {
   match: MatchSummary;
   settings: {
+    mode: string;
     maxRounds: number | null;
     timePerRoundSeconds: number | null;
     initialPoints: number;
@@ -154,15 +164,26 @@ export type ImportQuestionsResult = {
   invalidRows: Array<{ line: number; reason: string }>;
 };
 
+type ApiGameMode = {
+  id: string;
+  code: string;
+  name: string;
+  description: string | null;
+  default_initial_points: number | null;
+  default_time_per_question_seconds: number | null;
+  is_active: boolean;
+};
+
 type ApiGame = {
   id: string;
+  organization_id: string | null;
   slug: string;
   name: string;
   description: string;
   status: string;
   icon_key: string | null;
   player_count: number;
-  modes: GameModeOption[];
+  modes: ApiGameMode[];
 };
 
 type ApiPlayer = {
@@ -201,6 +222,8 @@ type ApiMatchParticipant = {
   display_name: string;
   join_source: "local" | "remote";
   current_score: number;
+  lives_remaining: number | null;
+  eliminated: boolean;
 };
 
 type ApiMatchRound = {
@@ -210,6 +233,7 @@ type ApiMatchRound = {
   status: "open" | "answer_revealed" | "closed";
   selected_participant_id: string | null;
   answer_revealed: boolean;
+  time_remaining_seconds: number | null;
   question: ApiMatchQuestion | null;
 };
 
@@ -230,6 +254,7 @@ type ApiLiveRoom = {
 type ApiMatchState = {
   match_data: ApiMatch;
   settings: {
+    mode: string;
     max_rounds: number | null;
     time_per_round_seconds: number | null;
     initial_points: number;
@@ -358,6 +383,103 @@ export function onUnauthorized(handler: (() => void) | null) {
 export async function listGames(): Promise<Game[]> {
   const games = await request<ApiGame[]>("/api/v1/games", { auth: false });
   return games.map(mapGame);
+}
+
+export async function listGamesForAdmin(
+  organizationId = getActiveOrganizationId(),
+): Promise<Game[]> {
+  const games = await request<ApiGame[]>(`/api/v1/organizations/${organizationId}/games`);
+  return games.map(mapGame);
+}
+
+export type GameInput = {
+  name: string;
+  description: string;
+  status: string;
+  slug?: string;
+  sortOrder?: number;
+  iconKey?: string | null;
+};
+
+export async function createGame(
+  input: GameInput,
+  organizationId = getActiveOrganizationId(),
+): Promise<string> {
+  const created = await request<{ id: string }>("/api/v1/games", {
+    method: "POST",
+    body: {
+      organization_id: organizationId,
+      slug: input.slug,
+      name: input.name,
+      description: input.description,
+      status: input.status,
+      icon_key: input.iconKey ?? null,
+      sort_order: input.sortOrder ?? 0,
+    },
+  });
+  return created.id;
+}
+
+export async function updateGame(gameId: string, input: GameInput): Promise<void> {
+  await requestNoContent(`/api/v1/games/${gameId}`, {
+    method: "PATCH",
+    body: {
+      name: input.name,
+      description: input.description,
+      status: input.status,
+      icon_key: input.iconKey ?? null,
+      sort_order: input.sortOrder ?? 0,
+    },
+  });
+}
+
+export async function archiveGame(gameId: string): Promise<void> {
+  await requestNoContent(`/api/v1/games/${gameId}`, { method: "DELETE" });
+}
+
+export type GameModeInput = {
+  code: string;
+  name: string;
+  description?: string | null;
+  defaultInitialPoints?: number | null;
+  defaultTimePerQuestionSeconds?: number | null;
+  isActive?: boolean;
+};
+
+export async function createGameMode(gameId: string, input: GameModeInput): Promise<string> {
+  const created = await request<{ id: string }>(`/api/v1/games/${gameId}/modes`, {
+    method: "POST",
+    body: {
+      game_id: gameId,
+      code: input.code,
+      name: input.name,
+      description: input.description ?? null,
+      default_initial_points: input.defaultInitialPoints ?? null,
+      default_time_per_question_seconds: input.defaultTimePerQuestionSeconds ?? null,
+    },
+  });
+  return created.id;
+}
+
+export async function updateGameMode(
+  gameId: string,
+  modeId: string,
+  input: GameModeInput,
+): Promise<void> {
+  await requestNoContent(`/api/v1/games/${gameId}/modes/${modeId}`, {
+    method: "PATCH",
+    body: {
+      name: input.name,
+      description: input.description ?? null,
+      default_initial_points: input.defaultInitialPoints ?? null,
+      default_time_per_question_seconds: input.defaultTimePerQuestionSeconds ?? null,
+      is_active: input.isActive ?? true,
+    },
+  });
+}
+
+export async function archiveGameMode(gameId: string, modeId: string): Promise<void> {
+  await requestNoContent(`/api/v1/games/${gameId}/modes/${modeId}`, { method: "DELETE" });
 }
 
 export async function listPlayers(
@@ -724,6 +846,121 @@ export async function listTeams(organizationId = getActiveOrganizationId()): Pro
   }));
 }
 
+export async function createTeam(
+  name: string,
+  organizationId = getActiveOrganizationId(),
+): Promise<void> {
+  await request<{ id: string }>(`/api/v1/organizations/${organizationId}/ministries`, {
+    method: "POST",
+    body: { name },
+  });
+}
+
+export async function updateTeam(
+  teamId: string,
+  input: { name?: string; isActive?: boolean },
+  organizationId = getActiveOrganizationId(),
+): Promise<void> {
+  await requestNoContent(`/api/v1/organizations/${organizationId}/ministries/${teamId}`, {
+    method: "PATCH",
+    body: { name: input.name, is_active: input.isActive },
+  });
+}
+
+export async function archiveTeam(
+  teamId: string,
+  organizationId = getActiveOrganizationId(),
+): Promise<void> {
+  await requestNoContent(`/api/v1/organizations/${organizationId}/ministries/${teamId}`, {
+    method: "DELETE",
+  });
+}
+
+export type OrganizationDetail = {
+  id: string;
+  name: string;
+  slug: string;
+  contactEmail: string | null;
+};
+
+export async function getOrganization(
+  organizationId = getActiveOrganizationId(),
+): Promise<OrganizationDetail> {
+  const org = await request<{
+    id: string;
+    name: string;
+    slug: string;
+    contact_email: string | null;
+  }>(`/api/v1/organizations/${organizationId}`);
+  return {
+    id: org.id,
+    name: org.name,
+    slug: org.slug,
+    contactEmail: org.contact_email,
+  };
+}
+
+export async function updateOrganization(
+  input: { name: string; contactEmail: string | null },
+  organizationId = getActiveOrganizationId(),
+): Promise<void> {
+  await requestNoContent(`/api/v1/organizations/${organizationId}`, {
+    method: "PATCH",
+    body: { name: input.name, contact_email: input.contactEmail },
+  });
+}
+
+export type OrgMember = {
+  userId: string;
+  displayName: string;
+  email: string;
+  role: string;
+};
+
+export async function listMembers(
+  organizationId = getActiveOrganizationId(),
+): Promise<OrgMember[]> {
+  const members = await request<
+    Array<{ user_id: string; display_name: string; email: string; role: string }>
+  >(`/api/v1/organizations/${organizationId}/members`);
+  return members.map((member) => ({
+    userId: member.user_id,
+    displayName: member.display_name,
+    email: member.email,
+    role: member.role,
+  }));
+}
+
+export async function addMember(
+  input: { email: string; role: string },
+  organizationId = getActiveOrganizationId(),
+): Promise<void> {
+  await requestNoContent(`/api/v1/organizations/${organizationId}/members`, {
+    method: "POST",
+    body: { email: input.email, role: input.role },
+  });
+}
+
+export async function updateMemberRole(
+  userId: string,
+  role: string,
+  organizationId = getActiveOrganizationId(),
+): Promise<void> {
+  await requestNoContent(`/api/v1/organizations/${organizationId}/members/${userId}`, {
+    method: "PATCH",
+    body: { role },
+  });
+}
+
+export async function removeMember(
+  userId: string,
+  organizationId = getActiveOrganizationId(),
+): Promise<void> {
+  await requestNoContent(`/api/v1/organizations/${organizationId}/members/${userId}`, {
+    method: "DELETE",
+  });
+}
+
 export async function searchOrganization(
   query: string,
   organizationId = getActiveOrganizationId(),
@@ -808,13 +1045,23 @@ function mapGame(game: ApiGame): Game {
   const visual = gameVisual(game.icon_key ?? game.slug);
   return {
     id: game.id,
+    organizationId: game.organization_id ?? null,
+    slug: game.slug,
     name: game.name,
     description: game.description,
     icon: visual.icon,
     iconColor: visual.iconColor,
     status: normalizeGameStatus(game.status),
     players: game.player_count ?? 0,
-    modes: game.modes ?? [],
+    modes: (game.modes ?? []).map((mode) => ({
+      id: mode.id,
+      code: mode.code,
+      name: mode.name,
+      description: mode.description ?? null,
+      defaultInitialPoints: mode.default_initial_points ?? null,
+      defaultTimePerQuestionSeconds: mode.default_time_per_question_seconds ?? null,
+      isActive: mode.is_active ?? true,
+    })),
   };
 }
 
@@ -870,6 +1117,7 @@ function mapMatchState(state: ApiMatchState): MatchState {
   return {
     match: mapMatch(state.match_data),
     settings: {
+      mode: state.settings.mode,
       maxRounds: state.settings.max_rounds,
       timePerRoundSeconds: state.settings.time_per_round_seconds,
       initialPoints: state.settings.initial_points,
@@ -903,6 +1151,8 @@ function mapParticipant(participant: ApiMatchParticipant): MatchParticipant {
     displayName: participant.display_name,
     joinSource: participant.join_source,
     currentScore: participant.current_score,
+    livesRemaining: participant.lives_remaining,
+    eliminated: participant.eliminated,
   };
 }
 
@@ -914,6 +1164,7 @@ function mapRound(round: ApiMatchRound): MatchRound {
     status: round.status,
     selectedParticipantId: round.selected_participant_id,
     answerRevealed: round.answer_revealed,
+    timeRemainingSeconds: round.time_remaining_seconds,
     question: round.question ? mapQuestion(round.question) : null,
   };
 }
@@ -955,6 +1206,7 @@ function normalizeMatchStatus(status: string): MatchStatus {
 
 function normalizeGameStatus(status: string): GameStatus {
   if (status === "active" || status === "beta" || status === "maintenance") return status;
+  if (status === "archived") return "archived";
   if (status === "coming_soon" || status === "coming-soon") return "coming-soon";
   return "coming-soon";
 }

@@ -2,6 +2,7 @@ import { createFileRoute, notFound } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
 import { Gamepad2, Trophy } from "lucide-react";
 import { MatchStatusBadge } from "@/components/match/MatchStatusBadge";
+import { RoundTimer } from "@/components/match/RoundTimer";
 import { useRealtimeInvalidation } from "@/hooks/use-realtime-invalidation";
 import { getMatchState } from "@/lib/api-client";
 
@@ -60,6 +61,15 @@ function PresentPage() {
                 <p className="mb-4 text-sm font-semibold uppercase tracking-widest text-primary">
                   Pergunta {round.roundNumber}
                 </p>
+                {round.status === "open" && round.timeRemainingSeconds !== null && (
+                  <div className="mb-6 flex justify-center">
+                    <RoundTimer
+                      key={round.id}
+                      initialSeconds={round.timeRemainingSeconds}
+                      className="text-2xl"
+                    />
+                  </div>
+                )}
                 <h2 className="text-5xl font-semibold leading-tight">{round.question.prompt}</h2>
                 {round.answerRevealed && (
                   <p className="mt-8 text-3xl font-medium text-primary">
@@ -95,10 +105,23 @@ function PresentPage() {
               {leaders.map((participant, index) => (
                 <div
                   key={participant.id}
-                  className="flex items-center justify-between rounded-xl bg-muted/40 px-4 py-3"
+                  className={
+                    "flex items-center justify-between rounded-xl bg-muted/40 px-4 py-3" +
+                    (participant.eliminated ? " opacity-50" : "")
+                  }
                 >
-                  <span className="text-sm font-medium">
+                  <span className="flex items-center gap-2 text-sm font-medium">
                     {index + 1}. {participant.displayName}
+                    {participant.livesRemaining != null && !participant.eliminated && (
+                      <span className="text-rose-500">
+                        {"♥".repeat(Math.max(0, participant.livesRemaining))}
+                      </span>
+                    )}
+                    {participant.eliminated && (
+                      <span className="rounded bg-destructive/15 px-1.5 py-0.5 text-[10px] font-semibold uppercase text-destructive">
+                        Fora
+                      </span>
+                    )}
                   </span>
                   <span className="text-sm font-semibold tabular-nums">
                     {participant.currentScore}

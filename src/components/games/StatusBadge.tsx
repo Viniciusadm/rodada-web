@@ -6,6 +6,7 @@ const statusLabel: Record<GameStatus, string> = {
   beta: "Beta",
   maintenance: "Manutenção",
   "coming-soon": "Em breve",
+  archived: "Arquivado",
 };
 
 const styles: Record<GameStatus, string> = {
@@ -13,6 +14,7 @@ const styles: Record<GameStatus, string> = {
   beta: "bg-primary/15 text-primary ring-primary/25",
   maintenance: "bg-warning/15 text-warning ring-warning/25",
   "coming-soon": "bg-muted text-muted-foreground ring-border",
+  archived: "bg-muted text-muted-foreground ring-border",
 };
 
 export function StatusBadge({ status, className }: { status: GameStatus; className?: string }) {

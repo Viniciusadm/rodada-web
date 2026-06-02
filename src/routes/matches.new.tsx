@@ -75,7 +75,8 @@ function NewMatchPage() {
       mode,
       maxQuestions: maxQuestions ? Number(maxQuestions) : undefined,
       timePerQuestion: timePerQuestion ? Number(timePerQuestion) : undefined,
-      initialPoints: mode === "pontos-iniciais" ? Number(initialPoints) : undefined,
+      initialPoints:
+        mode === "pontos-iniciais" || mode === "eliminacao" ? Number(initialPoints) : undefined,
       remoteEnabled,
       questions,
       gameId: gameId || games[0]?.id,
@@ -135,7 +136,16 @@ function NewMatchPage() {
               </div>
               <div className="space-y-2">
                 <Label>Modo de jogo</Label>
-                <Select value={mode} onValueChange={(v) => setMode(v as GameMode)}>
+                <Select
+                  value={mode}
+                  onValueChange={(v) => {
+                    const next = v as GameMode;
+                    setMode(next);
+                    // Sensible defaults: lives are small counts, initial points are large.
+                    if (next === "eliminacao") setInitialPoints("3");
+                    else if (next === "pontos-iniciais") setInitialPoints("500");
+                  }}
+                >
                   <SelectTrigger>
                     <SelectValue />
                   </SelectTrigger>
@@ -166,16 +176,23 @@ function NewMatchPage() {
                   onChange={(e) => setTimePerQuestion(e.target.value)}
                 />
               </div>
-              {mode === "pontos-iniciais" && (
+              {(mode === "pontos-iniciais" || mode === "eliminacao") && (
                 <div className="space-y-2">
-                  <Label htmlFor="ip">Pontos iniciais por jogador</Label>
+                  <Label htmlFor="ip">
+                    {mode === "eliminacao" ? "Vidas por jogador" : "Pontos iniciais por jogador"}
+                  </Label>
                   <Input
                     id="ip"
                     type="number"
-                    min={0}
+                    min={mode === "eliminacao" ? 1 : 0}
                     value={initialPoints}
                     onChange={(e) => setInitialPoints(e.target.value)}
                   />
+                  <p className="text-xs text-muted-foreground">
+                    {mode === "eliminacao"
+                      ? "Cada erro tira uma vida. Ao zerar, o jogador é eliminado; o último de pé vence."
+                      : "Todos começam o placar com essa pontuação."}
+                  </p>
                 </div>
               )}
             </div>

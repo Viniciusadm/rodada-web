@@ -13,6 +13,21 @@ import {
 } from "@/lib/api-client";
 
 const TOKEN_KEY = "games-hub-token";
+const ACTIVE_ORG_KEY = "games-hub-active-org";
+
+function readActiveOrg(): string | null {
+  if (typeof window === "undefined") return null;
+  return window.localStorage.getItem(ACTIVE_ORG_KEY);
+}
+
+function writeActiveOrg(id: string | null) {
+  if (typeof window === "undefined") return;
+  if (id) {
+    window.localStorage.setItem(ACTIVE_ORG_KEY, id);
+  } else {
+    window.localStorage.removeItem(ACTIVE_ORG_KEY);
+  }
+}
 
 export type AuthStatus = "idle" | "loading" | "authed" | "anon";
 
@@ -26,6 +41,7 @@ type AuthState = {
   bootstrap: () => Promise<void>;
   login: (email: string, password: string) => Promise<void>;
   register: (input: { displayName: string; email: string; password: string }) => Promise<void>;
+  setActiveOrganization: (organizationId: string) => void;
   logout: () => void;
 };
 
@@ -44,11 +60,16 @@ function writeToken(token: string | null) {
 }
 
 function sessionToState(session: AuthSession) {
+  // Prefer the org the user last switched to (persisted locally), as long as it
+  // is still one they belong to; otherwise fall back to the session default.
+  const persisted = readActiveOrg();
   const active =
+    session.organizations.find((org) => org.id === persisted) ??
     session.organizations.find((org) => org.id === session.activeOrganizationId) ??
     session.organizations[0] ??
     null;
   setActiveOrganizationId(active?.id ?? null);
+  writeActiveOrg(active?.id ?? null);
   return {
     status: "authed" as const,
     user: session.user,
@@ -135,10 +156,19 @@ export const useAuthStore = create<AuthState>((set, get) => ({
     }
   },
 
+  setActiveOrganization: (organizationId) => {
+    const org = get().organizations.find((item) => item.id === organizationId);
+    if (!org) return;
+    setActiveOrganizationId(org.id);
+    writeActiveOrg(org.id);
+    set({ activeOrganization: org });
+  },
+
   logout: () => {
     writeToken(null);
     setAccessToken(null);
     setActiveOrganizationId(null);
+    writeActiveOrg(null);
     set({ ...ANON_STATE, error: null });
   },
 }));

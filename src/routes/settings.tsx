@@ -5,6 +5,12 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { PageHeader } from "@/components/common/PageHeader";
 import { useTheme } from "@/components/theme-provider";
 import {
+  MembersSettings,
+  OrganizationSettings,
+  TeamsSettings,
+} from "@/components/settings/OrgManagement";
+import { useCanManageOrg } from "@/hooks/use-active-role";
+import {
   useNotificationPreferencesQuery,
   useSetNotificationPreference,
 } from "@/features/games-hub-data";
@@ -38,10 +44,19 @@ function SettingsPage() {
   const { theme, setTheme } = useTheme();
   const { data: preferences = [], isLoading } = useNotificationPreferencesQuery();
   const setPreference = useSetNotificationPreference();
+  const canManage = useCanManageOrg();
 
   return (
     <div className="mx-auto max-w-3xl space-y-6">
       <PageHeader title="Configurações" description="Ajuste as preferências disponíveis." />
+
+      {canManage && (
+        <>
+          <OrganizationSettings />
+          <TeamsSettings />
+          <MembersSettings />
+        </>
+      )}
 
       <div className="space-y-5 rounded-2xl border border-border bg-card p-6">
         <div>

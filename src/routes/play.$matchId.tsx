@@ -5,6 +5,7 @@ import { useEffect, useMemo, useState } from "react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { RoundTimer } from "@/components/match/RoundTimer";
 import { useRealtimeInvalidation } from "@/hooks/use-realtime-invalidation";
 import { getMatchState, joinMatch, sendPlayerAnswer } from "@/lib/api-client";
 
@@ -133,10 +134,28 @@ function PlayPage() {
               {participant && (
                 <p className="text-sm text-primary">{participant.currentScore} pontos</p>
               )}
+              {participant?.livesRemaining != null && (
+                <p className="text-sm text-rose-500">
+                  {participant.eliminated
+                    ? "Você foi eliminado"
+                    : `${"♥".repeat(Math.max(0, participant.livesRemaining)) || "—"} vidas`}
+                </p>
+              )}
             </div>
 
-            {round?.question ? (
+            {participant?.eliminated ? (
+              <p className="rounded-lg bg-destructive/10 p-3 text-sm text-destructive">
+                Você ficou sem vidas. Acompanhe o restante da partida pela apresentação.
+              </p>
+            ) : round?.question ? (
               <div className="space-y-4">
+                {round.status === "open" && round.timeRemainingSeconds !== null && (
+                  <RoundTimer
+                    key={round.id}
+                    initialSeconds={round.timeRemainingSeconds}
+                    className="text-base"
+                  />
+                )}
                 <p className="text-lg font-semibold">{round.question.prompt}</p>
                 {round.answerRevealed && (
                   <p className="rounded-lg bg-muted/40 p-3 text-sm">
