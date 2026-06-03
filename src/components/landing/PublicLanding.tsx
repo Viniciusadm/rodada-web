@@ -31,7 +31,7 @@ export function PublicLanding() {
     <div className="min-h-screen bg-background text-foreground">
       <header className="mx-auto flex w-full max-w-7xl items-center justify-between px-4 py-5 md:px-8">
         <Link to="/" className="flex items-center gap-2.5">
-          <div className="flex size-9 items-center justify-center rounded-xl bg-gradient-to-br from-primary to-primary-glow shadow-lg shadow-primary/20">
+          <div className="flex size-9 items-center justify-center rounded-xl bg-primary">
             <Gamepad2 className="size-5 text-primary-foreground" />
           </div>
           <div className="flex flex-col leading-none">
@@ -49,9 +49,7 @@ export function PublicLanding() {
       </header>
 
       <main className="mx-auto w-full max-w-7xl px-4 pb-16 md:px-8">
-        <section className="relative overflow-hidden rounded-3xl border border-border bg-gradient-to-br from-primary/15 via-card to-card p-8 md:p-12">
-          <div className="absolute -right-20 -top-20 size-72 rounded-full bg-primary/20 blur-3xl" />
-          <div className="absolute -bottom-24 right-1/3 size-64 rounded-full bg-primary-glow/15 blur-3xl" />
+        <section className="relative overflow-hidden rounded-3xl border border-border bg-card p-8 md:p-12">
           <div className="relative max-w-2xl">
             <span className="inline-flex items-center gap-1.5 rounded-full bg-primary/15 px-3 py-1 text-xs font-semibold uppercase tracking-wider text-primary ring-1 ring-primary/20">
               <span className="size-1.5 rounded-full bg-primary animate-pulse" />

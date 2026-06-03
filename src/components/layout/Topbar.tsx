@@ -63,7 +63,7 @@ export function Topbar() {
                 <p className="text-sm font-medium">{userName}</p>
                 {user?.email && <p className="text-xs text-muted-foreground">{user.email}</p>}
               </div>
-              <div className="flex size-9 items-center justify-center rounded-full bg-gradient-to-br from-primary/30 to-primary-glow/40 text-xs font-semibold ring-2 ring-primary/20">
+              <div className="flex size-9 items-center justify-center rounded-full bg-primary/15 text-xs font-semibold ring-2 ring-primary/20">
                 {initialsOf(userName) || "U"}
               </div>
             </button>
