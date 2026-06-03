@@ -432,6 +432,7 @@ function HostPanel() {
                   key={participant.id}
                   participant={participant}
                   mode={state.settings.mode}
+                  early={Boolean(state.currentRound?.earlyParticipantIds.includes(participant.id))}
                   disabled={scoreMutation.isPending}
                   onAdjust={(delta) =>
                     scoreMutation.mutate({ participantId: participant.id, delta })
@@ -454,11 +455,13 @@ function HostPanel() {
 function ParticipantRow({
   participant,
   mode,
+  early,
   disabled,
   onAdjust,
 }: {
   participant: MatchParticipant;
   mode: string;
+  early: boolean;
   disabled: boolean;
   onAdjust: (delta: number) => void;
 }) {
@@ -467,7 +470,7 @@ function ParticipantRow({
     <div
       className={
         "flex items-center justify-between rounded-xl bg-muted/40 px-4 py-3" +
-        (participant.eliminated ? " opacity-50" : "")
+        (participant.eliminated || early ? " opacity-50" : "")
       }
     >
       <div className="min-w-0">
@@ -476,6 +479,11 @@ function ParticipantRow({
           {participant.eliminated && (
             <span className="shrink-0 rounded bg-destructive/15 px-1.5 py-0.5 text-[10px] font-semibold uppercase text-destructive">
               Eliminado
+            </span>
+          )}
+          {early && !participant.eliminated && (
+            <span className="shrink-0 rounded bg-destructive/15 px-1.5 py-0.5 text-[10px] font-semibold uppercase text-destructive">
+              Fora (rodada)
             </span>
           )}
         </p>

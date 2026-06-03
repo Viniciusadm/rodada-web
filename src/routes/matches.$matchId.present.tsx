@@ -108,32 +108,40 @@ function PresentPage() {
           <aside className="rounded-2xl border border-border bg-card/80 p-5">
             <h3 className="mb-4 text-base font-semibold">Placar</h3>
             <div className="space-y-2">
-              {leaders.map((participant, index) => (
-                <div
-                  key={participant.id}
-                  className={
-                    "flex items-center justify-between rounded-xl bg-muted/40 px-4 py-3" +
-                    (participant.eliminated ? " opacity-50" : "")
-                  }
-                >
-                  <span className="flex items-center gap-2 text-sm font-medium">
-                    {index + 1}. {participant.displayName}
-                    {participant.livesRemaining != null && !participant.eliminated && (
-                      <span className="text-rose-500">
-                        {"♥".repeat(Math.max(0, participant.livesRemaining))}
-                      </span>
-                    )}
-                    {participant.eliminated && (
-                      <span className="rounded bg-destructive/15 px-1.5 py-0.5 text-[10px] font-semibold uppercase text-destructive">
-                        Fora
-                      </span>
-                    )}
-                  </span>
-                  <span className="text-sm font-semibold tabular-nums">
-                    {participant.currentScore}
-                  </span>
-                </div>
-              ))}
+              {leaders.map((participant, index) => {
+                const early = Boolean(round?.earlyParticipantIds.includes(participant.id));
+                return (
+                  <div
+                    key={participant.id}
+                    className={
+                      "flex items-center justify-between rounded-xl bg-muted/40 px-4 py-3" +
+                      (participant.eliminated || early ? " opacity-50" : "")
+                    }
+                  >
+                    <span className="flex items-center gap-2 text-sm font-medium">
+                      {index + 1}. {participant.displayName}
+                      {participant.livesRemaining != null && !participant.eliminated && !early && (
+                        <span className="text-rose-500">
+                          {"♥".repeat(Math.max(0, participant.livesRemaining))}
+                        </span>
+                      )}
+                      {participant.eliminated && (
+                        <span className="rounded bg-destructive/15 px-1.5 py-0.5 text-[10px] font-semibold uppercase text-destructive">
+                          Fora
+                        </span>
+                      )}
+                      {early && !participant.eliminated && (
+                        <span className="rounded bg-destructive/15 px-1.5 py-0.5 text-[10px] font-semibold uppercase text-destructive">
+                          Fora (rodada)
+                        </span>
+                      )}
+                    </span>
+                    <span className="text-sm font-semibold tabular-nums">
+                      {participant.currentScore}
+                    </span>
+                  </div>
+                );
+              })}
               {leaders.length === 0 && (
                 <p className="text-sm text-muted-foreground">Sem participantes.</p>
               )}

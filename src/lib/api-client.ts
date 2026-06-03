@@ -159,6 +159,7 @@ export type MatchRound = {
   answerRevealed: boolean;
   timeRemainingSeconds: number | null;
   question: MatchQuestion | null;
+  earlyParticipantIds: string[];
 };
 
 export type MatchState = {
@@ -171,6 +172,7 @@ export type MatchState = {
     initialPoints: number;
     remoteEnabled: boolean;
     capacity: number | null;
+    buzzerArmDelaySeconds: number;
   };
   questions: MatchQuestion[];
   participants: MatchParticipant[];
@@ -257,6 +259,7 @@ type ApiMatchRound = {
   answer_revealed: boolean;
   time_remaining_seconds: number | null;
   question: ApiMatchQuestion | null;
+  early_participant_ids: string[];
 };
 
 type ApiLiveRoom = {
@@ -283,6 +286,7 @@ type ApiMatchState = {
     initial_points: number;
     remote_enabled: boolean;
     capacity: number | null;
+    buzzer_arm_delay_seconds: number;
   };
   questions: ApiMatchQuestion[];
   participants: ApiMatchParticipant[];
@@ -474,6 +478,7 @@ export async function createMatch(input: {
   timePerQuestion?: number;
   initialPoints?: number;
   remoteEnabled: boolean;
+  buzzerArmDelaySeconds?: number;
   questions: MatchQuestionDraft[];
   gameId?: string;
   gameModeId?: string;
@@ -509,6 +514,7 @@ export async function createMatch(input: {
       time_per_round_seconds: input.timePerQuestion,
       initial_points: input.initialPoints,
       remote_enabled: input.remoteEnabled,
+      buzzer_arm_delay_seconds: input.buzzerArmDelaySeconds,
       questions: input.questions.map((question) => ({
         source_question_id: null,
         prompt: question.text,
@@ -638,7 +644,7 @@ export async function sendPlayerAnswer(
   participantToken: string,
   answer?: string,
 ) {
-  return request<{ accepted: boolean; correct: boolean | null }>(
+  return request<{ accepted: boolean; correct: boolean | null; early: boolean }>(
     `/api/v1/matches/${matchId}/rounds/${roundId}/player-answer`,
     {
       auth: false,
@@ -914,6 +920,7 @@ function mapMatchState(state: ApiMatchState): MatchState {
       initialPoints: state.settings.initial_points,
       remoteEnabled: state.settings.remote_enabled,
       capacity: state.settings.capacity,
+      buzzerArmDelaySeconds: state.settings.buzzer_arm_delay_seconds,
     },
     questions: state.questions.map(mapQuestion),
     participants: state.participants.map(mapParticipant),
@@ -957,6 +964,7 @@ function mapRound(round: ApiMatchRound): MatchRound {
     answerRevealed: round.answer_revealed,
     timeRemainingSeconds: round.time_remaining_seconds,
     question: round.question ? mapQuestion(round.question) : null,
+    earlyParticipantIds: round.early_participant_ids ?? [],
   };
 }
 

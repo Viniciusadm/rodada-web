@@ -57,6 +57,7 @@ function NewMatchPage() {
   const [timePerQuestion, setTimePerQuestion] = useState<string>("20");
   const [initialPoints, setInitialPoints] = useState<string>("500");
   const [remoteEnabled, setRemoteEnabled] = useState(true);
+  const [buzzerArmDelay, setBuzzerArmDelay] = useState<string>("0");
 
   const selectedGame = useMemo(
     () => games.find((g) => g.id === gameId) ?? games[0],
@@ -100,6 +101,8 @@ function NewMatchPage() {
       initialPoints:
         mode === "pontos-iniciais" || mode === "eliminacao" ? Number(initialPoints) : undefined,
       remoteEnabled,
+      buzzerArmDelaySeconds:
+        gameKind === "buzzer" ? Math.min(5, Math.max(0, Number(buzzerArmDelay) || 0)) : undefined,
       questions,
       gameId: gameId || games[0]?.id,
     });
@@ -223,6 +226,23 @@ function NewMatchPage() {
                 </div>
               )}
             </div>
+            {gameKind === "buzzer" && (
+              <div className="space-y-2">
+                <Label htmlFor="arm-delay">Tempo de espera do buzzer (segundos)</Label>
+                <Input
+                  id="arm-delay"
+                  type="number"
+                  min={0}
+                  max={5}
+                  value={buzzerArmDelay}
+                  onChange={(e) => setBuzzerArmDelay(e.target.value)}
+                />
+                <p className="text-xs text-muted-foreground">
+                  Ao abrir a pergunta, o botão "Eu sei" fica bloqueado por esse tempo (0 a 5s). Quem
+                  clicar antes é eliminado da rodada. Use 0 para desativar.
+                </p>
+              </div>
+            )}
             <div className="flex items-center justify-between rounded-xl border border-border bg-muted/30 px-4 py-3">
               <div>
                 <p className="text-sm font-medium">Participação remota</p>

@@ -34,6 +34,7 @@ function PlayPage() {
   const [answeredRoundId, setAnsweredRoundId] = useState<string | null>(null);
   const [lastResult, setLastResult] = useState<"correct" | "incorrect" | null>(null);
   const [wordAnswer, setWordAnswer] = useState("");
+  const [armRemaining, setArmRemaining] = useState(0);
   const justJoinedRef = useRef(false);
   const realtime = useRealtimeInvalidation({ channel: `match:${matchId}`, matchId });
   const query = useQuery({
@@ -83,7 +84,11 @@ function PlayPage() {
       const roundId = query.data?.currentRound?.id ?? null;
       if (result.correct === null) {
         // Buzzer: ninguém julga ainda, só registra quem apertou primeiro.
-        toast.success(result.accepted ? "Resposta enviada." : "Alguém respondeu antes.");
+        if (result.early) {
+          toast.error("Você clicou cedo demais e perdeu esta rodada.");
+        } else {
+          toast.success(result.accepted ? "Resposta enviada." : "Alguém respondeu antes.");
+        }
       } else if (result.accepted) {
         if (roundId) setAnsweredRoundId(roundId);
         setLastResult(result.correct ? "correct" : "incorrect");
@@ -104,6 +109,11 @@ function PlayPage() {
       // O servidor recusa respostas após o tempo da pergunta expirar (409).
       if (error instanceof ApiError && error.status === 409 && /expired/i.test(error.message)) {
         toast.error("Tempo esgotado para esta pergunta.");
+        return;
+      }
+      // Buzzer: já desqualificado nesta rodada por clique adiantado (409).
+      if (error instanceof ApiError && error.status === 409 && /this round/i.test(error.message)) {
+        toast.error("Você está fora desta rodada.");
         return;
       }
       toast.error(errorToMessage(error));
@@ -151,6 +161,31 @@ function PlayPage() {
     setWordAnswer("");
   }, [currentRoundId]);
 
+  // Buzzer: contagem do estado "armado" do botão. O servidor é a autoridade;
+  // aqui é só aviso visual. Inicia na virada da rodada e, quando há tempo de
+  // pergunta, sincroniza pelo tempo já decorrido (corrige quem entra no meio).
+  useEffect(() => {
+    const round = query.data?.currentRound;
+    const armDelay = query.data?.settings.buzzerArmDelaySeconds ?? 0;
+    if (!round || round.status !== "open" || armDelay <= 0) {
+      setArmRemaining(0);
+      return;
+    }
+    const total = query.data?.settings.timePerRoundSeconds ?? null;
+    const remaining = round.timeRemainingSeconds ?? null;
+    let initial = armDelay;
+    if (total != null && remaining != null) {
+      initial = Math.max(0, armDelay - (total - remaining));
+    }
+    setArmRemaining(initial);
+    if (initial <= 0) return;
+    const interval = setInterval(() => {
+      setArmRemaining((value) => Math.max(0, value - 1));
+    }, 1000);
+    return () => clearInterval(interval);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [currentRoundId]);
+
   if (query.isLoading) {
     return <div className="p-8 text-center text-muted-foreground">Carregando partida...</div>;
   }
@@ -167,6 +202,9 @@ function PlayPage() {
   // snapshot do servidor ou pelo relógio local) não aceita mais "Eu sei".
   const roundExpired =
     round?.status === "open" && (round.timeRemainingSeconds === 0 || expiredRoundId === round.id);
+  // Buzzer: botão "armado" (clicar elimina da rodada) e desqualificação local.
+  const buzzerArmed = gameKind === "buzzer" && armRemaining > 0;
+  const iAmEarly = Boolean(participantId && round?.earlyParticipantIds.includes(participantId));
 
   return (
     <div className="flex min-h-screen flex-col items-center justify-center bg-background px-6 text-center">
@@ -247,17 +285,43 @@ function PlayPage() {
 
                 {gameKind === "buzzer" ? (
                   <>
-                    <Button
-                      className="h-24 w-24 rounded-full text-base"
-                      disabled={
-                        answerMutation.isPending ||
-                        Boolean(round.selectedParticipantId) ||
-                        roundExpired
-                      }
-                      onClick={() => answerMutation.mutate(undefined)}
-                    >
-                      <Hand className="mr-1 size-5" /> Eu sei
-                    </Button>
+                    {iAmEarly ? (
+                      <p className="rounded-lg bg-destructive/10 p-3 text-sm text-destructive">
+                        Você clicou cedo demais e está fora desta rodada. Aguarde a próxima
+                        pergunta.
+                      </p>
+                    ) : (
+                      <Button
+                        className={
+                          buzzerArmed
+                            ? "h-24 w-24 rounded-full bg-amber-500 text-base text-white hover:bg-amber-500/90"
+                            : "h-24 w-24 rounded-full text-base"
+                        }
+                        disabled={
+                          answerMutation.isPending ||
+                          Boolean(round.selectedParticipantId) ||
+                          roundExpired
+                        }
+                        onClick={() => answerMutation.mutate(undefined)}
+                      >
+                        {buzzerArmed ? (
+                          <span className="flex flex-col items-center leading-tight">
+                            <span className="text-2xl font-bold tabular-nums">{armRemaining}</span>
+                            <span className="text-[10px] uppercase tracking-wide">não clique</span>
+                          </span>
+                        ) : (
+                          <>
+                            <Hand className="mr-1 size-5" /> Eu sei
+                          </>
+                        )}
+                      </Button>
+                    )}
+                    {buzzerArmed && !iAmEarly && (
+                      <p className="text-sm text-amber-600">
+                        Aguarde {armRemaining}s para liberar. Clicar agora elimina você desta
+                        rodada.
+                      </p>
+                    )}
                     {roundExpired && !round.selectedParticipantId && (
                       <p className="text-sm text-destructive">
                         Tempo esgotado. Aguarde o anfitrião.
