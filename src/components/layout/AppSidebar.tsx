@@ -56,7 +56,7 @@ export function AppSidebar() {
     <Sidebar collapsible="icon">
       <SidebarHeader>
         <Link to="/" className="flex items-center gap-2.5 px-2 py-2">
-          <div className="flex size-9 items-center justify-center rounded-xl bg-gradient-to-br from-primary to-primary-glow shadow-lg shadow-primary/20">
+          <div className="flex size-9 items-center justify-center rounded-xl bg-primary">
             <Gamepad2 className="size-5 text-primary-foreground" />
           </div>
           <div className="flex flex-col leading-none group-data-[collapsible=icon]:hidden">
@@ -89,7 +89,7 @@ export function AppSidebar() {
 
       <SidebarFooter>
         <div className="flex items-center gap-3 rounded-lg px-2 py-2 group-data-[collapsible=icon]:justify-center">
-          <div className="flex size-8 shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-primary/30 to-primary-glow/30 text-xs font-semibold text-foreground">
+          <div className="flex size-8 shrink-0 items-center justify-center rounded-full bg-primary/15 text-xs font-semibold text-foreground">
             {initialsOf(userName) || "U"}
           </div>
           <div className="min-w-0 flex-1 group-data-[collapsible=icon]:hidden">

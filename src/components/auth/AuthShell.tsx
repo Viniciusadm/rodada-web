@@ -19,7 +19,7 @@ export function AuthShell({
         <div className="mb-8 flex flex-col items-center text-center">
           <Link
             to="/"
-            className="flex size-12 items-center justify-center rounded-2xl bg-gradient-to-br from-primary to-primary-glow shadow-lg shadow-primary/20"
+            className="flex size-12 items-center justify-center rounded-2xl bg-primary"
             aria-label="Games Hub — voltar para a home"
           >
             <Gamepad2 className="size-6 text-primary-foreground" />

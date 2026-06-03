@@ -38,7 +38,7 @@ function Dashboard() {
 
   return (
     <div className="mx-auto max-w-7xl space-y-10">
-      <section className="relative overflow-hidden rounded-3xl border border-border bg-gradient-to-br from-primary/15 via-card to-card p-8 md:p-10">
+      <section className="relative overflow-hidden rounded-3xl border border-border bg-card p-8 md:p-10">
         <div className="absolute -right-20 -top-20 size-72 rounded-full bg-primary/20 blur-3xl" />
         <div className="absolute -bottom-24 right-1/3 size-64 rounded-full bg-primary-glow/15 blur-3xl" />
         <div className="relative max-w-2xl">

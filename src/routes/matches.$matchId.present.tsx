@@ -25,7 +25,7 @@ function PresentPage() {
 
   if (query.isLoading) {
     return (
-      <div className="flex min-h-screen items-center justify-center bg-gradient-to-br from-background via-background to-primary/10">
+      <div className="flex min-h-screen items-center justify-center bg-background">
         <Loader2 className="size-8 animate-spin text-muted-foreground" />
       </div>
     );
@@ -41,11 +41,11 @@ function PresentPage() {
     .slice(0, 5);
 
   return (
-    <div className="relative min-h-screen overflow-hidden bg-gradient-to-br from-background via-background to-primary/10">
+    <div className="relative min-h-screen overflow-hidden bg-background">
       <div className="relative mx-auto flex min-h-screen max-w-7xl flex-col p-4 sm:p-8">
         <header className="mb-8 flex items-center justify-between">
           <div className="flex items-center gap-3">
-            <div className="flex size-12 items-center justify-center rounded-2xl bg-gradient-to-br from-primary to-primary-glow shadow-xl shadow-primary/30">
+            <div className="flex size-12 items-center justify-center rounded-2xl bg-primary">
               <Gamepad2 className="size-6 text-primary-foreground" />
             </div>
             <div>

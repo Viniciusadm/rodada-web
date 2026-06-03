@@ -65,9 +65,9 @@ function EntrarPage() {
   const canSubmit = pin.length === 6 && name.trim().length > 0 && !joinMutation.isPending;
 
   return (
-    <div className="flex min-h-screen flex-col items-center justify-center bg-gradient-to-br from-background to-primary/10 px-6 text-center">
+    <div className="flex min-h-screen flex-col items-center justify-center bg-background px-6 text-center">
       <div className="mb-8 flex items-center gap-3">
-        <div className="flex size-14 items-center justify-center rounded-2xl bg-gradient-to-br from-primary to-primary-glow shadow-xl shadow-primary/30">
+        <div className="flex size-14 items-center justify-center rounded-2xl bg-primary">
           <Gamepad2 className="size-7 text-primary-foreground" />
         </div>
         <div className="text-left">
