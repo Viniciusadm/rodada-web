@@ -39,8 +39,6 @@ function Dashboard() {
   return (
     <div className="mx-auto max-w-7xl space-y-10">
       <section className="relative overflow-hidden rounded-3xl border border-border bg-card p-8 md:p-10">
-        <div className="absolute -right-20 -top-20 size-72 rounded-full bg-primary/20 blur-3xl" />
-        <div className="absolute -bottom-24 right-1/3 size-64 rounded-full bg-primary-glow/15 blur-3xl" />
         <div className="relative max-w-2xl">
           <span className="inline-flex items-center gap-1.5 rounded-full bg-primary/15 px-3 py-1 text-xs font-semibold uppercase tracking-wider text-primary ring-1 ring-primary/20">
             <span className="size-1.5 rounded-full bg-primary animate-pulse" />
