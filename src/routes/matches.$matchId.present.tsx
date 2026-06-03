@@ -43,6 +43,13 @@ function PresentPage() {
   const leaders = [...state.participants]
     .sort((a, b) => b.currentScore - a.currentScore)
     .slice(0, 5);
+  const matchEnded = match.status === "encerrada";
+  const showRanking =
+    state.settings.rankingDisplay === "always"
+      ? true
+      : state.settings.rankingDisplay === "end_only"
+        ? matchEnded
+        : !round?.question;
 
   return (
     <div className="relative min-h-screen overflow-hidden bg-background">
@@ -62,7 +69,12 @@ function PresentPage() {
           <MatchStatusBadge status={match.status} className="text-sm" />
         </header>
 
-        <main className="grid flex-1 grid-cols-1 items-center gap-8 lg:grid-cols-[1fr_360px]">
+        <main
+          className={
+            "grid flex-1 grid-cols-1 items-center gap-8" +
+            (showRanking ? " lg:grid-cols-[1fr_360px]" : "")
+          }
+        >
           <section className="text-center">
             {round?.question ? (
               <>
@@ -130,6 +142,7 @@ function PresentPage() {
             )}
           </section>
 
+          {showRanking && (
           <aside className="rounded-2xl border border-border bg-card/80 p-5">
             <h3 className="mb-4 text-base font-semibold">Placar</h3>
             <div className="space-y-2">
@@ -172,6 +185,7 @@ function PresentPage() {
               )}
             </div>
           </aside>
+          )}
         </main>
       </div>
     </div>

@@ -99,6 +99,9 @@ function NewMatchPage() {
   const [initialPoints, setInitialPoints] = useState<string>("500");
   const [remoteEnabled, setRemoteEnabled] = useState(true);
   const [buzzerArmDelay, setBuzzerArmDelay] = useState<string>("0");
+  const [rankingDisplay, setRankingDisplay] = useState<
+    "always" | "between_questions" | "end_only"
+  >("always");
 
   const [questions, setQuestions] = useState<DraftQ[]>([]);
 
@@ -126,6 +129,7 @@ function NewMatchPage() {
       remoteEnabled,
       buzzerArmDelaySeconds:
         mode === "buzzer" ? Math.min(5, Math.max(0, Number(buzzerArmDelay) || 0)) : undefined,
+      rankingDisplay: mode === "quiz" ? rankingDisplay : undefined,
       questions: questions.map((q) => ({
         type: q.type,
         text: q.text,
@@ -227,6 +231,31 @@ function NewMatchPage() {
                       <SelectItem value="eliminacao">Eliminação por erro</SelectItem>
                     </SelectContent>
                   </Select>
+                </div>
+              )}
+              {mode === "quiz" && (
+                <div className="space-y-2">
+                  <Label>Exibição do ranking</Label>
+                  <Select
+                    value={rankingDisplay}
+                    onValueChange={(v) =>
+                      setRankingDisplay(v as "always" | "between_questions" | "end_only")
+                    }
+                  >
+                    <SelectTrigger>
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="always">Sempre mostrar ranking</SelectItem>
+                      <SelectItem value="between_questions">
+                        Mostrar somente entre perguntas
+                      </SelectItem>
+                      <SelectItem value="end_only">Mostrar só no final</SelectItem>
+                    </SelectContent>
+                  </Select>
+                  <p className="text-xs text-muted-foreground">
+                    Controla quando o placar aparece na tela de apresentação.
+                  </p>
                 </div>
               )}
               <div className="space-y-2">

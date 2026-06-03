@@ -152,6 +152,7 @@ export type MatchState = {
     remoteEnabled: boolean;
     capacity: number | null;
     buzzerArmDelaySeconds: number;
+    rankingDisplay: "always" | "between_questions" | "end_only";
   };
   questions: MatchQuestion[];
   participants: MatchParticipant[];
@@ -249,6 +250,7 @@ type ApiMatchState = {
     remote_enabled: boolean;
     capacity: number | null;
     buzzer_arm_delay_seconds: number;
+    ranking_display: string;
   };
   questions: ApiMatchQuestion[];
   participants: ApiMatchParticipant[];
@@ -437,6 +439,7 @@ export async function createMatch(input: {
   initialPoints?: number;
   remoteEnabled: boolean;
   buzzerArmDelaySeconds?: number;
+  rankingDisplay?: "always" | "between_questions" | "end_only";
   questions: MatchQuestionDraft[];
 }): Promise<MatchSummary> {
   const scoringMap = {
@@ -458,6 +461,7 @@ export async function createMatch(input: {
       initial_points: input.initialPoints,
       remote_enabled: input.remoteEnabled,
       buzzer_arm_delay_seconds: input.buzzerArmDelaySeconds,
+      ranking_display: input.rankingDisplay,
       questions: input.questions.map((question) => ({
         source_question_id: null,
         question_type: input.mode === "buzzer" ? "buzzer" : question.type,
@@ -859,6 +863,10 @@ function mapMatchState(state: ApiMatchState): MatchState {
       remoteEnabled: state.settings.remote_enabled,
       capacity: state.settings.capacity,
       buzzerArmDelaySeconds: state.settings.buzzer_arm_delay_seconds,
+      rankingDisplay: state.settings.ranking_display as
+        | "always"
+        | "between_questions"
+        | "end_only",
     },
     questions: state.questions.map(mapQuestion),
     participants: state.participants.map(mapParticipant),
