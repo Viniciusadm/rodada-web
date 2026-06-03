@@ -1,17 +1,5 @@
 import { Link, useRouterState } from "@tanstack/react-router";
-import {
-  Home,
-  Gamepad2,
-  Radio,
-  Trophy,
-  Users,
-  History,
-  PlusCircle,
-  Settings,
-  Swords,
-  Check,
-  ChevronsUpDown,
-} from "lucide-react";
+import { Home, Gamepad2, Trophy, Users, History, PlusCircle, Swords } from "lucide-react";
 
 import {
   Sidebar,
@@ -25,22 +13,7 @@ import {
   SidebarMenuItem,
   SidebarFooter,
 } from "@/components/ui/sidebar";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuLabel,
-  DropdownMenuSeparator,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
 import { useAuthStore } from "@/stores/auth";
-
-const ROLE_LABELS: Record<string, string> = {
-  owner: "Proprietário",
-  admin: "Administrador",
-  host: "Apresentador",
-  member: "Membro",
-};
 
 function initialsOf(name: string) {
   return name
@@ -53,43 +26,31 @@ function initialsOf(name: string) {
 
 const groups = [
   {
-    label: "Principal",
+    label: "Jogar",
     items: [
       { title: "Início", url: "/", icon: Home },
-      { title: "Jogos", url: "/games", icon: Gamepad2 },
+      { title: "Nova partida", url: "/matches/new", icon: PlusCircle },
       { title: "Partidas", url: "/matches", icon: Swords },
-      { title: "Salas ao vivo", url: "/rooms", icon: Radio },
-      { title: "Ranking", url: "/ranking", icon: Trophy },
+      { title: "Jogos", url: "/games", icon: Gamepad2 },
     ],
   },
   {
-    label: "Comunidade",
+    label: "Acompanhar",
     items: [
+      { title: "Ranking", url: "/ranking", icon: Trophy },
       { title: "Jogadores", url: "/players", icon: Users },
       { title: "Histórico", url: "/history", icon: History },
-    ],
-  },
-  {
-    label: "Gestão",
-    items: [
-      { title: "Nova partida", url: "/matches/new", icon: PlusCircle },
-      { title: "Configurações", url: "/settings", icon: Settings },
     ],
   },
 ];
 
 export function AppSidebar() {
   const currentPath = useRouterState({ select: (r) => r.location.pathname });
-  const activeOrganization = useAuthStore((s) => s.activeOrganization);
-  const organizations = useAuthStore((s) => s.organizations);
-  const setActiveOrganization = useAuthStore((s) => s.setActiveOrganization);
+  const user = useAuthStore((s) => s.user);
   const isActive = (path: string) =>
     path === "/" ? currentPath === "/" : currentPath.startsWith(path);
 
-  const orgName = activeOrganization?.name ?? "Games Hub";
-  const roleLabel = activeOrganization
-    ? (ROLE_LABELS[activeOrganization.role] ?? "Membro")
-    : "Hub de jogos";
+  const userName = user?.displayName ?? "Conta";
 
   return (
     <Sidebar collapsible="icon">
@@ -127,49 +88,15 @@ export function AppSidebar() {
       </SidebarContent>
 
       <SidebarFooter>
-        {organizations.length > 1 ? (
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <button
-                type="button"
-                className="flex w-full items-center gap-3 rounded-lg px-2 py-2 text-left transition-colors hover:bg-sidebar-accent group-data-[collapsible=icon]:justify-center"
-              >
-                <div className="flex size-8 shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-primary/30 to-primary-glow/30 text-xs font-semibold text-foreground">
-                  {initialsOf(orgName) || "GH"}
-                </div>
-                <div className="min-w-0 flex-1 group-data-[collapsible=icon]:hidden">
-                  <p className="truncate text-sm font-medium">{orgName}</p>
-                  <p className="truncate text-xs text-muted-foreground">{roleLabel}</p>
-                </div>
-                <ChevronsUpDown className="size-4 shrink-0 text-muted-foreground group-data-[collapsible=icon]:hidden" />
-              </button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="start" className="w-56">
-              <DropdownMenuLabel>Organizações</DropdownMenuLabel>
-              <DropdownMenuSeparator />
-              {organizations.map((org) => (
-                <DropdownMenuItem
-                  key={org.id}
-                  onSelect={() => setActiveOrganization(org.id)}
-                  className="flex items-center justify-between gap-2"
-                >
-                  <span className="truncate">{org.name}</span>
-                  {org.id === activeOrganization?.id && <Check className="size-4 shrink-0" />}
-                </DropdownMenuItem>
-              ))}
-            </DropdownMenuContent>
-          </DropdownMenu>
-        ) : (
-          <div className="flex items-center gap-3 rounded-lg px-2 py-2 group-data-[collapsible=icon]:justify-center">
-            <div className="flex size-8 shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-primary/30 to-primary-glow/30 text-xs font-semibold text-foreground">
-              {initialsOf(orgName) || "GH"}
-            </div>
-            <div className="min-w-0 flex-1 group-data-[collapsible=icon]:hidden">
-              <p className="truncate text-sm font-medium">{orgName}</p>
-              <p className="truncate text-xs text-muted-foreground">{roleLabel}</p>
-            </div>
+        <div className="flex items-center gap-3 rounded-lg px-2 py-2 group-data-[collapsible=icon]:justify-center">
+          <div className="flex size-8 shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-primary/30 to-primary-glow/30 text-xs font-semibold text-foreground">
+            {initialsOf(userName) || "U"}
           </div>
-        )}
+          <div className="min-w-0 flex-1 group-data-[collapsible=icon]:hidden">
+            <p className="truncate text-sm font-medium">{userName}</p>
+            {user?.email && <p className="truncate text-xs text-muted-foreground">{user.email}</p>}
+          </div>
+        </div>
       </SidebarFooter>
     </Sidebar>
   );

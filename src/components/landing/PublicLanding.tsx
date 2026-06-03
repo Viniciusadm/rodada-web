@@ -1,5 +1,5 @@
 import { Link } from "@tanstack/react-router";
-import { ArrowRight, Gamepad2, Radio, Trophy, Users, type LucideIcon } from "lucide-react";
+import { ArrowRight, Gamepad2, Link2, Trophy, Users, type LucideIcon } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 
@@ -7,24 +7,22 @@ const FEATURES: Array<{ icon: LucideIcon; title: string; description: string }> 
   {
     icon: Gamepad2,
     title: "Jogos prontos",
-    description:
-      "Uma coleção de experiências interativas para usar em encontros, salas e eventos da comunidade.",
+    description: "Uma coleção de experiências interativas para usar em encontros, aulas e eventos.",
   },
   {
-    icon: Radio,
-    title: "Salas ao vivo",
-    description:
-      "Crie partidas em tempo real e convide participantes via PIN, presencial ou remoto.",
+    icon: Link2,
+    title: "Entre por link",
+    description: "Crie a partida e convide participantes por um link único — presencial ou remoto.",
   },
   {
     icon: Trophy,
     title: "Ranking e engajamento",
-    description: "Acompanhe a pontuação dos jogadores e times para movimentar a comunidade.",
+    description: "Acompanhe a pontuação dos jogadores e times a cada partida.",
   },
   {
     icon: Users,
     title: "Multi-organização",
-    description: "Gerencie sua comunidade com papéis de apresentador, administrador e membro.",
+    description: "Gerencie seu grupo com papéis de apresentador, administrador e membro.",
   },
 ];
 
@@ -57,14 +55,14 @@ export function PublicLanding() {
           <div className="relative max-w-2xl">
             <span className="inline-flex items-center gap-1.5 rounded-full bg-primary/15 px-3 py-1 text-xs font-semibold uppercase tracking-wider text-primary ring-1 ring-primary/20">
               <span className="size-1.5 rounded-full bg-primary animate-pulse" />
-              Para comunidades e times
+              Para grupos e times
             </span>
             <h1 className="mt-4 text-3xl font-semibold tracking-tight md:text-5xl">
-              Jogos interativos para reunir sua comunidade
+              Jogos interativos para reunir o seu grupo
             </h1>
             <p className="mt-4 max-w-xl text-base text-muted-foreground md:text-lg">
-              Crie partidas ao vivo, engaje participantes presenciais e remotos e acompanhe o
-              ranking da sua comunidade em um só lugar.
+              Crie uma partida, compartilhe o link único e reúna participantes presenciais e remotos
+              em um só lugar.
             </p>
             <div className="mt-6 flex flex-wrap gap-3">
               <Button asChild size="lg" className="rounded-xl">

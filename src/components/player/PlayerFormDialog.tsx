@@ -14,17 +14,8 @@ import {
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
-import { useCreatePlayer, useTeamsQuery, useUpdatePlayer } from "@/features/games-hub-data";
+import { useCreatePlayer, useUpdatePlayer } from "@/features/games-hub-data";
 import type { Player } from "@/lib/api-client";
-
-const NO_TEAM = "none";
 
 const schema = z.object({
   displayName: z
@@ -42,19 +33,16 @@ type Props = {
 };
 
 export function PlayerFormDialog({ mode, player, open, onOpenChange }: Props) {
-  const { data: teams = [] } = useTeamsQuery();
   const createPlayer = useCreatePlayer();
   const updatePlayer = useUpdatePlayer();
 
   const [displayName, setDisplayName] = useState("");
-  const [ministryId, setMinistryId] = useState<string>(NO_TEAM);
   const [error, setError] = useState<string | null>(null);
 
   // Reidrata o formulário sempre que abrir ou trocar o jogador em edição.
   useEffect(() => {
     if (!open) return;
     setDisplayName(player?.name ?? "");
-    setMinistryId(player?.ministryId ?? NO_TEAM);
     setError(null);
   }, [open, player]);
 
@@ -68,20 +56,15 @@ export function PlayerFormDialog({ mode, player, open, onOpenChange }: Props) {
       return;
     }
     setError(null);
-    const ministry = ministryId === NO_TEAM ? null : ministryId;
 
     try {
       if (mode === "create") {
-        await createPlayer.mutateAsync({
-          displayName: parsed.data.displayName,
-          ministryId: ministry,
-        });
+        await createPlayer.mutateAsync({ displayName: parsed.data.displayName });
         toast.success("Jogador cadastrado!");
       } else if (player) {
         await updatePlayer.mutateAsync({
           playerId: player.id,
           displayName: parsed.data.displayName,
-          ministryId: ministry,
         });
         toast.success("Jogador atualizado!");
       }
@@ -97,9 +80,7 @@ export function PlayerFormDialog({ mode, player, open, onOpenChange }: Props) {
         <DialogHeader>
           <DialogTitle>{mode === "create" ? "Novo jogador" : "Editar jogador"}</DialogTitle>
           <DialogDescription>
-            {mode === "create"
-              ? "Cadastre um jogador na sua comunidade."
-              : "Atualize o nome e o time do jogador."}
+            {mode === "create" ? "Cadastre um jogador no seu hub." : "Atualize o nome do jogador."}
           </DialogDescription>
         </DialogHeader>
 
@@ -113,23 +94,6 @@ export function PlayerFormDialog({ mode, player, open, onOpenChange }: Props) {
               placeholder="Nome do jogador"
               autoFocus
             />
-          </div>
-
-          <div className="space-y-1.5">
-            <Label htmlFor="player-team">Time / ministério</Label>
-            <Select value={ministryId} onValueChange={setMinistryId}>
-              <SelectTrigger id="player-team">
-                <SelectValue placeholder="Selecione um time" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value={NO_TEAM}>Sem time</SelectItem>
-                {teams.map((team) => (
-                  <SelectItem key={team.id} value={team.id}>
-                    {team.name}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
           </div>
 
           {error && (

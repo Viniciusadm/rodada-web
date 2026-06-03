@@ -115,10 +115,9 @@ function PublicBootstrap({ children }: { children: React.ReactNode }) {
 }
 
 function AuthedShell({ children }: { children: React.ReactNode }) {
-  const orgId = useAuthStore((s) => s.activeOrganization?.id ?? null);
+  const userId = useAuthStore((s) => s.user?.id ?? null);
   useRealtimeInvalidation({
-    channel: orgId ? `organization:${orgId}` : null,
-    organizationId: orgId,
+    channel: userId ? `user:${userId}` : null,
   });
 
   return (

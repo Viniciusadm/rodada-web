@@ -9,8 +9,6 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
-import { Route as SettingsRouteImport } from './routes/settings'
-import { Route as RoomsRouteImport } from './routes/rooms'
 import { Route as RegisterRouteImport } from './routes/register'
 import { Route as RankingRouteImport } from './routes/ranking'
 import { Route as PlayersRouteImport } from './routes/players'
@@ -26,16 +24,6 @@ import { Route as MatchesMatchIdQuestionsRouteImport } from './routes/matches.$m
 import { Route as MatchesMatchIdPresentRouteImport } from './routes/matches.$matchId.present'
 import { Route as MatchesMatchIdHostRouteImport } from './routes/matches.$matchId.host'
 
-const SettingsRoute = SettingsRouteImport.update({
-  id: '/settings',
-  path: '/settings',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const RoomsRoute = RoomsRouteImport.update({
-  id: '/rooms',
-  path: '/rooms',
-  getParentRoute: () => rootRouteImport,
-} as any)
 const RegisterRoute = RegisterRouteImport.update({
   id: '/register',
   path: '/register',
@@ -116,8 +104,6 @@ export interface FileRoutesByFullPath {
   '/players': typeof PlayersRoute
   '/ranking': typeof RankingRoute
   '/register': typeof RegisterRoute
-  '/rooms': typeof RoomsRoute
-  '/settings': typeof SettingsRoute
   '/matches/new': typeof MatchesNewRoute
   '/play/$matchId': typeof PlayMatchIdRoute
   '/matches/': typeof MatchesIndexRoute
@@ -134,8 +120,6 @@ export interface FileRoutesByTo {
   '/players': typeof PlayersRoute
   '/ranking': typeof RankingRoute
   '/register': typeof RegisterRoute
-  '/rooms': typeof RoomsRoute
-  '/settings': typeof SettingsRoute
   '/matches/new': typeof MatchesNewRoute
   '/play/$matchId': typeof PlayMatchIdRoute
   '/matches': typeof MatchesIndexRoute
@@ -153,8 +137,6 @@ export interface FileRoutesById {
   '/players': typeof PlayersRoute
   '/ranking': typeof RankingRoute
   '/register': typeof RegisterRoute
-  '/rooms': typeof RoomsRoute
-  '/settings': typeof SettingsRoute
   '/matches/new': typeof MatchesNewRoute
   '/play/$matchId': typeof PlayMatchIdRoute
   '/matches/': typeof MatchesIndexRoute
@@ -173,8 +155,6 @@ export interface FileRouteTypes {
     | '/players'
     | '/ranking'
     | '/register'
-    | '/rooms'
-    | '/settings'
     | '/matches/new'
     | '/play/$matchId'
     | '/matches/'
@@ -191,8 +171,6 @@ export interface FileRouteTypes {
     | '/players'
     | '/ranking'
     | '/register'
-    | '/rooms'
-    | '/settings'
     | '/matches/new'
     | '/play/$matchId'
     | '/matches'
@@ -209,8 +187,6 @@ export interface FileRouteTypes {
     | '/players'
     | '/ranking'
     | '/register'
-    | '/rooms'
-    | '/settings'
     | '/matches/new'
     | '/play/$matchId'
     | '/matches/'
@@ -228,8 +204,6 @@ export interface RootRouteChildren {
   PlayersRoute: typeof PlayersRoute
   RankingRoute: typeof RankingRoute
   RegisterRoute: typeof RegisterRoute
-  RoomsRoute: typeof RoomsRoute
-  SettingsRoute: typeof SettingsRoute
   MatchesNewRoute: typeof MatchesNewRoute
   PlayMatchIdRoute: typeof PlayMatchIdRoute
   MatchesIndexRoute: typeof MatchesIndexRoute
@@ -240,20 +214,6 @@ export interface RootRouteChildren {
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
-    '/settings': {
-      id: '/settings'
-      path: '/settings'
-      fullPath: '/settings'
-      preLoaderRoute: typeof SettingsRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/rooms': {
-      id: '/rooms'
-      path: '/rooms'
-      fullPath: '/rooms'
-      preLoaderRoute: typeof RoomsRouteImport
-      parentRoute: typeof rootRouteImport
-    }
     '/register': {
       id: '/register'
       path: '/register'
@@ -364,8 +324,6 @@ const rootRouteChildren: RootRouteChildren = {
   PlayersRoute: PlayersRoute,
   RankingRoute: RankingRoute,
   RegisterRoute: RegisterRoute,
-  RoomsRoute: RoomsRoute,
-  SettingsRoute: SettingsRoute,
   MatchesNewRoute: MatchesNewRoute,
   PlayMatchIdRoute: PlayMatchIdRoute,
   MatchesIndexRoute: MatchesIndexRoute,

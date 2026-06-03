@@ -17,7 +17,6 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { usePlayersQuery, useUpdatePlayer } from "@/features/games-hub-data";
 import type { Player } from "@/lib/api-client";
 import { cn } from "@/lib/utils";
-import { useAuthStore } from "@/stores/auth";
 
 export const Route = createFileRoute("/players")({
   head: () => ({
@@ -31,8 +30,6 @@ export const Route = createFileRoute("/players")({
 
 function PlayersPage() {
   const { data: players = [], isLoading, isError } = usePlayersQuery();
-  const role = useAuthStore((s) => s.activeOrganization?.role);
-  const canManage = role === "owner" || role === "admin" || role === "host";
   const updatePlayer = useUpdatePlayer();
 
   const [search, setSearch] = useState("");
@@ -43,9 +40,7 @@ function PlayersPage() {
   const filteredPlayers = useMemo(() => {
     const term = search.trim().toLocaleLowerCase("pt-BR");
     if (!term) return players;
-    return players.filter((player) =>
-      `${player.name} ${player.team}`.toLocaleLowerCase("pt-BR").includes(term),
-    );
+    return players.filter((player) => player.name.toLocaleLowerCase("pt-BR").includes(term));
   }, [players, search]);
 
   const openCreate = () => {
@@ -85,11 +80,9 @@ function PlayersPage() {
                 className="h-10 rounded-lg pl-9"
               />
             </div>
-            {canManage && (
-              <Button className="rounded-lg" onClick={openCreate}>
-                <PlusCircle className="mr-1 size-4" /> Novo jogador
-              </Button>
-            )}
+            <Button className="rounded-lg" onClick={openCreate}>
+              <PlusCircle className="mr-1 size-4" /> Novo jogador
+            </Button>
           </div>
         }
       />
@@ -128,34 +121,31 @@ function PlayersPage() {
                       </span>
                     )}
                   </div>
-                  <p className="truncate text-xs text-muted-foreground">{p.team}</p>
                 </div>
-                {canManage && (
-                  <DropdownMenu>
-                    <DropdownMenuTrigger asChild>
-                      <Button variant="ghost" size="icon" className="size-8 shrink-0">
-                        <MoreVertical className="size-4" />
-                        <span className="sr-only">Ações</span>
-                      </Button>
-                    </DropdownMenuTrigger>
-                    <DropdownMenuContent align="end">
-                      <DropdownMenuItem onClick={() => openEdit(p)}>
-                        <Pencil className="size-4" /> Editar
-                      </DropdownMenuItem>
-                      <DropdownMenuItem onClick={() => toggleActive(p)}>
-                        {p.isActive ? (
-                          <>
-                            <PowerOff className="size-4" /> Inativar
-                          </>
-                        ) : (
-                          <>
-                            <Power className="size-4" /> Reativar
-                          </>
-                        )}
-                      </DropdownMenuItem>
-                    </DropdownMenuContent>
-                  </DropdownMenu>
-                )}
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                    <Button variant="ghost" size="icon" className="size-8 shrink-0">
+                      <MoreVertical className="size-4" />
+                      <span className="sr-only">Ações</span>
+                    </Button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent align="end">
+                    <DropdownMenuItem onClick={() => openEdit(p)}>
+                      <Pencil className="size-4" /> Editar
+                    </DropdownMenuItem>
+                    <DropdownMenuItem onClick={() => toggleActive(p)}>
+                      {p.isActive ? (
+                        <>
+                          <PowerOff className="size-4" /> Inativar
+                        </>
+                      ) : (
+                        <>
+                          <Power className="size-4" /> Reativar
+                        </>
+                      )}
+                    </DropdownMenuItem>
+                  </DropdownMenuContent>
+                </DropdownMenu>
               </div>
               <div className="mt-4 grid grid-cols-3 gap-2 border-t border-border pt-4 text-center">
                 <div>
@@ -180,14 +170,12 @@ function PlayersPage() {
         )}
       </div>
 
-      {canManage && (
-        <PlayerFormDialog
-          mode={dialogMode}
-          player={editing}
-          open={dialogOpen}
-          onOpenChange={setDialogOpen}
-        />
-      )}
+      <PlayerFormDialog
+        mode={dialogMode}
+        player={editing}
+        open={dialogOpen}
+        onOpenChange={setDialogOpen}
+      />
     </div>
   );
 }

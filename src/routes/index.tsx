@@ -1,11 +1,11 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { ArrowRight, PlusCircle, Radio, Trophy } from "lucide-react";
+import { ArrowRight, PlusCircle, Trophy } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import { GameCard } from "@/components/games/GameCard";
 import { Skeleton } from "@/components/ui/skeleton";
 import { PublicLanding } from "@/components/landing/PublicLanding";
-import { useGamesQuery, useLiveRoomsQuery, useRankingQuery } from "@/features/games-hub-data";
+import { useGamesQuery, useRankingQuery } from "@/features/games-hub-data";
 import { useAuthStore } from "@/stores/auth";
 
 export const Route = createFileRoute("/")({
@@ -33,10 +33,8 @@ function HomeRoute() {
 function Dashboard() {
   const { data: games = [], isLoading: gamesLoading } = useGamesQuery();
   const { data: ranking = [], isLoading: rankingLoading } = useRankingQuery();
-  const { data: rooms = [] } = useLiveRoomsQuery();
   const featured = games.slice(0, 6);
   const top3 = ranking.slice(0, 3);
-  const liveRooms = rooms.slice(0, 3);
 
   return (
     <div className="mx-auto max-w-7xl space-y-10">
@@ -49,11 +47,10 @@ function Dashboard() {
             Bem-vindo de volta
           </span>
           <h1 className="mt-4 text-3xl font-semibold tracking-tight md:text-4xl">
-            Pronto para jogar com sua comunidade?
+            Pronto para começar uma partida?
           </h1>
           <p className="mt-3 max-w-xl text-base text-muted-foreground">
-            Explore a coleção de jogos do Games Hub, crie salas ao vivo e acompanhe o ranking da sua
-            comunidade em tempo real.
+            Crie uma partida, compartilhe o link único e reúna os participantes em segundos.
           </p>
           <div className="mt-6 flex flex-wrap gap-3">
             <Button asChild size="lg" className="rounded-xl">
@@ -62,9 +59,7 @@ function Dashboard() {
               </Link>
             </Button>
             <Button asChild size="lg" variant="outline" className="rounded-xl">
-              <Link to="/rooms">
-                <Radio className="mr-2 size-4" /> Ver salas ao vivo
-              </Link>
+              <Link to="/matches">Ver partidas</Link>
             </Button>
           </div>
         </div>
@@ -99,8 +94,8 @@ function Dashboard() {
         </div>
       </section>
 
-      <div className="grid grid-cols-1 gap-6 lg:grid-cols-5">
-        <section className="rounded-2xl border border-border bg-card p-6 lg:col-span-3">
+      <div className="grid grid-cols-1 gap-6">
+        <section className="rounded-2xl border border-border bg-card p-6">
           <div className="mb-5 flex items-center justify-between">
             <div className="flex items-center gap-2">
               <Trophy className="size-5 text-primary" />
@@ -133,7 +128,6 @@ function Dashboard() {
                   </div>
                   <div>
                     <p className="text-sm font-medium leading-tight">{p.name}</p>
-                    <p className="text-xs text-muted-foreground">{p.team}</p>
                   </div>
                 </div>
                 <span className="text-sm font-semibold tabular-nums">
@@ -145,34 +139,6 @@ function Dashboard() {
             {!rankingLoading && top3.length === 0 && (
               <li className="rounded-xl bg-muted/40 px-4 py-3 text-sm text-muted-foreground">
                 Ranking ainda sem pontuação.
-              </li>
-            )}
-          </ul>
-        </section>
-
-        <section className="rounded-2xl border border-border bg-card p-6 lg:col-span-2">
-          <div className="mb-5 flex items-center justify-between">
-            <div className="flex items-center gap-2">
-              <Radio className="size-5 text-primary" />
-              <h2 className="text-base font-semibold">Salas ao vivo</h2>
-            </div>
-            <span className="flex items-center gap-1.5 text-xs text-muted-foreground">
-              <span className="size-1.5 animate-pulse rounded-full bg-red-500" />
-              {rooms.length} ativas
-            </span>
-          </div>
-          <ul className="space-y-3">
-            {liveRooms.map((r) => (
-              <li key={r.id} className="rounded-xl bg-muted/40 p-3">
-                <p className="truncate text-sm font-medium">{r.name}</p>
-                <p className="mt-0.5 truncate text-xs text-muted-foreground">
-                  {r.gameName} • {r.participants}/{r.capacity}
-                </p>
-              </li>
-            ))}
-            {liveRooms.length === 0 && (
-              <li className="rounded-xl bg-muted/40 px-4 py-3 text-sm text-muted-foreground">
-                Nenhuma sala ativa agora.
               </li>
             )}
           </ul>

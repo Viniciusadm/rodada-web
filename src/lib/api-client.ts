@@ -2,14 +2,11 @@ import { CheckCircle2, Gamepad2, Joystick, Pencil, Puzzle, type LucideIcon } fro
 import type { MatchQuestionDraft, MatchStatus } from "@/lib/match-types";
 
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL ?? "https://games.isarchie.com.br/";
-export const DEMO_ORGANIZATION_ID =
-  import.meta.env.VITE_DEMO_ORGANIZATION_ID ?? "10000000-0000-0000-0000-000000000001";
 
 export type GameKind = "buzzer" | "true_false" | "free_text";
 
 export type Game = {
   id: string;
-  organizationId: string | null;
   slug: string;
   name: string;
   description: string;
@@ -33,9 +30,7 @@ export type GameModeOption = {
 export type Player = {
   id: string;
   name: string;
-  ministryId: string | null;
   initials: string;
-  team: string;
   points: number;
   matches: number;
   level: number;
@@ -62,7 +57,6 @@ export type LiveRoom = {
 
 export type ApiMatch = {
   id: string;
-  organization_id: string;
   game_id: string;
   game_mode_id: string;
   host_user_id: string;
@@ -207,7 +201,6 @@ type ApiGameMode = {
 
 type ApiGame = {
   id: string;
-  organization_id: string | null;
   slug: string;
   name: string;
   description: string;
@@ -220,7 +213,6 @@ type ApiGame = {
 type ApiPlayer = {
   id: string;
   display_name: string;
-  ministry_id: string | null;
   is_active: boolean;
   total_points: number;
   matches_played: number;
@@ -231,7 +223,6 @@ type ApiRankingEntry = {
   position: number;
   player_id: string;
   display_name: string;
-  ministry_id: string | null;
   total_points: number;
   matches_played: number;
   wins: number;
@@ -318,30 +309,13 @@ export type AuthUser = {
   email: string;
 };
 
-export type AuthOrganization = {
-  id: string;
-  name: string;
-  slug: string;
-  role: string;
-};
-
 export type AuthSession = {
   user: AuthUser;
-  organizations: AuthOrganization[];
-  activeOrganizationId: string | null;
-};
-
-export type Team = {
-  id: string;
-  name: string;
-  slug: string;
-  isActive: boolean;
 };
 
 export type SearchResults = {
   games: Array<{ id: string; name: string; slug: string }>;
   players: Array<{ id: string; displayName: string }>;
-  rooms: Array<{ matchId: string; name: string; pin: string }>;
 };
 
 export type AppNotification = {
@@ -361,21 +335,11 @@ export type NotificationPreference = {
 
 type ApiMeResponse = {
   user: { id: string; display_name: string; email: string };
-  organizations: Array<{ id: string; name: string; slug: string; role: string }>;
-  active_organization_id: string | null;
-};
-
-type ApiTeam = {
-  id: string;
-  name: string;
-  slug: string;
-  is_active: boolean;
 };
 
 type ApiSearchResponse = {
   games: Array<{ id: string; name: string; slug: string }>;
   players: Array<{ id: string; display_name: string; ministry_id: string | null }>;
-  rooms: Array<{ match_id: string; name: string; pin: string }>;
 };
 
 type ApiNotification = {
@@ -389,7 +353,6 @@ type ApiNotification = {
 };
 
 let accessToken: string | null = null;
-let activeOrganizationId: string | null = null;
 let unauthorizedHandler: (() => void) | null = null;
 
 /**
@@ -452,14 +415,6 @@ export function getAccessToken() {
   return accessToken;
 }
 
-export function setActiveOrganizationId(id: string | null) {
-  activeOrganizationId = id;
-}
-
-export function getActiveOrganizationId(): string {
-  return activeOrganizationId ?? DEMO_ORGANIZATION_ID;
-}
-
 export function onUnauthorized(handler: (() => void) | null) {
   unauthorizedHandler = handler;
 }
@@ -469,41 +424,18 @@ export async function listGames(): Promise<Game[]> {
   return games.map(mapGame);
 }
 
-export async function listGamesForAdmin(
-  organizationId = getActiveOrganizationId(),
-): Promise<Game[]> {
-  const games = await request<ApiGame[]>(`/api/v1/organizations/${organizationId}/games`);
-  return games.map(mapGame);
+export async function listPlayers(): Promise<Player[]> {
+  const players = await request<ApiPlayer[]>(`/api/v1/players`);
+  return players.map((player) => mapPlayer(player));
 }
 
-export async function listPlayers(
-  organizationId = getActiveOrganizationId(),
-  teams?: Map<string, string>,
-): Promise<Player[]> {
-  const players = await request<ApiPlayer[]>(`/api/v1/organizations/${organizationId}/players`);
-  return players.map((player) => mapPlayer(player, teams));
+export async function listRankings(): Promise<RankingEntry[]> {
+  const ranking = await request<ApiRankingEntry[]>(`/api/v1/rankings`);
+  return ranking.map((entry) => mapRankingEntry(entry));
 }
 
-export async function listRankings(
-  organizationId = getActiveOrganizationId(),
-  teams?: Map<string, string>,
-): Promise<RankingEntry[]> {
-  const params = new URLSearchParams({ organization_id: organizationId });
-  const ranking = await request<ApiRankingEntry[]>(`/api/v1/rankings?${params}`);
-  return ranking.map((entry) => mapRankingEntry(entry, teams));
-}
-
-export async function listLiveRooms(
-  organizationId = getActiveOrganizationId(),
-): Promise<LiveRoom[]> {
-  const rooms = await request<ApiLiveRoom[]>(`/api/v1/organizations/${organizationId}/rooms/live`);
-  return rooms.map(mapLiveRoom);
-}
-
-export async function listMatches(
-  organizationId = getActiveOrganizationId(),
-): Promise<MatchSummary[]> {
-  const matches = await request<ApiMatch[]>(`/api/v1/organizations/${organizationId}/matches`);
+export async function listMatches(): Promise<MatchSummary[]> {
+  const matches = await request<ApiMatch[]>(`/api/v1/matches`);
   return matches.map(mapMatch);
 }
 
@@ -569,7 +501,6 @@ export async function createMatch(input: {
   const created = await request<ApiMatch>("/api/v1/matches", {
     method: "POST",
     body: {
-      organization_id: getActiveOrganizationId(),
       game_id: gameId,
       game_mode_id: gameModeId,
       host_user_id: "resolved-from-token",
@@ -589,17 +520,11 @@ export async function createMatch(input: {
   return mapMatch(created);
 }
 
-export async function createPlayer(input: {
-  displayName: string;
-  ministryId: string | null;
-  organizationId?: string;
-}): Promise<Player> {
+export async function createPlayer(input: { displayName: string }): Promise<Player> {
   const result = await request<ApiPlayer>("/api/v1/players", {
     method: "POST",
     body: {
-      organization_id: input.organizationId ?? getActiveOrganizationId(),
       user_id: null,
-      ministry_id: input.ministryId,
       display_name: input.displayName,
     },
   });
@@ -608,13 +533,12 @@ export async function createPlayer(input: {
 
 export async function updatePlayer(
   playerId: string,
-  input: { displayName?: string; ministryId?: string | null; isActive?: boolean },
+  input: { displayName?: string; isActive?: boolean },
 ): Promise<Player> {
   const result = await request<ApiPlayer>(`/api/v1/players/${playerId}`, {
     method: "PATCH",
     body: {
       display_name: input.displayName,
-      ministry_id: input.ministryId,
       is_active: input.isActive,
     },
   });
@@ -862,168 +786,23 @@ export async function fetchMe(): Promise<AuthSession> {
       displayName: payload.user.display_name,
       email: payload.user.email,
     },
-    organizations: payload.organizations.map((org) => ({
-      id: org.id,
-      name: org.name,
-      slug: org.slug,
-      role: org.role,
-    })),
-    activeOrganizationId: payload.active_organization_id,
   };
 }
 
-export async function listTeams(organizationId = getActiveOrganizationId()): Promise<Team[]> {
-  const teams = await request<ApiTeam[]>(`/api/v1/organizations/${organizationId}/ministries`);
-  return teams.map((team) => ({
-    id: team.id,
-    name: team.name,
-    slug: team.slug,
-    isActive: team.is_active,
-  }));
-}
-
-export async function createTeam(
-  name: string,
-  organizationId = getActiveOrganizationId(),
-): Promise<void> {
-  await request<{ id: string }>(`/api/v1/organizations/${organizationId}/ministries`, {
-    method: "POST",
-    body: { name },
-  });
-}
-
-export async function updateTeam(
-  teamId: string,
-  input: { name?: string; isActive?: boolean },
-  organizationId = getActiveOrganizationId(),
-): Promise<void> {
-  await requestNoContent(`/api/v1/organizations/${organizationId}/ministries/${teamId}`, {
-    method: "PATCH",
-    body: { name: input.name, is_active: input.isActive },
-  });
-}
-
-export async function archiveTeam(
-  teamId: string,
-  organizationId = getActiveOrganizationId(),
-): Promise<void> {
-  await requestNoContent(`/api/v1/organizations/${organizationId}/ministries/${teamId}`, {
-    method: "DELETE",
-  });
-}
-
-export type OrganizationDetail = {
-  id: string;
-  name: string;
-  slug: string;
-  contactEmail: string | null;
-};
-
-export async function getOrganization(
-  organizationId = getActiveOrganizationId(),
-): Promise<OrganizationDetail> {
-  const org = await request<{
-    id: string;
-    name: string;
-    slug: string;
-    contact_email: string | null;
-  }>(`/api/v1/organizations/${organizationId}`);
-  return {
-    id: org.id,
-    name: org.name,
-    slug: org.slug,
-    contactEmail: org.contact_email,
-  };
-}
-
-export async function updateOrganization(
-  input: { name: string; contactEmail: string | null },
-  organizationId = getActiveOrganizationId(),
-): Promise<void> {
-  await requestNoContent(`/api/v1/organizations/${organizationId}`, {
-    method: "PATCH",
-    body: { name: input.name, contact_email: input.contactEmail },
-  });
-}
-
-export type OrgMember = {
-  userId: string;
-  displayName: string;
-  email: string;
-  role: string;
-};
-
-export async function listMembers(
-  organizationId = getActiveOrganizationId(),
-): Promise<OrgMember[]> {
-  const members = await request<
-    Array<{ user_id: string; display_name: string; email: string; role: string }>
-  >(`/api/v1/organizations/${organizationId}/members`);
-  return members.map((member) => ({
-    userId: member.user_id,
-    displayName: member.display_name,
-    email: member.email,
-    role: member.role,
-  }));
-}
-
-export async function addMember(
-  input: { email: string; role: string },
-  organizationId = getActiveOrganizationId(),
-): Promise<void> {
-  await requestNoContent(`/api/v1/organizations/${organizationId}/members`, {
-    method: "POST",
-    body: { email: input.email, role: input.role },
-  });
-}
-
-export async function updateMemberRole(
-  userId: string,
-  role: string,
-  organizationId = getActiveOrganizationId(),
-): Promise<void> {
-  await requestNoContent(`/api/v1/organizations/${organizationId}/members/${userId}`, {
-    method: "PATCH",
-    body: { role },
-  });
-}
-
-export async function removeMember(
-  userId: string,
-  organizationId = getActiveOrganizationId(),
-): Promise<void> {
-  await requestNoContent(`/api/v1/organizations/${organizationId}/members/${userId}`, {
-    method: "DELETE",
-  });
-}
-
-export async function searchOrganization(
-  query: string,
-  organizationId = getActiveOrganizationId(),
-): Promise<SearchResults> {
+export async function searchOrganization(query: string): Promise<SearchResults> {
   const params = new URLSearchParams({ q: query });
-  const results = await request<ApiSearchResponse>(
-    `/api/v1/organizations/${organizationId}/search?${params}`,
-  );
+  const results = await request<ApiSearchResponse>(`/api/v1/search?${params}`);
   return {
     games: results.games.map((game) => ({ id: game.id, name: game.name, slug: game.slug })),
     players: results.players.map((player) => ({
       id: player.id,
       displayName: player.display_name,
     })),
-    rooms: results.rooms.map((room) => ({
-      matchId: room.match_id,
-      name: room.name,
-      pin: room.pin,
-    })),
   };
 }
 
-export async function listNotifications(
-  organizationId = getActiveOrganizationId(),
-): Promise<AppNotification[]> {
-  const params = new URLSearchParams({ organization_id: organizationId });
-  const notifications = await request<ApiNotification[]>(`/api/v1/notifications?${params}`);
+export async function listNotifications(): Promise<AppNotification[]> {
+  const notifications = await request<ApiNotification[]>(`/api/v1/notifications`);
   return notifications.map((notification) => ({
     id: notification.id,
     kind: notification.kind,
@@ -1035,37 +814,14 @@ export async function listNotifications(
   }));
 }
 
-export async function markNotificationRead(
-  notificationId: string,
-  organizationId = getActiveOrganizationId(),
-) {
-  const params = new URLSearchParams({ organization_id: organizationId });
-  await requestNoContent(`/api/v1/notifications/${notificationId}/read?${params}`, {
+export async function markNotificationRead(notificationId: string) {
+  await requestNoContent(`/api/v1/notifications/${notificationId}/read`, {
     method: "POST",
   });
 }
 
-export async function markAllNotificationsRead(organizationId = getActiveOrganizationId()) {
-  const params = new URLSearchParams({ organization_id: organizationId });
-  await requestNoContent(`/api/v1/notifications/read-all?${params}`, { method: "POST" });
-}
-
-export async function getNotificationPreferences(
-  organizationId = getActiveOrganizationId(),
-): Promise<NotificationPreference[]> {
-  const params = new URLSearchParams({ organization_id: organizationId });
-  return request<NotificationPreference[]>(`/api/v1/notification-preferences?${params}`);
-}
-
-export async function setNotificationPreference(
-  key: string,
-  enabled: boolean,
-  organizationId = getActiveOrganizationId(),
-): Promise<NotificationPreference> {
-  return request<NotificationPreference>(`/api/v1/notification-preferences/${key}`, {
-    method: "PUT",
-    body: { organization_id: organizationId, enabled },
-  });
+export async function markAllNotificationsRead() {
+  await requestNoContent(`/api/v1/notifications/read-all`, { method: "POST" });
 }
 
 async function errorBody(response: Response): Promise<{ message: string; code: string | null }> {
@@ -1084,7 +840,6 @@ function mapGame(game: ApiGame): Game {
   const visual = gameVisual(game.icon_key ?? game.slug);
   return {
     id: game.id,
-    organizationId: game.organization_id ?? null,
     slug: game.slug,
     name: game.name,
     description: game.description,
@@ -1104,14 +859,12 @@ function mapGame(game: ApiGame): Game {
   };
 }
 
-function mapPlayer(player: ApiPlayer, teams?: Map<string, string>): Player {
+function mapPlayer(player: ApiPlayer): Player {
   const name = player.display_name;
   return {
     id: player.id,
     name,
-    ministryId: player.ministry_id,
     initials: initials(name),
-    team: teamLabel(player.ministry_id, teams),
     points: player.total_points,
     matches: player.matches_played,
     level: levelFromPoints(player.total_points),
@@ -1135,14 +888,12 @@ function mapLiveRoom(room: ApiLiveRoom): LiveRoom {
   };
 }
 
-function mapRankingEntry(entry: ApiRankingEntry, teams?: Map<string, string>): RankingEntry {
+function mapRankingEntry(entry: ApiRankingEntry): RankingEntry {
   const name = entry.display_name === entry.player_id ? "Jogador" : entry.display_name;
   return {
     id: entry.player_id,
     name,
-    ministryId: entry.ministry_id,
     initials: initials(name),
-    team: teamLabel(entry.ministry_id, teams),
     points: entry.total_points,
     matches: entry.matches_played,
     level: levelFromPoints(entry.total_points),
@@ -1273,11 +1024,6 @@ function initials(name: string) {
     .slice(0, 2)
     .map((part) => part[0]?.toUpperCase() ?? "")
     .join("");
-}
-
-function teamLabel(teamId: string | null, teams?: Map<string, string>) {
-  if (!teamId) return "Sem time";
-  return teams?.get(teamId) ?? "Time";
 }
 
 function levelFromPoints(points: number) {

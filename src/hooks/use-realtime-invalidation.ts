@@ -7,14 +7,9 @@ import { useAuthStore } from "@/stores/auth";
 type UseRealtimeInvalidationParams = {
   channel: string | null;
   matchId?: string;
-  organizationId?: string | null;
 };
 
-export function useRealtimeInvalidation({
-  channel,
-  matchId,
-  organizationId,
-}: UseRealtimeInvalidationParams) {
+export function useRealtimeInvalidation({ channel, matchId }: UseRealtimeInvalidationParams) {
   const queryClient = useQueryClient();
   const token = useAuthStore((state) => state.token);
   const [connected, setConnected] = useState(false);
@@ -30,14 +25,14 @@ export function useRealtimeInvalidation({
       onDisconnect: () => setConnected(false),
       onError: () => setConnected(false),
       onEvent: (event) => {
-        invalidateByEvent(event, queryClient, { matchId, organizationId });
+        invalidateByEvent(event, queryClient, { matchId });
       },
     });
 
     return () => {
       connection.close();
     };
-  }, [channel, matchId, organizationId, queryClient, token]);
+  }, [channel, matchId, queryClient, token]);
 
   return { connected };
 }
@@ -45,7 +40,7 @@ export function useRealtimeInvalidation({
 function invalidateByEvent(
   event: RealtimeEvent,
   queryClient: ReturnType<typeof useQueryClient>,
-  scope: { matchId?: string; organizationId?: string | null },
+  scope: { matchId?: string },
 ) {
   if (
     ["match_created", "match_updated", "buzzer_updated", "room_updated"].includes(event.kind) &&
@@ -55,20 +50,11 @@ function invalidateByEvent(
   }
 
   if (["match_created", "match_updated", "room_updated"].includes(event.kind)) {
-    void queryClient.invalidateQueries({
-      queryKey: scope.organizationId ? ["matches", scope.organizationId] : ["matches"],
-    });
-    void queryClient.invalidateQueries({
-      queryKey: scope.organizationId ? ["live-rooms", scope.organizationId] : ["live-rooms"],
-    });
+    void queryClient.invalidateQueries({ queryKey: ["matches"] });
   }
 
   if (event.kind === "ranking_updated") {
-    void queryClient.invalidateQueries({
-      queryKey: scope.organizationId ? ["ranking", scope.organizationId] : ["ranking"],
-    });
-    void queryClient.invalidateQueries({
-      queryKey: scope.organizationId ? ["players", scope.organizationId] : ["players"],
-    });
+    void queryClient.invalidateQueries({ queryKey: ["ranking"] });
+    void queryClient.invalidateQueries({ queryKey: ["players"] });
   }
 }

@@ -35,11 +35,9 @@ export function Topbar() {
   const { theme, toggle } = useTheme();
   const navigate = useNavigate();
   const user = useAuthStore((s) => s.user);
-  const activeOrganization = useAuthStore((s) => s.activeOrganization);
   const logout = useAuthStore((s) => s.logout);
 
   const userName = user?.displayName ?? "Conta";
-  const orgName = activeOrganization?.name ?? "Games Hub";
 
   return (
     <header className="sticky top-0 z-20 flex h-16 items-center gap-3 border-b border-border bg-background/80 px-4 backdrop-blur-md md:px-6">
@@ -63,7 +61,7 @@ export function Topbar() {
             <button className="ml-1 flex items-center gap-2.5 rounded-full pl-1 pr-1 outline-none focus-visible:ring-2 focus-visible:ring-ring/30 sm:pr-2">
               <div className="hidden text-right leading-tight sm:block">
                 <p className="text-sm font-medium">{userName}</p>
-                <p className="text-xs text-muted-foreground">{orgName}</p>
+                {user?.email && <p className="text-xs text-muted-foreground">{user.email}</p>}
               </div>
               <div className="flex size-9 items-center justify-center rounded-full bg-gradient-to-br from-primary/30 to-primary-glow/40 text-xs font-semibold ring-2 ring-primary/20">
                 {initialsOf(userName) || "U"}
@@ -98,8 +96,7 @@ function GlobalSearch() {
   const [open, setOpen] = useState(false);
   const { data, isFetching } = useSearchQuery(term);
 
-  const hasResults =
-    !!data && (data.games.length > 0 || data.players.length > 0 || data.rooms.length > 0);
+  const hasResults = !!data && (data.games.length > 0 || data.players.length > 0);
   const showPanel = open && term.trim().length >= 2;
 
   const go = (to: string) => {
@@ -119,7 +116,7 @@ function GlobalSearch() {
         }}
         onFocus={() => setOpen(true)}
         onBlur={() => window.setTimeout(() => setOpen(false), 150)}
-        placeholder="Buscar jogos, salas ou jogadores..."
+        placeholder="Buscar jogos ou jogadores..."
         className="h-10 rounded-full border-transparent bg-muted/60 pl-10 focus-visible:border-ring/30 focus-visible:ring-2 focus-visible:ring-ring/20"
       />
       {showPanel && (
@@ -141,14 +138,6 @@ function GlobalSearch() {
                 label="Jogadores"
                 items={data!.players.map((p) => ({ id: p.id, label: p.displayName }))}
                 onSelect={() => go("/players")}
-              />
-              <SearchGroup
-                label="Salas ao vivo"
-                items={data!.rooms.map((r) => ({
-                  id: r.matchId,
-                  label: `${r.name} · PIN ${r.pin}`,
-                }))}
-                onSelect={(id) => go(`/matches/${id}/host`)}
               />
             </div>
           )}

@@ -66,7 +66,6 @@ function HostPanel() {
   const refresh = async () => {
     await queryClient.invalidateQueries({ queryKey: ["match-state", matchId] });
     await queryClient.invalidateQueries({ queryKey: ["matches"] });
-    await queryClient.invalidateQueries({ queryKey: ["live-rooms"] });
   };
   const action = useMutation({
     mutationFn: async (kind: "start" | "draw" | "end" | "reset" | "reveal") => {

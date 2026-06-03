@@ -95,7 +95,6 @@ function RankingPage() {
                 </div>
                 <div>
                   <p className="text-sm font-medium leading-tight">{p.name}</p>
-                  <p className="text-xs text-muted-foreground">{p.team}</p>
                 </div>
               </div>
               <span className="text-right text-sm tabular-nums text-muted-foreground">
