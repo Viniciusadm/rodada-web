@@ -5,19 +5,22 @@ export function RoundTimer({
   initialSeconds,
   className,
   onExpire,
+  paused,
 }: {
   initialSeconds: number;
   className?: string;
   onExpire?: () => void;
+  paused?: boolean;
 }) {
   const [seconds, setSeconds] = useState(initialSeconds);
   useEffect(() => {
     setSeconds(initialSeconds);
+    if (paused) return;
     const interval = setInterval(() => {
       setSeconds((value) => Math.max(0, value - 1));
     }, 1000);
     return () => clearInterval(interval);
-  }, [initialSeconds]);
+  }, [initialSeconds, paused]);
   const expired = seconds <= 0;
   useEffect(() => {
     if (expired) onExpire?.();

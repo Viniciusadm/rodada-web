@@ -279,6 +279,7 @@ function PlayPage() {
                       initialSeconds={round.timeRemainingSeconds}
                       className="text-base"
                       onExpire={() => setExpiredRoundId(round.id)}
+                      paused={Boolean(round.selectedParticipantId)}
                     />
                   )}
                   <p className="text-lg font-semibold">{round.question.prompt}</p>

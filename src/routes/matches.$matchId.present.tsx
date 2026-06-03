@@ -71,6 +71,7 @@ function PresentPage() {
                       key={round.id}
                       initialSeconds={round.timeRemainingSeconds}
                       className="text-2xl"
+                      paused={Boolean(round.selectedParticipantId)}
                     />
                   </div>
                 )}

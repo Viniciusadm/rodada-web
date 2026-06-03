@@ -385,6 +385,7 @@ function HostPanel() {
                       key={round.id}
                       initialSeconds={round.timeRemainingSeconds}
                       className="text-lg"
+                      paused={Boolean(round.selectedParticipantId)}
                     />
                   )}
                 </div>
