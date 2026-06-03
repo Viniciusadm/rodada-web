@@ -1,13 +1,11 @@
-import { CheckCircle2, Gamepad2, Joystick, Puzzle, type LucideIcon } from "lucide-react";
+import { CheckCircle2, Gamepad2, Joystick, Pencil, Puzzle, type LucideIcon } from "lucide-react";
 import type { MatchQuestionDraft, MatchStatus } from "@/lib/match-types";
 
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL ?? "https://games.isarchie.com.br/";
 export const DEMO_ORGANIZATION_ID =
   import.meta.env.VITE_DEMO_ORGANIZATION_ID ?? "10000000-0000-0000-0000-000000000001";
 
-export type GameStatus = "active" | "beta" | "maintenance" | "coming-soon" | "archived";
-
-export type GameKind = "buzzer" | "true_false" | "word_complete";
+export type GameKind = "buzzer" | "true_false" | "free_text";
 
 export type Game = {
   id: string;
@@ -18,7 +16,6 @@ export type Game = {
   kind: GameKind;
   icon: LucideIcon;
   iconColor: string;
-  status: GameStatus;
   players: number;
   modes: GameModeOption[];
 };
@@ -214,7 +211,6 @@ type ApiGame = {
   slug: string;
   name: string;
   description: string;
-  status: string;
   kind: string;
   icon_key: string | null;
   player_count: number;
@@ -418,10 +414,29 @@ export class ApiError extends Error {
   }
 }
 
+/** Cópia amigável (pt-BR) por código de erro do backend, para as ações de partida. */
+const MATCH_ERROR_COPY: Record<string, string> = {
+  match_round_open:
+    "Já há uma pergunta em andamento. Encerre a rodada atual antes de sortear a próxima.",
+  match_not_started: "Inicie a partida antes de sortear perguntas.",
+  match_finished: "Esta partida já foi encerrada.",
+  match_already_finished: "Esta partida já foi encerrada.",
+  match_no_questions: "Esta partida ainda não tem perguntas. Adicione perguntas para começar.",
+  match_all_questions_used:
+    "Todas as perguntas já foram usadas. Adicione novas perguntas ou encerre a partida.",
+  match_round_limit: "O limite de perguntas da partida foi atingido.",
+  match_no_participants: "Adicione ao menos um participante antes de iniciar.",
+  match_already_started: "A partida já foi iniciada.",
+  match_no_open_round: "Não há uma pergunta aberta para revelar.",
+  match_not_host: "Apenas o anfitrião pode controlar esta partida.",
+  match_not_found: "Partida não encontrada.",
+};
+
 /** Converte qualquer erro em uma mensagem amigável e diferenciada para o usuário. */
 export function errorToMessage(error: unknown): string {
   if (error instanceof ApiError) {
     if (error.isNetwork) return "Sem conexão. Verifique sua internet e tente novamente.";
+    if (error.code && MATCH_ERROR_COPY[error.code]) return MATCH_ERROR_COPY[error.code];
     if (error.status === 403) return "Você não tem permissão para essa ação.";
     return error.message;
   }
@@ -1076,7 +1091,6 @@ function mapGame(game: ApiGame): Game {
     kind: normalizeGameKind(game.kind),
     icon: visual.icon,
     iconColor: visual.iconColor,
-    status: normalizeGameStatus(game.status),
     players: game.player_count ?? 0,
     modes: (game.modes ?? []).map((mode) => ({
       id: mode.id,
@@ -1231,19 +1245,15 @@ function normalizeMatchStatus(status: string): MatchStatus {
   return "aguardando";
 }
 
-function normalizeGameStatus(status: string): GameStatus {
-  if (status === "active" || status === "beta" || status === "maintenance") return status;
-  if (status === "archived") return "archived";
-  if (status === "coming_soon" || status === "coming-soon") return "coming-soon";
-  return "coming-soon";
-}
-
 function normalizeGameKind(kind: string): GameKind {
-  if (kind === "true_false" || kind === "word_complete") return kind;
+  if (kind === "true_false" || kind === "free_text") return kind;
   return "buzzer";
 }
 
 function gameVisual(key: string): { icon: LucideIcon; iconColor: string } {
+  if (key.includes("pencil") || key.includes("escrev") || key.includes("resposta")) {
+    return { icon: Pencil, iconColor: "text-amber-400 bg-amber-500/15" };
+  }
   if (key.includes("word") || key.includes("palavra")) {
     return { icon: Puzzle, iconColor: "text-amber-400 bg-amber-500/15" };
   }

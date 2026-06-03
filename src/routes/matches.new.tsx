@@ -51,7 +51,7 @@ function NewMatchPage() {
   const [step, setStep] = useState(0);
 
   const [gameId, setGameId] = useState("");
-  const [name, setName] = useState("Quiz dos Profetas");
+  const [name, setName] = useState("");
   const [mode, setMode] = useState<GameMode>("classico");
   const [maxQuestions, setMaxQuestions] = useState<string>("10");
   const [timePerQuestion, setTimePerQuestion] = useState<string>("20");
@@ -83,10 +83,7 @@ function NewMatchPage() {
     }
   }, [availableModes, mode]);
 
-  const [questions, setQuestions] = useState<DraftQ[]>([
-    { text: "Quem foi o profeta levado ao céu em um carro de fogo?", answer: "Elias", points: 100 },
-    { text: "Qual profeta foi engolido por um grande peixe?", answer: "Jonas", points: 100 },
-  ]);
+  const [questions, setQuestions] = useState<DraftQ[]>([]);
 
   function canAdvance() {
     if (step === 0) return name.trim().length > 0 && (gameId || games[0]?.id);
@@ -286,13 +283,7 @@ function NewMatchPage() {
                     </Button>
                   </div>
                   <Input
-                    placeholder={
-                      gameKind === "true_false"
-                        ? "Afirmação"
-                        : gameKind === "word_complete"
-                          ? "Frase com a palavra a completar"
-                          : "Pergunta"
-                    }
+                    placeholder={gameKind === "true_false" ? "Afirmação" : "Pergunta"}
                     value={q.text}
                     onChange={(e) =>
                       setQuestions(
@@ -324,7 +315,7 @@ function NewMatchPage() {
                     ) : (
                       <Input
                         placeholder={
-                          gameKind === "word_complete"
+                          gameKind === "free_text"
                             ? "Resposta(s) aceitas — separe variações com |"
                             : "Resposta correta"
                         }

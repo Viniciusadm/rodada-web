@@ -7,17 +7,27 @@ import {
   ListChecks,
   Play,
   Plus,
+  QrCode,
   RotateCcw,
   Shuffle,
   StopCircle,
   XCircle,
 } from "lucide-react";
+import { QRCodeSVG } from "qrcode.react";
 import { useState } from "react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Skeleton } from "@/components/ui/skeleton";
 import { ConfirmDialog } from "@/components/common/ConfirmDialog";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog";
 import { MatchStatusBadge } from "@/components/match/MatchStatusBadge";
 import { RoundTimer } from "@/components/match/RoundTimer";
 import { useRealtimeInvalidation } from "@/hooks/use-realtime-invalidation";
@@ -134,6 +144,7 @@ function HostPanel() {
   const selected = state.participants.find((player) => player.id === round?.selectedParticipantId);
   const remainingQuestions = state.questions.filter((question) => !question.used).length;
   const canStart = match.status === "aguardando" && state.participants.length > 0;
+  const remoteEnabled = state.settings.remoteEnabled;
   const origin = typeof window === "undefined" ? "" : window.location.origin;
 
   const joinUrl = state.room?.pin
@@ -162,26 +173,84 @@ function HostPanel() {
             <span>{state.participants.length} participantes</span>
             <span>•</span>
             <span>{remainingQuestions} perguntas restantes</span>
-            {state.room && (
+            {remoteEnabled ? (
+              <>
+                {state.room && (
+                  <>
+                    <span>•</span>
+                    <span>PIN {state.room.pin}</span>
+                  </>
+                )}
+                <Button
+                  size="icon"
+                  variant="ghost"
+                  className="size-6"
+                  onClick={() => {
+                    navigator.clipboard?.writeText(joinUrl);
+                    toast.success("Link de entrada copiado.");
+                  }}
+                >
+                  <Copy className="size-3" />
+                </Button>
+              </>
+            ) : (
               <>
                 <span>•</span>
-                <span>PIN {state.room.pin}</span>
+                <span className="font-medium text-amber-500">Participação remota desligada</span>
               </>
             )}
-            <Button
-              size="icon"
-              variant="ghost"
-              className="size-6"
-              onClick={() => {
-                navigator.clipboard?.writeText(joinUrl);
-                toast.success("Link de entrada copiado.");
-              }}
-            >
-              <Copy className="size-3" />
-            </Button>
           </div>
         </div>
         <div className="flex flex-wrap gap-2">
+          {remoteEnabled ? (
+            <Dialog>
+              <DialogTrigger asChild>
+                <Button variant="outline" size="sm" className="rounded-lg">
+                  <QrCode className="mr-1 size-4" /> QR Code
+                </Button>
+              </DialogTrigger>
+              <DialogContent className="sm:max-w-sm">
+                <DialogHeader>
+                  <DialogTitle>Entrar na partida</DialogTitle>
+                  <DialogDescription>
+                    Os jogadores escaneiam o código com a câmera do celular para entrar.
+                  </DialogDescription>
+                </DialogHeader>
+                <div className="flex flex-col items-center gap-4 py-2">
+                  <div className="rounded-2xl bg-white p-4">
+                    <QRCodeSVG value={joinUrl} size={232} marginSize={1} />
+                  </div>
+                  {state.room?.pin && (
+                    <p className="text-sm text-muted-foreground">
+                      Ou use o PIN{" "}
+                      <span className="font-semibold text-foreground">{state.room.pin}</span>
+                    </p>
+                  )}
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    className="rounded-lg"
+                    onClick={() => {
+                      navigator.clipboard?.writeText(joinUrl);
+                      toast.success("Link de entrada copiado.");
+                    }}
+                  >
+                    <Copy className="mr-1 size-4" /> Copiar link
+                  </Button>
+                </div>
+              </DialogContent>
+            </Dialog>
+          ) : (
+            <Button
+              variant="outline"
+              size="sm"
+              className="rounded-lg"
+              disabled
+              title="Ative a participação remota para os jogadores entrarem pelo celular."
+            >
+              <QrCode className="mr-1 size-4" /> QR Code
+            </Button>
+          )}
           <Button asChild variant="outline" size="sm" className="rounded-lg">
             <Link to="/matches/$matchId/questions" params={{ matchId }}>
               <ListChecks className="mr-1 size-4" /> Perguntas
