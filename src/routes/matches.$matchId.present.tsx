@@ -6,6 +6,8 @@ import { RoundTimer } from "@/components/match/RoundTimer";
 import { useRealtimeInvalidation } from "@/hooks/use-realtime-invalidation";
 import { getMatchState } from "@/lib/api-client";
 
+const PRESENT_MC_COLORS = ["bg-rose-600", "bg-sky-600", "bg-amber-500", "bg-emerald-600"];
+
 export const Route = createFileRoute("/matches/$matchId/present")({
   head: () => ({
     meta: [{ title: "Apresentação — Games Hub" }],
@@ -35,6 +37,8 @@ function PresentPage() {
   const state = query.data;
   const match = state.match;
   const round = state.currentRound;
+  const mode = state.settings.mode;
+  const questionType = round?.question?.type ?? "buzzer";
   const selected = state.participants.find((player) => player.id === round?.selectedParticipantId);
   const leaders = [...state.participants]
     .sort((a, b) => b.currentScore - a.currentScore)
@@ -78,15 +82,35 @@ function PresentPage() {
                 <h2 className="text-3xl font-semibold leading-tight sm:text-4xl lg:text-5xl">
                   {round.question.prompt}
                 </h2>
-                {round.answerRevealed && (
+                {questionType === "multiple_choice" && round.question.options.length > 0 && (
+                  <div className="mx-auto mt-8 grid max-w-3xl grid-cols-1 gap-3 sm:grid-cols-2">
+                    {round.question.options.map((option, index) => (
+                      <div
+                        key={index}
+                        className={`rounded-2xl px-5 py-4 text-xl font-semibold text-white ${PRESENT_MC_COLORS[index % PRESENT_MC_COLORS.length]} ${
+                          round.answerRevealed && !option.correct ? "opacity-40" : ""
+                        }`}
+                      >
+                        {option.text}
+                      </div>
+                    ))}
+                  </div>
+                )}
+                {round.answerRevealed && questionType !== "multiple_choice" && (
                   <p className="mt-8 text-2xl font-medium text-primary sm:text-3xl">
-                    {round.question.expectedAnswer}
+                    {questionType === "true_false"
+                      ? round.question.expectedAnswer === "true"
+                        ? "Verdadeiro"
+                        : "Falso"
+                      : round.question.expectedAnswer}
                   </p>
                 )}
                 <p className="mt-6 text-lg text-muted-foreground">
-                  {selected
-                    ? `${selected.displayName} respondeu primeiro`
-                    : "Aguardando resposta dos jogadores"}
+                  {mode === "buzzer"
+                    ? selected
+                      ? `${selected.displayName} respondeu primeiro`
+                      : "Aguardando resposta dos jogadores"
+                    : "Os jogadores respondem pelo celular"}
                 </p>
               </>
             ) : (

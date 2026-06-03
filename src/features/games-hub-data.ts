@@ -2,7 +2,6 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 
 import {
   createPlayer,
-  listGames,
   listMatches,
   listMatchRounds,
   listNotifications,
@@ -13,21 +12,12 @@ import {
   searchOrganization,
   updatePlayer,
   type AppNotification,
-  type Game,
   type MatchRoundDetail,
   type MatchSummary,
   type Player,
   type RankingEntry,
   type SearchResults,
 } from "@/lib/api-client";
-
-export function useGamesQuery() {
-  return useQuery<Game[]>({
-    queryKey: ["games"],
-    queryFn: listGames,
-    staleTime: 60_000,
-  });
-}
 
 export function usePlayersQuery() {
   return useQuery<Player[]>({

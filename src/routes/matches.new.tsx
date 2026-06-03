@@ -1,6 +1,6 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { useEffect, useMemo, useState } from "react";
+import { useState } from "react";
 import { ArrowLeft, ArrowRight, Check, Plus, Trash2 } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
@@ -16,9 +16,8 @@ import {
 import { Switch } from "@/components/ui/switch";
 import { PageHeader } from "@/components/common/PageHeader";
 import { CsvImport } from "@/components/match/CsvImport";
-import { createMatch, errorToMessage } from "@/lib/api-client";
-import { useGamesQuery } from "@/features/games-hub-data";
-import type { GameMode } from "@/lib/match-types";
+import { createMatch, errorToMessage, type MatchMode } from "@/lib/api-client";
+import type { DraftOption, DraftQuestionType, GameMode } from "@/lib/match-types";
 import { cn } from "@/lib/utils";
 
 export const Route = createFileRoute("/matches/new")({
@@ -33,12 +32,54 @@ export const Route = createFileRoute("/matches/new")({
 
 const steps = ["Regras", "Perguntas", "Revisão"];
 
-type DraftQ = { text: string; answer: string; points: number };
+type DraftQ = {
+  type: DraftQuestionType;
+  text: string;
+  answer: string;
+  options: DraftOption[];
+  points: number;
+};
+
+function emptyQuestion(type: DraftQuestionType): DraftQ {
+  if (type === "multiple_choice") {
+    return {
+      type,
+      text: "",
+      answer: "",
+      options: [
+        { text: "", correct: true },
+        { text: "", correct: false },
+      ],
+      points: 100,
+    };
+  }
+  return {
+    type,
+    text: "",
+    answer: type === "true_false" ? "true" : "",
+    options: [],
+    points: 100,
+  };
+}
+
+function questionValid(q: DraftQ, mode: MatchMode): boolean {
+  if (!q.text.trim()) return false;
+  if (mode === "buzzer") return q.answer.trim().length > 0;
+  if (q.type === "true_false") return q.answer === "true" || q.answer === "false";
+  if (q.type === "multiple_choice") {
+    return (
+      q.options.length >= 2 &&
+      q.options.length <= 4 &&
+      q.options.every((option) => option.text.trim().length > 0) &&
+      q.options.filter((option) => option.correct).length === 1
+    );
+  }
+  return q.answer.trim().length > 0;
+}
 
 function NewMatchPage() {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
-  const { data: games = [] } = useGamesQuery();
   const createMatchMutation = useMutation({
     mutationFn: createMatch,
     onSuccess: async (match) => {
@@ -50,45 +91,24 @@ function NewMatchPage() {
   });
   const [step, setStep] = useState(0);
 
-  const [gameId, setGameId] = useState("");
+  const [mode, setMode] = useState<MatchMode>("quiz");
   const [name, setName] = useState("");
-  const [mode, setMode] = useState<GameMode>("classico");
+  const [scoringMode, setScoringMode] = useState<GameMode>("classico");
   const [maxQuestions, setMaxQuestions] = useState<string>("10");
   const [timePerQuestion, setTimePerQuestion] = useState<string>("20");
   const [initialPoints, setInitialPoints] = useState<string>("500");
   const [remoteEnabled, setRemoteEnabled] = useState(true);
   const [buzzerArmDelay, setBuzzerArmDelay] = useState<string>("0");
 
-  const selectedGame = useMemo(
-    () => games.find((g) => g.id === gameId) ?? games[0],
-    [games, gameId],
-  );
-  const availableModes = useMemo<GameMode[]>(() => {
-    const byCode: Record<string, GameMode> = {
-      classic: "classico",
-      initial_points: "pontos-iniciais",
-      elimination: "eliminacao",
-    };
-    const modes = (selectedGame?.modes ?? [])
-      .filter((m) => m.isActive)
-      .map((m) => byCode[m.code])
-      .filter((m): m is GameMode => Boolean(m));
-    return modes.length > 0 ? Array.from(new Set(modes)) : ["classico"];
-  }, [selectedGame]);
-
-  const gameKind = selectedGame?.kind ?? "buzzer";
-
-  useEffect(() => {
-    if (!availableModes.includes(mode)) {
-      setMode(availableModes[0]);
-    }
-  }, [availableModes, mode]);
-
   const [questions, setQuestions] = useState<DraftQ[]>([]);
 
+  function updateQuestion(index: number, patch: Partial<DraftQ>) {
+    setQuestions((qs) => qs.map((q, i) => (i === index ? { ...q, ...patch } : q)));
+  }
+
   function canAdvance() {
-    if (step === 0) return name.trim().length > 0 && (gameId || games[0]?.id);
-    if (step === 1) return questions.length > 0 && questions.every((q) => q.text && q.answer);
+    if (step === 0) return name.trim().length > 0;
+    if (step === 1) return questions.length > 0 && questions.every((q) => questionValid(q, mode));
     return true;
   }
 
@@ -96,15 +116,23 @@ function NewMatchPage() {
     createMatchMutation.mutate({
       name: name.trim(),
       mode,
+      scoringMode: mode === "buzzer" ? scoringMode : undefined,
       maxQuestions: maxQuestions ? Number(maxQuestions) : undefined,
       timePerQuestion: timePerQuestion ? Number(timePerQuestion) : undefined,
       initialPoints:
-        mode === "pontos-iniciais" || mode === "eliminacao" ? Number(initialPoints) : undefined,
+        mode === "buzzer" && (scoringMode === "pontos-iniciais" || scoringMode === "eliminacao")
+          ? Number(initialPoints)
+          : undefined,
       remoteEnabled,
       buzzerArmDelaySeconds:
-        gameKind === "buzzer" ? Math.min(5, Math.max(0, Number(buzzerArmDelay) || 0)) : undefined,
-      questions,
-      gameId: gameId || games[0]?.id,
+        mode === "buzzer" ? Math.min(5, Math.max(0, Number(buzzerArmDelay) || 0)) : undefined,
+      questions: questions.map((q) => ({
+        type: q.type,
+        text: q.text,
+        answer: q.answer,
+        options: q.type === "multiple_choice" ? q.options : undefined,
+        points: q.points,
+      })),
     });
   }
 
@@ -143,49 +171,64 @@ function NewMatchPage() {
               <Label htmlFor="name">Nome da partida</Label>
               <Input id="name" value={name} onChange={(e) => setName(e.target.value)} />
             </div>
+
+            <div className="space-y-2">
+              <Label>Modo</Label>
+              <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+                {[
+                  {
+                    value: "buzzer" as MatchMode,
+                    title: "Buzzer",
+                    description: "Jogadores apertam para responder; você decide quem acertou.",
+                  },
+                  {
+                    value: "quiz" as MatchMode,
+                    title: "Quiz",
+                    description: "Perguntas com correção automática.",
+                  },
+                ].map((option) => (
+                  <button
+                    key={option.value}
+                    type="button"
+                    onClick={() => setMode(option.value)}
+                    className={cn(
+                      "rounded-xl border p-4 text-left transition",
+                      mode === option.value
+                        ? "border-primary bg-primary/5 ring-1 ring-primary"
+                        : "border-border hover:bg-muted/40",
+                    )}
+                  >
+                    <p className="text-sm font-semibold">{option.title}</p>
+                    <p className="mt-1 text-xs text-muted-foreground">{option.description}</p>
+                  </button>
+                ))}
+              </div>
+            </div>
+
             <div className="grid grid-cols-1 gap-5 md:grid-cols-2">
-              <div className="space-y-2">
-                <Label>Jogo</Label>
-                <Select value={gameId || games[0]?.id || ""} onValueChange={setGameId}>
-                  <SelectTrigger>
-                    <SelectValue placeholder="Selecione um jogo" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {games.map((game) => (
-                      <SelectItem key={game.id} value={game.id}>
-                        {game.name}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-              <div className="space-y-2">
-                <Label>Modo de jogo</Label>
-                <Select
-                  value={mode}
-                  onValueChange={(v) => {
-                    const next = v as GameMode;
-                    setMode(next);
-                    if (next === "eliminacao") setInitialPoints("3");
-                    else if (next === "pontos-iniciais") setInitialPoints("500");
-                  }}
-                >
-                  <SelectTrigger>
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {availableModes.includes("classico") && (
+              {mode === "buzzer" && (
+                <div className="space-y-2">
+                  <Label>Modo de pontuação</Label>
+                  <Select
+                    value={scoringMode}
+                    onValueChange={(v) => {
+                      const next = v as GameMode;
+                      setScoringMode(next);
+                      if (next === "eliminacao") setInitialPoints("3");
+                      else if (next === "pontos-iniciais") setInitialPoints("500");
+                    }}
+                  >
+                    <SelectTrigger>
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
                       <SelectItem value="classico">Clássico — acúmulo de pontos</SelectItem>
-                    )}
-                    {availableModes.includes("pontos-iniciais") && (
                       <SelectItem value="pontos-iniciais">Pontos iniciais</SelectItem>
-                    )}
-                    {availableModes.includes("eliminacao") && (
                       <SelectItem value="eliminacao">Eliminação por erro</SelectItem>
-                    )}
-                  </SelectContent>
-                </Select>
-              </div>
+                    </SelectContent>
+                  </Select>
+                </div>
+              )}
               <div className="space-y-2">
                 <Label htmlFor="max">Máximo de perguntas (opcional)</Label>
                 <Input
@@ -206,27 +249,30 @@ function NewMatchPage() {
                   onChange={(e) => setTimePerQuestion(e.target.value)}
                 />
               </div>
-              {(mode === "pontos-iniciais" || mode === "eliminacao") && (
-                <div className="space-y-2">
-                  <Label htmlFor="ip">
-                    {mode === "eliminacao" ? "Vidas por jogador" : "Pontos iniciais por jogador"}
-                  </Label>
-                  <Input
-                    id="ip"
-                    type="number"
-                    min={mode === "eliminacao" ? 1 : 0}
-                    value={initialPoints}
-                    onChange={(e) => setInitialPoints(e.target.value)}
-                  />
-                  <p className="text-xs text-muted-foreground">
-                    {mode === "eliminacao"
-                      ? "Cada erro tira uma vida. Ao zerar, o jogador é eliminado; o último de pé vence."
-                      : "Todos começam o placar com essa pontuação."}
-                  </p>
-                </div>
-              )}
+              {mode === "buzzer" &&
+                (scoringMode === "pontos-iniciais" || scoringMode === "eliminacao") && (
+                  <div className="space-y-2">
+                    <Label htmlFor="ip">
+                      {scoringMode === "eliminacao"
+                        ? "Vidas por jogador"
+                        : "Pontos iniciais por jogador"}
+                    </Label>
+                    <Input
+                      id="ip"
+                      type="number"
+                      min={scoringMode === "eliminacao" ? 1 : 0}
+                      value={initialPoints}
+                      onChange={(e) => setInitialPoints(e.target.value)}
+                    />
+                    <p className="text-xs text-muted-foreground">
+                      {scoringMode === "eliminacao"
+                        ? "Cada erro tira uma vida. Ao zerar, o jogador é eliminado; o último de pé vence."
+                        : "Todos começam o placar com essa pontuação."}
+                    </p>
+                  </div>
+                )}
             </div>
-            {gameKind === "buzzer" && (
+            {mode === "buzzer" && (
               <div className="space-y-2">
                 <Label htmlFor="arm-delay">Tempo de espera do buzzer (segundos)</Label>
                 <Input
@@ -259,7 +305,16 @@ function NewMatchPage() {
           <div className="space-y-5">
             <CsvImport
               onImport={(rows) => {
-                setQuestions((qs) => [...qs, ...rows]);
+                setQuestions((qs) => [
+                  ...qs,
+                  ...rows.map((row) => ({
+                    type: row.type,
+                    text: row.text,
+                    answer: row.answer,
+                    options: row.options ?? [],
+                    points: row.points,
+                  })),
+                ]);
                 toast.success(`${rows.length} perguntas importadas.`);
               }}
             />
@@ -268,19 +323,16 @@ function NewMatchPage() {
               <div>
                 <h3 className="text-base font-semibold">Perguntas ({questions.length})</h3>
                 <p className="text-sm text-muted-foreground">
-                  Adicione manualmente ou importe via CSV.
+                  {mode === "buzzer"
+                    ? "Enunciado e resposta de referência para você julgar."
+                    : "Escolha o tipo de cada pergunta."}
                 </p>
               </div>
               <Button
                 size="sm"
                 variant="outline"
                 className="rounded-lg"
-                onClick={() =>
-                  setQuestions([
-                    ...questions,
-                    { text: "", answer: gameKind === "true_false" ? "false" : "", points: 100 },
-                  ])
-                }
+                onClick={() => setQuestions([...questions, emptyQuestion("free_text")])}
               >
                 <Plus className="mr-1 size-4" /> Adicionar
               </Button>
@@ -302,27 +354,62 @@ function NewMatchPage() {
                       <Trash2 className="size-3.5" />
                     </Button>
                   </div>
-                  <Input
-                    placeholder={gameKind === "true_false" ? "Afirmação" : "Pergunta"}
-                    value={q.text}
-                    onChange={(e) =>
-                      setQuestions(
-                        questions.map((qq, idx) =>
-                          idx === i ? { ...qq, text: e.target.value } : qq,
-                        ),
-                      )
-                    }
-                    className="mb-2"
-                  />
-                  <div className="grid grid-cols-3 gap-2">
-                    {gameKind === "true_false" ? (
+
+                  {mode === "quiz" && (
+                    <div className="mb-2">
                       <Select
-                        value={q.answer === "true" ? "true" : "false"}
+                        value={q.type}
                         onValueChange={(v) =>
                           setQuestions(
-                            questions.map((qq, idx) => (idx === i ? { ...qq, answer: v } : qq)),
+                            questions.map((qq, idx) =>
+                              idx === i
+                                ? { ...emptyQuestion(v as DraftQuestionType), text: qq.text }
+                                : qq,
+                            ),
                           )
                         }
+                      >
+                        <SelectTrigger>
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="multiple_choice">Múltipla escolha</SelectItem>
+                          <SelectItem value="true_false">Verdadeiro ou Falso</SelectItem>
+                          <SelectItem value="free_text">Texto</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+                  )}
+
+                  <Input
+                    placeholder={
+                      mode === "quiz" && q.type === "true_false" ? "Afirmação" : "Pergunta"
+                    }
+                    value={q.text}
+                    onChange={(e) => updateQuestion(i, { text: e.target.value })}
+                    className="mb-2"
+                  />
+
+                  {mode === "buzzer" ? (
+                    <div className="grid grid-cols-3 gap-2">
+                      <Input
+                        placeholder="Resposta de referência"
+                        value={q.answer}
+                        onChange={(e) => updateQuestion(i, { answer: e.target.value })}
+                        className="col-span-2"
+                      />
+                      <Input
+                        type="number"
+                        placeholder="Pontos"
+                        value={q.points}
+                        onChange={(e) => updateQuestion(i, { points: Number(e.target.value) || 0 })}
+                      />
+                    </div>
+                  ) : q.type === "true_false" ? (
+                    <div className="grid grid-cols-3 gap-2">
+                      <Select
+                        value={q.answer === "true" ? "true" : "false"}
+                        onValueChange={(v) => updateQuestion(i, { answer: v })}
                       >
                         <SelectTrigger className="col-span-2">
                           <SelectValue />
@@ -332,37 +419,112 @@ function NewMatchPage() {
                           <SelectItem value="false">Falso</SelectItem>
                         </SelectContent>
                       </Select>
-                    ) : (
                       <Input
-                        placeholder={
-                          gameKind === "free_text"
-                            ? "Resposta(s) aceitas — separe variações com |"
-                            : "Resposta correta"
-                        }
+                        type="number"
+                        placeholder="Pontos"
+                        value={q.points}
+                        onChange={(e) => updateQuestion(i, { points: Number(e.target.value) || 0 })}
+                      />
+                    </div>
+                  ) : q.type === "multiple_choice" ? (
+                    <div className="space-y-2">
+                      {q.options.map((option, optionIndex) => (
+                        <div key={optionIndex} className="flex items-center gap-2">
+                          <Button
+                            type="button"
+                            size="sm"
+                            variant={option.correct ? "default" : "outline"}
+                            className="w-24 shrink-0 justify-center rounded-lg"
+                            onClick={() =>
+                              updateQuestion(i, {
+                                options: q.options.map((opt, idx) => ({
+                                  ...opt,
+                                  correct: idx === optionIndex,
+                                })),
+                              })
+                            }
+                          >
+                            {option.correct ? (
+                              <>
+                                <Check className="mr-1 size-4" /> Correta
+                              </>
+                            ) : (
+                              "Correta?"
+                            )}
+                          </Button>
+                          <Input
+                            placeholder={`Opção ${optionIndex + 1}`}
+                            value={option.text}
+                            onChange={(e) =>
+                              updateQuestion(i, {
+                                options: q.options.map((opt, idx) =>
+                                  idx === optionIndex ? { ...opt, text: e.target.value } : opt,
+                                ),
+                              })
+                            }
+                          />
+                          {q.options.length > 2 && (
+                            <Button
+                              type="button"
+                              size="icon"
+                              variant="ghost"
+                              className="size-9 shrink-0 text-muted-foreground hover:text-destructive"
+                              onClick={() =>
+                                updateQuestion(i, {
+                                  options: q.options.filter((_, idx) => idx !== optionIndex),
+                                })
+                              }
+                            >
+                              <Trash2 className="size-4" />
+                            </Button>
+                          )}
+                        </div>
+                      ))}
+                      <div className="flex items-center justify-between">
+                        {q.options.length < 4 ? (
+                          <Button
+                            type="button"
+                            size="sm"
+                            variant="outline"
+                            className="rounded-lg"
+                            onClick={() =>
+                              updateQuestion(i, {
+                                options: [...q.options, { text: "", correct: false }],
+                              })
+                            }
+                          >
+                            <Plus className="mr-1 size-4" /> Opção
+                          </Button>
+                        ) : (
+                          <span />
+                        )}
+                        <Input
+                          type="number"
+                          placeholder="Pontos"
+                          value={q.points}
+                          onChange={(e) =>
+                            updateQuestion(i, { points: Number(e.target.value) || 0 })
+                          }
+                          className="w-28"
+                        />
+                      </div>
+                    </div>
+                  ) : (
+                    <div className="grid grid-cols-3 gap-2">
+                      <Input
+                        placeholder="Resposta(s) aceitas — separe variações com |"
                         value={q.answer}
-                        onChange={(e) =>
-                          setQuestions(
-                            questions.map((qq, idx) =>
-                              idx === i ? { ...qq, answer: e.target.value } : qq,
-                            ),
-                          )
-                        }
+                        onChange={(e) => updateQuestion(i, { answer: e.target.value })}
                         className="col-span-2"
                       />
-                    )}
-                    <Input
-                      type="number"
-                      placeholder="Pontos"
-                      value={q.points}
-                      onChange={(e) =>
-                        setQuestions(
-                          questions.map((qq, idx) =>
-                            idx === i ? { ...qq, points: Number(e.target.value) || 0 } : qq,
-                          ),
-                        )
-                      }
-                    />
-                  </div>
+                      <Input
+                        type="number"
+                        placeholder="Pontos"
+                        value={q.points}
+                        onChange={(e) => updateQuestion(i, { points: Number(e.target.value) || 0 })}
+                      />
+                    </div>
+                  )}
                 </div>
               ))}
             </div>
@@ -379,15 +541,7 @@ function NewMatchPage() {
               <div className="mt-4 grid grid-cols-2 gap-3 sm:grid-cols-4">
                 {[
                   { label: "Perguntas", value: questions.length },
-                  {
-                    label: "Modo",
-                    value:
-                      mode === "classico"
-                        ? "Clássico"
-                        : mode === "pontos-iniciais"
-                          ? "Pts iniciais"
-                          : "Eliminação",
-                  },
+                  { label: "Modo", value: mode === "buzzer" ? "Buzzer" : "Quiz" },
                   { label: "Tempo/pergunta", value: timePerQuestion ? `${timePerQuestion}s` : "—" },
                   { label: "Remoto", value: remoteEnabled ? "Sim" : "Não" },
                 ].map((s) => (

@@ -31,7 +31,6 @@ const groups = [
       { title: "Início", url: "/", icon: Home },
       { title: "Nova partida", url: "/matches/new", icon: PlusCircle },
       { title: "Partidas", url: "/matches", icon: Swords },
-      { title: "Jogos", url: "/games", icon: Gamepad2 },
     ],
   },
   {

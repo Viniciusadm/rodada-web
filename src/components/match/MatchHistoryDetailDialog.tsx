@@ -38,7 +38,7 @@ export function MatchHistoryDetailDialog({ match, open, onOpenChange }: Props) {
             <DialogHeader>
               <DialogTitle>{match.name}</DialogTitle>
               <DialogDescription className="flex items-center gap-1.5">
-                <Gamepad2 className="size-3.5" /> {match.gameName} · {match.modeName}
+                <Gamepad2 className="size-3.5" /> {match.modeLabel} · {match.scoringModeLabel}
               </DialogDescription>
             </DialogHeader>
 

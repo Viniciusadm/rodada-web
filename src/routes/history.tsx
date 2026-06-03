@@ -71,7 +71,7 @@ function HistoryPage() {
                 <div className="flex flex-wrap items-center gap-2">
                   <h3 className="text-base font-semibold">{m.name}</h3>
                   <span className="text-xs text-muted-foreground">
-                    {m.gameName} · {m.modeName}
+                    {m.modeLabel} · {m.scoringModeLabel}
                   </span>
                 </div>
                 <div className="mt-2 flex flex-wrap gap-x-5 gap-y-1.5 text-xs text-muted-foreground">

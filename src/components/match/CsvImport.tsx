@@ -1,20 +1,24 @@
 import { useRef, useState } from "react";
 import { FileUp, Download } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { parseCsv } from "@/lib/match-types";
+import { parseCsv, type MatchQuestionDraft } from "@/lib/match-types";
 import { toast } from "sonner";
 
-type ParsedRow = { text: string; answer: string; points: number };
+const TYPE_LABEL: Record<MatchQuestionDraft["type"], string> = {
+  free_text: "Texto",
+  true_false: "V/F",
+  multiple_choice: "Múltipla",
+};
 
 export function CsvImport({
   onImport,
   onImportCsv,
 }: {
-  onImport?: (rows: ParsedRow[]) => void;
+  onImport?: (rows: MatchQuestionDraft[]) => void;
   onImportCsv?: (csv: string) => void;
 }) {
   const inputRef = useRef<HTMLInputElement>(null);
-  const [preview, setPreview] = useState<ParsedRow[] | null>(null);
+  const [preview, setPreview] = useState<MatchQuestionDraft[] | null>(null);
   const [csv, setCsv] = useState("");
 
   function handleFile(file: File) {
@@ -33,9 +37,10 @@ export function CsvImport({
 
   function downloadTemplate() {
     const csv =
-      "pergunta,resposta,pontos\n" +
-      '"Qual console popularizou controles com sensor de movimento?","Nintendo Wii",100\n' +
-      '"Qual gênero usa fases, chefes e progressão por níveis?","Plataforma",100\n';
+      "tipo,pergunta,resposta,pontos,opcoes\n" +
+      'texto,"Qual console popularizou controles com sensor de movimento?","Nintendo Wii",100,\n' +
+      'vf,"O PlayStation é da Sony",verdadeiro,100,\n' +
+      'multipla,"Qual desses é um console da Nintendo?",,100,*Switch|PlayStation|Xbox\n';
     const blob = new Blob([csv], { type: "text/csv;charset=utf-8" });
     const url = URL.createObjectURL(blob);
     const a = document.createElement("a");
@@ -54,7 +59,7 @@ export function CsvImport({
         <div>
           <p className="text-sm font-medium">Importar perguntas via CSV</p>
           <p className="mt-1 text-xs text-muted-foreground">
-            Formato: <code>pergunta, resposta, pontos</code>
+            Formato: <code>tipo, pergunta, resposta, pontos, opcoes</code>
           </p>
         </div>
         <div className="flex flex-wrap items-center justify-center gap-2">
@@ -123,6 +128,7 @@ export function CsvImport({
             <table className="w-full text-sm">
               <thead className="sticky top-0 bg-muted/60 text-xs uppercase text-muted-foreground">
                 <tr>
+                  <th className="px-3 py-2 text-left">Tipo</th>
                   <th className="px-3 py-2 text-left">Pergunta</th>
                   <th className="px-3 py-2 text-left">Resposta</th>
                   <th className="px-3 py-2 text-right">Pts</th>
@@ -131,8 +137,13 @@ export function CsvImport({
               <tbody>
                 {preview.slice(0, 50).map((r, i) => (
                   <tr key={i} className="border-t border-border">
+                    <td className="px-3 py-2 text-muted-foreground">{TYPE_LABEL[r.type]}</td>
                     <td className="px-3 py-2">{r.text}</td>
-                    <td className="px-3 py-2 text-muted-foreground">{r.answer}</td>
+                    <td className="px-3 py-2 text-muted-foreground">
+                      {r.type === "multiple_choice"
+                        ? (r.options ?? []).map((o) => o.text).join(" | ")
+                        : r.answer}
+                    </td>
                     <td className="px-3 py-2 text-right tabular-nums">{r.points}</td>
                   </tr>
                 ))}

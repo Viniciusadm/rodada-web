@@ -28,7 +28,7 @@ export function RoundTimer({
   return (
     <span
       className={cn(
-        "shrink-0 rounded-lg px-3 py-1 font-semibold tabular-nums mb-4 inline-block",
+        "shrink-0 rounded-lg px-3 py-1 font-semibold tabular-nums inline-block",
         expired ? "bg-destructive/15 text-destructive" : "bg-primary/10 text-primary",
         className,
       )}

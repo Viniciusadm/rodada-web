@@ -1,11 +1,10 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { ArrowRight, PlusCircle, Trophy } from "lucide-react";
+import { ArrowRight, Hand, ListChecks, PlusCircle, Trophy } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
-import { GameCard } from "@/components/games/GameCard";
 import { Skeleton } from "@/components/ui/skeleton";
 import { PublicLanding } from "@/components/landing/PublicLanding";
-import { useGamesQuery, useRankingQuery } from "@/features/games-hub-data";
+import { useRankingQuery } from "@/features/games-hub-data";
 import { useAuthStore } from "@/stores/auth";
 
 export const Route = createFileRoute("/")({
@@ -31,9 +30,7 @@ function HomeRoute() {
 }
 
 function Dashboard() {
-  const { data: games = [], isLoading: gamesLoading } = useGamesQuery();
   const { data: ranking = [], isLoading: rankingLoading } = useRankingQuery();
-  const featured = games.slice(0, 6);
   const top3 = ranking.slice(0, 3);
 
   return (
@@ -64,31 +61,46 @@ function Dashboard() {
       </section>
 
       <section>
-        <div className="mb-5 flex items-end justify-between">
-          <div>
-            <h2 className="text-xl font-semibold tracking-tight">Jogos disponíveis</h2>
-            <p className="text-sm text-muted-foreground">
-              Escolha uma experiência para começar agora.
-            </p>
-          </div>
-          <Link
-            to="/games"
-            className="hidden text-sm font-medium text-primary hover:underline sm:inline-flex sm:items-center"
-          >
-            Ver todos <ArrowRight className="ml-1 size-4" />
-          </Link>
+        <div className="mb-5">
+          <h2 className="text-xl font-semibold tracking-tight">Modos de jogo</h2>
+          <p className="text-sm text-muted-foreground">Escolha um modo para criar sua partida.</p>
         </div>
-        <div className="grid grid-cols-1 gap-5 md:grid-cols-2 xl:grid-cols-3">
-          {gamesLoading &&
-            Array.from({ length: 3 }).map((_, index) => (
-              <Skeleton key={index} className="h-[218px] rounded-2xl" />
-            ))}
-          {!gamesLoading && featured.map((g) => <GameCard key={g.id} game={g} />)}
-          {!gamesLoading && featured.length === 0 && (
-            <div className="col-span-full rounded-2xl border border-border bg-card p-6 text-sm text-muted-foreground">
-              Nenhum jogo disponível.
+        <div className="grid grid-cols-1 gap-5 md:grid-cols-2">
+          {[
+            {
+              icon: Hand,
+              title: "Buzzer",
+              description:
+                "Mostre a pergunta, os jogadores apertam para responder e você decide quem acertou.",
+              color: "text-amber-400 bg-amber-500/15",
+            },
+            {
+              icon: ListChecks,
+              title: "Quiz",
+              description:
+                "Monte perguntas de verdadeiro/falso, texto ou múltipla escolha e correção automática.",
+              color: "text-indigo-400 bg-indigo-500/15",
+            },
+          ].map((mode) => (
+            <div
+              key={mode.title}
+              className="group flex flex-col rounded-2xl border border-border bg-card p-5"
+            >
+              <div className={`flex size-12 items-center justify-center rounded-xl ${mode.color}`}>
+                <mode.icon className="size-6" />
+              </div>
+              <h3 className="mt-5 text-lg font-semibold tracking-tight">{mode.title}</h3>
+              <p className="mt-1 line-clamp-3 text-sm text-muted-foreground">{mode.description}</p>
+              <div className="mt-5 flex items-center justify-end border-t border-border/60 pt-4">
+                <Button asChild size="sm" className="rounded-lg">
+                  <Link to="/matches/new">
+                    Criar partida
+                    <ArrowRight className="ml-1 size-4" />
+                  </Link>
+                </Button>
+              </div>
             </div>
-          )}
+          ))}
         </div>
       </section>
 

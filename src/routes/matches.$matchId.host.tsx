@@ -139,7 +139,8 @@ function HostPanel() {
   const state = query.data;
   const match = state.match;
   const round = state.currentRound;
-  const gameKind = state.settings.gameKind;
+  const mode = state.settings.mode;
+  const questionType = round?.question?.type ?? "buzzer";
   const selected = state.participants.find((player) => player.id === round?.selectedParticipantId);
   const remainingQuestions = state.questions.filter((question) => !question.used).length;
   const canStart = match.status === "aguardando" && state.participants.length > 0;
@@ -291,7 +292,7 @@ function HostPanel() {
           >
             <CheckCircle2 className="mr-1 size-4" /> Revelar resposta
           </Button>
-          {gameKind === "buzzer" ? (
+          {mode === "buzzer" ? (
             <div className="grid grid-cols-2 gap-2">
               <Button
                 className="rounded-lg"
@@ -392,14 +393,14 @@ function HostPanel() {
                 <p className="text-sm text-muted-foreground">
                   Resposta:{" "}
                   <span className="font-medium text-foreground">
-                    {gameKind === "true_false"
+                    {questionType === "true_false"
                       ? round.question.expectedAnswer === "true"
                         ? "Verdadeiro"
                         : "Falso"
                       : round.question.expectedAnswer}
                   </span>
                 </p>
-                {gameKind === "buzzer" ? (
+                {mode === "buzzer" ? (
                   <p className="text-sm text-muted-foreground">
                     Selecionado:{" "}
                     <span className="font-medium text-foreground">

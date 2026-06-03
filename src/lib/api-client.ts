@@ -1,31 +1,10 @@
-import { CheckCircle2, Gamepad2, Joystick, Pencil, Puzzle, type LucideIcon } from "lucide-react";
 import type { MatchQuestionDraft, MatchStatus } from "@/lib/match-types";
 
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL ?? "https://games.isarchie.com.br/";
 
-export type GameKind = "buzzer" | "true_false" | "free_text";
-
-export type Game = {
-  id: string;
-  slug: string;
-  name: string;
-  description: string;
-  kind: GameKind;
-  icon: LucideIcon;
-  iconColor: string;
-  players: number;
-  modes: GameModeOption[];
-};
-
-export type GameModeOption = {
-  id: string;
-  code: string;
-  name: string;
-  description: string | null;
-  defaultInitialPoints: number | null;
-  defaultTimePerQuestionSeconds: number | null;
-  isActive: boolean;
-};
+export type MatchMode = "buzzer" | "quiz";
+export type QuestionType = "buzzer" | "true_false" | "free_text" | "multiple_choice";
+export type McOption = { text: string; correct: boolean };
 
 export type Player = {
   id: string;
@@ -46,8 +25,8 @@ export type LiveRoom = {
   id: string;
   matchId: string;
   name: string;
-  gameId: string;
-  gameName: string;
+  mode: MatchMode;
+  modeLabel: string;
   pin: string;
   participants: number;
   capacity: number;
@@ -57,15 +36,14 @@ export type LiveRoom = {
 
 export type ApiMatch = {
   id: string;
-  game_id: string;
-  game_mode_id: string;
+  mode: string;
   host_user_id: string;
   name: string;
   status: string;
   current_round_id: string | null;
   winner_participant_id: string | null;
-  game_name?: string;
-  mode_name?: string;
+  mode_label?: string;
+  scoring_mode_label?: string;
   question_count?: number;
   participant_count?: number;
   rounds_played?: number;
@@ -83,12 +61,11 @@ export type MatchSummary = {
   id: string;
   name: string;
   status: MatchStatus;
-  gameId: string;
-  gameModeId: string;
+  mode: MatchMode;
   currentRoundId: string | null;
   winnerParticipantId: string | null;
-  gameName: string;
-  modeName: string;
+  modeLabel: string;
+  scoringModeLabel: string;
   questionCount: number;
   participantCount: number;
   roundsPlayed: number;
@@ -104,8 +81,10 @@ export type MatchSummary = {
 
 export type MatchQuestion = {
   id: string;
+  type: QuestionType;
   prompt: string;
   expectedAnswer: string;
+  options: McOption[];
   points: number;
   used: boolean;
   position: number;
@@ -165,8 +144,8 @@ export type MatchRound = {
 export type MatchState = {
   match: MatchSummary;
   settings: {
-    mode: string;
-    gameKind: GameKind;
+    mode: MatchMode;
+    scoringMode: string;
     maxRounds: number | null;
     timePerRoundSeconds: number | null;
     initialPoints: number;
@@ -191,27 +170,6 @@ export type ImportQuestionsResult = {
   invalidRows: Array<{ line: number; reason: string }>;
 };
 
-type ApiGameMode = {
-  id: string;
-  code: string;
-  name: string;
-  description: string | null;
-  default_initial_points: number | null;
-  default_time_per_question_seconds: number | null;
-  is_active: boolean;
-};
-
-type ApiGame = {
-  id: string;
-  slug: string;
-  name: string;
-  description: string;
-  kind: string;
-  icon_key: string | null;
-  player_count: number;
-  modes: ApiGameMode[];
-};
-
 type ApiPlayer = {
   id: string;
   display_name: string;
@@ -230,10 +188,14 @@ type ApiRankingEntry = {
   wins: number;
 };
 
+type ApiMcOption = { text: string; correct: boolean };
+
 type ApiMatchQuestion = {
   id: string;
+  question_type: string;
   prompt: string;
   expected_answer: string;
+  options: ApiMcOption[];
   points: number;
   used: boolean;
   position: number;
@@ -266,8 +228,8 @@ type ApiLiveRoom = {
   id: string;
   match_id: string;
   match_name: string;
-  game_id: string;
-  game_name: string;
+  mode: string;
+  mode_label: string;
   pin: string;
   status: string;
   participants: number;
@@ -280,7 +242,7 @@ type ApiMatchState = {
   match_data: ApiMatch;
   settings: {
     mode: string;
-    game_kind: string;
+    scoring_mode: string;
     max_rounds: number | null;
     time_per_round_seconds: number | null;
     initial_points: number;
@@ -423,11 +385,6 @@ export function onUnauthorized(handler: (() => void) | null) {
   unauthorizedHandler = handler;
 }
 
-export async function listGames(): Promise<Game[]> {
-  const games = await request<ApiGame[]>("/api/v1/games", { auth: false });
-  return games.map(mapGame);
-}
-
 export async function listPlayers(): Promise<Player[]> {
   const players = await request<ApiPlayer[]>(`/api/v1/players`);
   return players.map((player) => mapPlayer(player));
@@ -473,41 +430,27 @@ export async function getMatchState(matchId: string): Promise<MatchState> {
 
 export async function createMatch(input: {
   name: string;
-  mode: string;
+  mode: MatchMode;
+  scoringMode?: "classico" | "pontos-iniciais" | "eliminacao";
   maxQuestions?: number;
   timePerQuestion?: number;
   initialPoints?: number;
   remoteEnabled: boolean;
   buzzerArmDelaySeconds?: number;
   questions: MatchQuestionDraft[];
-  gameId?: string;
-  gameModeId?: string;
 }): Promise<MatchSummary> {
-  const games = await listGames();
-  const gameId = input.gameId ?? games[0]?.id;
-  if (!gameId) {
-    throw new Error("Nenhum jogo disponível para criar a partida.");
-  }
-  const selectedGame = games.find((game) => game.id === gameId) ?? games[0];
-  const modeCode =
-    input.mode === "pontos-iniciais"
-      ? "initial_points"
-      : input.mode === "eliminacao"
-        ? "elimination"
-        : "classic";
-
-  const gameModeId =
-    input.gameModeId ?? selectedGame?.modes.find((mode) => mode.code === modeCode)?.id;
-  if (!gameModeId) {
-    throw new Error(
-      `O jogo "${selectedGame?.name ?? "selecionado"}" não oferece o modo escolhido. Escolha outro modo.`,
-    );
-  }
+  const scoringMap = {
+    classico: "classic",
+    "pontos-iniciais": "initial_points",
+    eliminacao: "elimination",
+  } as const;
+  const scoringMode =
+    input.mode === "buzzer" ? scoringMap[input.scoringMode ?? "classico"] : "classic";
   const created = await request<ApiMatch>("/api/v1/matches", {
     method: "POST",
     body: {
-      game_id: gameId,
-      game_mode_id: gameModeId,
+      mode: input.mode,
+      scoring_mode: scoringMode,
       host_user_id: "resolved-from-token",
       name: input.name,
       max_rounds: input.maxQuestions,
@@ -517,8 +460,10 @@ export async function createMatch(input: {
       buzzer_arm_delay_seconds: input.buzzerArmDelaySeconds,
       questions: input.questions.map((question) => ({
         source_question_id: null,
+        question_type: input.mode === "buzzer" ? "buzzer" : question.type,
         prompt: question.text,
         expected_answer: question.answer,
+        options: question.options ?? [],
         points: question.points,
       })),
     },
@@ -564,13 +509,21 @@ export async function addParticipant(matchId: string, displayName: string) {
 
 export async function addMatchQuestion(
   matchId: string,
-  question: { prompt: string; expectedAnswer: string; points: number },
+  question: {
+    questionType?: QuestionType;
+    prompt: string;
+    expectedAnswer: string;
+    options?: McOption[];
+    points: number;
+  },
 ) {
   await requestNoContent(`/api/v1/matches/${matchId}/questions`, {
     method: "POST",
     body: {
+      question_type: question.questionType,
       prompt: question.prompt,
       expected_answer: question.expectedAnswer,
+      options: question.options ?? [],
       points: question.points,
     },
   });
@@ -579,13 +532,21 @@ export async function addMatchQuestion(
 export async function updateMatchQuestion(
   matchId: string,
   questionId: string,
-  question: { prompt: string; expectedAnswer: string; points: number },
+  question: {
+    questionType?: QuestionType;
+    prompt: string;
+    expectedAnswer: string;
+    options?: McOption[];
+    points: number;
+  },
 ) {
   await requestNoContent(`/api/v1/matches/${matchId}/questions/${questionId}`, {
     method: "PATCH",
     body: {
+      question_type: question.questionType,
       prompt: question.prompt,
       expected_answer: question.expectedAnswer,
+      options: question.options ?? [],
       points: question.points,
     },
   });
@@ -842,29 +803,6 @@ async function errorBody(response: Response): Promise<{ message: string; code: s
   }
 }
 
-function mapGame(game: ApiGame): Game {
-  const visual = gameVisual(game.icon_key ?? game.slug);
-  return {
-    id: game.id,
-    slug: game.slug,
-    name: game.name,
-    description: game.description,
-    kind: normalizeGameKind(game.kind),
-    icon: visual.icon,
-    iconColor: visual.iconColor,
-    players: game.player_count ?? 0,
-    modes: (game.modes ?? []).map((mode) => ({
-      id: mode.id,
-      code: mode.code,
-      name: mode.name,
-      description: mode.description ?? null,
-      defaultInitialPoints: mode.default_initial_points ?? null,
-      defaultTimePerQuestionSeconds: mode.default_time_per_question_seconds ?? null,
-      isActive: mode.is_active ?? true,
-    })),
-  };
-}
-
 function mapPlayer(player: ApiPlayer): Player {
   const name = player.display_name;
   return {
@@ -884,8 +822,8 @@ function mapLiveRoom(room: ApiLiveRoom): LiveRoom {
     id: room.id,
     matchId: room.match_id,
     name: room.match_name,
-    gameId: room.game_id,
-    gameName: room.game_name,
+    mode: normalizeMatchMode(room.mode),
+    modeLabel: room.mode_label,
     pin: room.pin,
     participants: room.participants,
     capacity: room.capacity ?? 0,
@@ -913,8 +851,8 @@ function mapMatchState(state: ApiMatchState): MatchState {
   return {
     match: mapMatch(state.match_data),
     settings: {
-      mode: state.settings.mode,
-      gameKind: normalizeGameKind(state.settings.game_kind),
+      mode: normalizeMatchMode(state.settings.mode),
+      scoringMode: state.settings.scoring_mode,
       maxRounds: state.settings.max_rounds,
       timePerRoundSeconds: state.settings.time_per_round_seconds,
       initialPoints: state.settings.initial_points,
@@ -933,8 +871,10 @@ function mapMatchState(state: ApiMatchState): MatchState {
 function mapQuestion(question: ApiMatchQuestion): MatchQuestion {
   return {
     id: question.id,
+    type: normalizeQuestionType(question.question_type),
     prompt: question.prompt,
     expectedAnswer: question.expected_answer,
+    options: question.options ?? [],
     points: question.points,
     used: question.used,
     position: question.position,
@@ -973,12 +913,11 @@ function mapMatch(match: ApiMatch): MatchSummary {
     id: match.id,
     name: match.name,
     status: normalizeMatchStatus(match.status),
-    gameId: match.game_id,
-    gameModeId: match.game_mode_id,
+    mode: normalizeMatchMode(match.mode),
     currentRoundId: match.current_round_id,
     winnerParticipantId: match.winner_participant_id,
-    gameName: match.game_name ?? "",
-    modeName: match.mode_name ?? "",
+    modeLabel: match.mode_label ?? "",
+    scoringModeLabel: match.scoring_mode_label ?? "",
     questionCount: match.question_count ?? 0,
     participantCount: match.participant_count ?? 0,
     roundsPlayed: match.rounds_played ?? 0,
@@ -1004,25 +943,15 @@ function normalizeMatchStatus(status: string): MatchStatus {
   return "aguardando";
 }
 
-function normalizeGameKind(kind: string): GameKind {
-  if (kind === "true_false" || kind === "free_text") return kind;
-  return "buzzer";
+function normalizeMatchMode(mode: string): MatchMode {
+  return mode === "quiz" ? "quiz" : "buzzer";
 }
 
-function gameVisual(key: string): { icon: LucideIcon; iconColor: string } {
-  if (key.includes("pencil") || key.includes("escrev") || key.includes("resposta")) {
-    return { icon: Pencil, iconColor: "text-amber-400 bg-amber-500/15" };
+function normalizeQuestionType(type: string): QuestionType {
+  if (type === "true_false" || type === "free_text" || type === "multiple_choice") {
+    return type;
   }
-  if (key.includes("word") || key.includes("palavra")) {
-    return { icon: Puzzle, iconColor: "text-amber-400 bg-amber-500/15" };
-  }
-  if (key.includes("check") || key.includes("verdadeiro")) {
-    return { icon: CheckCircle2, iconColor: "text-emerald-400 bg-emerald-500/15" };
-  }
-  if (key.includes("book") || key.includes("quiz")) {
-    return { icon: Joystick, iconColor: "text-indigo-400 bg-indigo-500/15" };
-  }
-  return { icon: Gamepad2, iconColor: "text-sky-400 bg-sky-500/15" };
+  return "buzzer";
 }
 
 function initials(name: string) {
