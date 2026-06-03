@@ -15,20 +15,23 @@ export function AuthShell({
 }) {
   return (
     <div className="flex min-h-screen flex-col bg-background">
-      <header className="flex w-full items-center justify-between border-b border-border px-4 py-3 md:px-6">
-        <Link to="/" className="flex items-center gap-2.5">
-          <div className="flex size-9 items-center justify-center rounded-xl bg-primary">
-            <Gamepad2 className="size-5 text-primary-foreground" />
-          </div>
-          <span className="text-base font-semibold tracking-tight">Games Hub</span>
-        </Link>
-        <Link
-          to="/"
-          className="text-sm font-medium text-muted-foreground transition-colors hover:text-foreground"
-        >
-          Voltar para a home
-        </Link>
+      <header className="border-b border-border">
+        <div className="mx-auto flex w-full max-w-7xl items-center justify-between px-4 py-5 md:px-8">
+          <Link to="/" className="flex items-center gap-2.5">
+            <div className="flex size-9 items-center justify-center rounded-xl bg-primary">
+              <Gamepad2 className="size-5 text-primary-foreground" />
+            </div>
+            <span className="text-base font-semibold tracking-tight">Games Hub</span>
+          </Link>
+          <Link
+            to="/"
+            className="text-sm font-medium text-muted-foreground transition-colors hover:text-foreground"
+          >
+            Voltar para a home
+          </Link>
+        </div>
       </header>
+
 
       <div className="flex flex-1 items-center justify-center px-4 py-10">
         <div className="w-full max-w-sm">
