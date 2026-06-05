@@ -1,5 +1,5 @@
 import { Link } from "@tanstack/react-router";
-import { ArrowRight, Gamepad2, Link2, Trophy, Users, type LucideIcon } from "lucide-react";
+import { ArrowRight, Gamepad2, Link2, Trophy, Zap, type LucideIcon } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 
@@ -17,12 +17,12 @@ const FEATURES: Array<{ icon: LucideIcon; title: string; description: string }> 
   {
     icon: Trophy,
     title: "Ranking e engajamento",
-    description: "Acompanhe a pontuação dos jogadores e times a cada partida.",
+    description: "Acompanhe a pontuação dos jogadores a cada partida.",
   },
   {
-    icon: Users,
-    title: "Multi-organização",
-    description: "Gerencie seu grupo com papéis de apresentador, administrador e membro.",
+    icon: Zap,
+    title: "Tempo real",
+    description: "Buzzer e quizzes sincronizados ao vivo para todos os participantes.",
   },
 ];
 
@@ -53,7 +53,7 @@ export function PublicLanding() {
           <div className="relative max-w-2xl">
             <span className="inline-flex items-center gap-1.5 rounded-full bg-primary/15 px-3 py-1 text-xs font-semibold uppercase tracking-wider text-primary ring-1 ring-primary/20">
               <span className="size-1.5 rounded-full bg-primary animate-pulse" />
-              Para grupos e times
+              Para apresentadores de jogos
             </span>
             <h1 className="mt-4 text-3xl font-semibold tracking-tight md:text-5xl">
               Jogos interativos para reunir o seu grupo
@@ -116,7 +116,7 @@ export function PublicLanding() {
       <footer className="border-t border-border">
         <div className="mx-auto flex w-full max-w-7xl flex-col items-center justify-between gap-2 px-4 py-6 text-xs text-muted-foreground md:flex-row md:px-8">
           <span>© {new Date().getFullYear()} Games Hub</span>
-          <span>Hub de jogos para sua comunidade.</span>
+          <span>Hub de jogos.</span>
         </div>
       </footer>
     </div>
