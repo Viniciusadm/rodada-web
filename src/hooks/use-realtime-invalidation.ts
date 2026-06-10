@@ -12,11 +12,17 @@ import { useAuthStore } from "@/stores/auth";
 type UseRealtimeInvalidationParams = {
   channel: string | null;
   matchId?: string;
+  token?: string | null;
 };
 
-export function useRealtimeInvalidation({ channel, matchId }: UseRealtimeInvalidationParams) {
+export function useRealtimeInvalidation({
+  channel,
+  matchId,
+  token: tokenOverride,
+}: UseRealtimeInvalidationParams) {
   const queryClient = useQueryClient();
-  const token = useAuthStore((state) => state.token);
+  const authToken = useAuthStore((state) => state.token);
+  const token = tokenOverride ?? authToken;
   const [connected, setConnected] = useState(false);
 
   useEffect(() => {

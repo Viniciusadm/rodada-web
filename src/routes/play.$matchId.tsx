@@ -43,7 +43,7 @@ function PlayPage() {
   const [wordAnswer, setWordAnswer] = useState("");
   const [armRemaining, setArmRemaining] = useState(0);
   const justJoinedRef = useRef(false);
-  const realtime = useRealtimeInvalidation({ channel: `match:${matchId}`, matchId });
+  const realtime = useRealtimeInvalidation({ channel: `match:${matchId}`, matchId, token });
   const query = useQuery({
     queryKey: ["match-state", matchId],
     queryFn: () => getMatchState(matchId),
