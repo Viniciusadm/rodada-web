@@ -1,4 +1,4 @@
-import type { MatchQuestionDraft, MatchStatus } from "@/lib/match-types";
+import type { GameMode, MatchQuestionDraft, MatchStatus } from "@/lib/match-types";
 
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL ?? "https://games.isarchie.com.br/";
 
@@ -395,9 +395,89 @@ export async function getMatchState(matchId: string): Promise<MatchState> {
 }
 
 export async function createMatch(input: {
-  name: string;
+  templateId: string;
+  name?: string;
+}): Promise<MatchSummary> {
+  const created = await request<ApiMatch>("/api/v1/matches", {
+    method: "POST",
+    body: {
+      template_id: input.templateId,
+      name: input.name?.trim() ? input.name.trim() : undefined,
+    },
+  });
+  return mapMatch(created);
+}
+
+export type GameCatalogItem = {
   mode: MatchMode;
-  scoringMode?: "classico" | "pontos-iniciais" | "eliminacao";
+  name: string;
+  description: string;
+};
+
+export const GAMES_CATALOG: GameCatalogItem[] = [
+  {
+    mode: "buzzer",
+    name: "Buzzer",
+    description:
+      "Jogadores apertam para responder e você decide quem acertou. Ideal para disputas ao vivo.",
+  },
+  {
+    mode: "quiz",
+    name: "Quiz",
+    description:
+      "Perguntas com correção automática (verdadeiro/falso, múltipla escolha ou texto).",
+  },
+];
+
+export type MatchTemplateQuestion = {
+  id: string;
+  sourceQuestionId: string | null;
+  type: QuestionType;
+  prompt: string;
+  expectedAnswer: string;
+  options: McOption[];
+  points: number;
+  position: number;
+};
+
+export type MatchTemplate = {
+  id: string;
+  name: string;
+  description: string | null;
+  mode: MatchMode;
+  scoringMode: GameMode;
+  modeLabel: string;
+  scoringModeLabel: string;
+  maxRounds: number | null;
+  timePerRoundSeconds: number | null;
+  initialPoints: number;
+  remoteEnabled: boolean;
+  capacity: number | null;
+  buzzerArmDelaySeconds: number;
+  rankingDisplay: "always" | "between_questions" | "end_only";
+  questions: MatchTemplateQuestion[];
+  createdAt: string;
+  updatedAt: string;
+};
+
+export type MatchTemplateSummary = {
+  id: string;
+  name: string;
+  description: string | null;
+  mode: MatchMode;
+  scoringMode: string;
+  modeLabel: string;
+  scoringModeLabel: string;
+  questionCount: number;
+  createdAt: string;
+  updatedAt: string;
+};
+
+export type MatchTemplateInput = {
+  name: string;
+  description?: string;
+  mode: MatchMode;
+  scoringMode?: GameMode;
   maxQuestions?: number;
   timePerQuestion?: number;
   initialPoints?: number;
@@ -405,38 +485,173 @@ export async function createMatch(input: {
   buzzerArmDelaySeconds?: number;
   rankingDisplay?: "always" | "between_questions" | "end_only";
   questions: MatchQuestionDraft[];
-}): Promise<MatchSummary> {
-  const scoringMap = {
-    classico: "classic",
-    "pontos-iniciais": "initial_points",
-    eliminacao: "elimination",
-  } as const;
+};
+
+type ApiMatchTemplateQuestion = {
+  id: string;
+  source_question_id: string | null;
+  question_type: string;
+  prompt: string;
+  expected_answer: string;
+  options: ApiMcOption[];
+  points: number;
+  position: number;
+};
+
+type ApiMatchTemplate = {
+  id: string;
+  name: string;
+  description: string | null;
+  mode: string;
+  scoring_mode: string;
+  mode_label: string;
+  scoring_mode_label: string;
+  max_rounds: number | null;
+  time_per_round_seconds: number | null;
+  initial_points: number;
+  remote_enabled: boolean;
+  capacity: number | null;
+  buzzer_arm_delay_seconds: number;
+  ranking_display: string;
+  questions: ApiMatchTemplateQuestion[];
+  created_at: string;
+  updated_at: string;
+};
+
+type ApiMatchTemplateSummary = {
+  id: string;
+  name: string;
+  description: string | null;
+  mode: string;
+  scoring_mode: string;
+  mode_label: string;
+  scoring_mode_label: string;
+  question_count: number;
+  created_at: string;
+  updated_at: string;
+};
+
+const SCORING_CODE_TO_MODE: Record<string, GameMode> = {
+  classic: "classico",
+  initial_points: "pontos-iniciais",
+  elimination: "eliminacao",
+};
+
+const SCORING_MODE_TO_CODE: Record<GameMode, string> = {
+  classico: "classic",
+  "pontos-iniciais": "initial_points",
+  eliminacao: "elimination",
+};
+
+function matchTemplateBody(input: MatchTemplateInput) {
   const scoringMode =
-    input.mode === "buzzer" ? scoringMap[input.scoringMode ?? "classico"] : "classic";
-  const created = await request<ApiMatch>("/api/v1/matches", {
+    input.mode === "buzzer" ? SCORING_MODE_TO_CODE[input.scoringMode ?? "classico"] : "classic";
+  return {
+    mode: input.mode,
+    scoring_mode: scoringMode,
+    name: input.name,
+    description: input.description ?? null,
+    max_rounds: input.maxQuestions,
+    time_per_round_seconds: input.timePerQuestion,
+    initial_points: input.initialPoints,
+    remote_enabled: input.remoteEnabled,
+    buzzer_arm_delay_seconds: input.buzzerArmDelaySeconds,
+    ranking_display: input.rankingDisplay,
+    questions: input.questions.map((question) => ({
+      source_question_id: question.sourceQuestionId ?? null,
+      question_type: input.mode === "buzzer" ? "buzzer" : question.type,
+      prompt: question.text,
+      expected_answer: question.answer,
+      options: question.options ?? [],
+      points: question.points,
+    })),
+  };
+}
+
+function mapMatchTemplate(template: ApiMatchTemplate): MatchTemplate {
+  return {
+    id: template.id,
+    name: template.name,
+    description: template.description,
+    mode: normalizeMatchMode(template.mode),
+    scoringMode: SCORING_CODE_TO_MODE[template.scoring_mode] ?? "classico",
+    modeLabel: template.mode_label,
+    scoringModeLabel: template.scoring_mode_label,
+    maxRounds: template.max_rounds,
+    timePerRoundSeconds: template.time_per_round_seconds,
+    initialPoints: template.initial_points,
+    remoteEnabled: template.remote_enabled,
+    capacity: template.capacity,
+    buzzerArmDelaySeconds: template.buzzer_arm_delay_seconds,
+    rankingDisplay: template.ranking_display as "always" | "between_questions" | "end_only",
+    questions: template.questions.map((question) => ({
+      id: question.id,
+      sourceQuestionId: question.source_question_id ?? null,
+      type: normalizeQuestionType(question.question_type),
+      prompt: question.prompt,
+      expectedAnswer: question.expected_answer,
+      options: question.options ?? [],
+      points: question.points,
+      position: question.position,
+    })),
+    createdAt: template.created_at,
+    updatedAt: template.updated_at,
+  };
+}
+
+function mapMatchTemplateSummary(template: ApiMatchTemplateSummary): MatchTemplateSummary {
+  return {
+    id: template.id,
+    name: template.name,
+    description: template.description,
+    mode: normalizeMatchMode(template.mode),
+    scoringMode: template.scoring_mode,
+    modeLabel: template.mode_label,
+    scoringModeLabel: template.scoring_mode_label,
+    questionCount: template.question_count,
+    createdAt: template.created_at,
+    updatedAt: template.updated_at,
+  };
+}
+
+export async function listMatchTemplates(search?: string): Promise<MatchTemplateSummary[]> {
+  const query = search?.trim() ? `?search=${encodeURIComponent(search.trim())}` : "";
+  const templates = await request<ApiMatchTemplateSummary[]>(`/api/v1/match-templates${query}`);
+  return templates.map(mapMatchTemplateSummary);
+}
+
+export async function getMatchTemplate(id: string): Promise<MatchTemplate> {
+  return mapMatchTemplate(await request<ApiMatchTemplate>(`/api/v1/match-templates/${id}`));
+}
+
+export async function createMatchTemplate(input: MatchTemplateInput): Promise<MatchTemplate> {
+  const created = await request<ApiMatchTemplate>(`/api/v1/match-templates`, {
     method: "POST",
-    body: {
-      mode: input.mode,
-      scoring_mode: scoringMode,
-      host_user_id: "resolved-from-token",
-      name: input.name,
-      max_rounds: input.maxQuestions,
-      time_per_round_seconds: input.timePerQuestion,
-      initial_points: input.initialPoints,
-      remote_enabled: input.remoteEnabled,
-      buzzer_arm_delay_seconds: input.buzzerArmDelaySeconds,
-      ranking_display: input.rankingDisplay,
-      questions: input.questions.map((question) => ({
-        source_question_id: question.sourceQuestionId ?? null,
-        question_type: input.mode === "buzzer" ? "buzzer" : question.type,
-        prompt: question.text,
-        expected_answer: question.answer,
-        options: question.options ?? [],
-        points: question.points,
-      })),
-    },
+    body: matchTemplateBody(input),
   });
-  return mapMatch(created);
+  return mapMatchTemplate(created);
+}
+
+export async function updateMatchTemplate(
+  id: string,
+  input: MatchTemplateInput,
+): Promise<MatchTemplate> {
+  const updated = await request<ApiMatchTemplate>(`/api/v1/match-templates/${id}`, {
+    method: "PATCH",
+    body: matchTemplateBody(input),
+  });
+  return mapMatchTemplate(updated);
+}
+
+export async function duplicateMatchTemplate(id: string): Promise<MatchTemplate> {
+  const duplicated = await request<ApiMatchTemplate>(`/api/v1/match-templates/${id}/duplicate`, {
+    method: "POST",
+  });
+  return mapMatchTemplate(duplicated);
+}
+
+export async function deleteMatchTemplate(id: string) {
+  await requestNoContent(`/api/v1/match-templates/${id}`, { method: "DELETE" });
 }
 
 export async function addParticipant(matchId: string, displayName: string) {

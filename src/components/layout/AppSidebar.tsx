@@ -1,5 +1,5 @@
 import { Link, useRouterState } from "@tanstack/react-router";
-import { Home, Gamepad2, History, Library, PlusCircle, Swords } from "lucide-react";
+import { Home, Gamepad2, History, Library, LayoutTemplate, Swords } from "lucide-react";
 
 import {
   Sidebar,
@@ -29,7 +29,8 @@ const groups = [
     label: "Jogar",
     items: [
       { title: "Início", url: "/", icon: Home },
-      { title: "Nova partida", url: "/matches/new", icon: PlusCircle },
+      { title: "Jogos", url: "/games", icon: Gamepad2 },
+      { title: "Modelos de partida", url: "/match-templates", icon: LayoutTemplate },
       { title: "Partidas", url: "/matches", icon: Swords },
       { title: "Perguntas gerais", url: "/general-questions", icon: Library },
     ],

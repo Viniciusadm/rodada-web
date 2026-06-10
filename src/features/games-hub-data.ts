@@ -4,6 +4,7 @@ import {
   listGeneralQuestions,
   listMatches,
   listMatchRounds,
+  listMatchTemplates,
   listNotifications,
   markAllNotificationsRead,
   markNotificationRead,
@@ -11,6 +12,7 @@ import {
   type GeneralQuestionPage,
   type MatchRoundDetail,
   type MatchSummary,
+  type MatchTemplateSummary,
 } from "@/lib/api-client";
 
 export function useGeneralQuestionsQuery(params: {
@@ -35,6 +37,15 @@ export function useMatchesQuery() {
   return useQuery<MatchSummary[]>({
     queryKey: ["matches"],
     queryFn: listMatches,
+    staleTime: 10_000,
+  });
+}
+
+export function useMatchTemplatesQuery(search: string) {
+  return useQuery<MatchTemplateSummary[]>({
+    queryKey: ["match-templates", "list", search],
+    queryFn: () => listMatchTemplates(search),
+    placeholderData: keepPreviousData,
     staleTime: 10_000,
   });
 }
