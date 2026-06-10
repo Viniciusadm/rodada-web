@@ -8,6 +8,7 @@ import { Input } from "@/components/ui/input";
 import { ConfirmDialog } from "@/components/common/ConfirmDialog";
 import { EmptyState } from "@/components/common/EmptyState";
 import { PageHeader } from "@/components/common/PageHeader";
+import { CsvImport } from "@/components/match/CsvImport";
 import { QuestionFields } from "@/components/match/QuestionFields";
 import {
   draftValid,
@@ -19,6 +20,7 @@ import { useGeneralQuestionsQuery } from "@/features/games-hub-data";
 import {
   createGeneralQuestion,
   deleteGeneralQuestion,
+  importGeneralQuestions,
   updateGeneralQuestion,
   type GeneralQuestion,
 } from "@/lib/api-client";
@@ -86,6 +88,15 @@ function GeneralQuestionsPage() {
     onSuccess: async () => {
       await refresh();
       toast.success("Pergunta geral removida.");
+    },
+    onError: (error) => toast.error(error.message),
+  });
+  const importMutation = useMutation({
+    mutationFn: (csv: string) => importGeneralQuestions(csv),
+    onSuccess: async (result) => {
+      await refresh();
+      const invalid = result.invalidRows.length ? ` ${result.invalidRows.length} inválidas.` : "";
+      toast.success(`${result.created} perguntas importadas.${invalid}`);
     },
     onError: (error) => toast.error(error.message),
   });
@@ -176,6 +187,9 @@ function GeneralQuestionsPage() {
           >
             <Plus className="mr-1 size-4" /> Criar
           </Button>
+          <div className="mt-4">
+            <CsvImport onImportCsv={(csv) => importMutation.mutate(csv)} />
+          </div>
         </div>
       </div>
     </div>

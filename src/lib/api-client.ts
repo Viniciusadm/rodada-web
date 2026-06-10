@@ -840,6 +840,17 @@ export async function deleteGeneralQuestion(id: string) {
   await requestNoContent(`/api/v1/general-questions/${id}`, { method: "DELETE" });
 }
 
+export async function importGeneralQuestions(csv: string): Promise<ImportQuestionsResult> {
+  const result = await request<{
+    created: number;
+    invalid_rows: Array<{ line: number; reason: string }>;
+  }>(`/api/v1/general-questions/import-csv`, {
+    method: "POST",
+    body: { csv },
+  });
+  return { created: result.created, invalidRows: result.invalid_rows };
+}
+
 export async function joinMatch(
   matchId: string,
   participantName: string,
