@@ -1,7 +1,12 @@
 import { useQueryClient } from "@tanstack/react-query";
 import { useEffect, useState } from "react";
 
-import { connectRealtime, type RealtimeEvent } from "@/lib/realtime-client";
+import { mapMatchState } from "@/lib/api-client";
+import {
+  connectRealtime,
+  type MatchRealtimePayload,
+  type RealtimeEvent,
+} from "@/lib/realtime-client";
 import { useAuthStore } from "@/stores/auth";
 
 type UseRealtimeInvalidationParams = {
@@ -42,18 +47,24 @@ function invalidateByEvent(
   queryClient: ReturnType<typeof useQueryClient>,
   scope: { matchId?: string },
 ) {
-  if (
-    ["match_created", "match_updated", "buzzer_updated", "room_updated"].includes(event.kind) &&
-    scope.matchId
-  ) {
-    void queryClient.invalidateQueries({ queryKey: ["match-state", scope.matchId] });
+  const stateAffectingKinds = [
+    "match_created",
+    "match_updated",
+    "buzzer_updated",
+    "room_updated",
+    "ranking_updated",
+  ];
+
+  if (stateAffectingKinds.includes(event.kind) && scope.matchId) {
+    const pushed = (event.payload as MatchRealtimePayload | undefined)?.state;
+    if (pushed) {
+      queryClient.setQueryData(["match-state", scope.matchId], mapMatchState(pushed));
+    } else {
+      void queryClient.invalidateQueries({ queryKey: ["match-state", scope.matchId] });
+    }
   }
 
   if (["match_created", "match_updated", "room_updated"].includes(event.kind)) {
     void queryClient.invalidateQueries({ queryKey: ["matches"] });
-  }
-
-  if (event.kind === "ranking_updated" && scope.matchId) {
-    void queryClient.invalidateQueries({ queryKey: ["match-state", scope.matchId] });
   }
 }

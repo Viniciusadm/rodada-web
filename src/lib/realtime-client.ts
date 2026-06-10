@@ -1,9 +1,14 @@
-import { getApiBaseUrl } from "@/lib/api-client";
+import { type ApiMatchState, getApiBaseUrl } from "@/lib/api-client";
 
 export type RealtimeEvent<T = unknown> = {
   channel: string;
   kind: string;
   payload: T;
+};
+
+export type MatchRealtimePayload = {
+  match_id: string;
+  state?: ApiMatchState;
 };
 
 export type RealtimeConnection = {

@@ -232,7 +232,7 @@ type ApiLiveRoom = {
   started_minutes_ago: number;
 };
 
-type ApiMatchState = {
+export type ApiMatchState = {
   match_data: ApiMatch;
   settings: {
     mode: string;
@@ -1086,7 +1086,7 @@ function mapLiveRoom(room: ApiLiveRoom): LiveRoom {
   };
 }
 
-function mapMatchState(state: ApiMatchState): MatchState {
+export function mapMatchState(state: ApiMatchState): MatchState {
   return {
     match: mapMatch(state.match_data),
     settings: {
