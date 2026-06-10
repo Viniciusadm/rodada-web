@@ -173,7 +173,12 @@ function NewMatchPage() {
           <div className="space-y-5">
             <div className="space-y-2">
               <Label htmlFor="name">Nome da partida</Label>
-              <Input id="name" value={name} onChange={(e) => setName(e.target.value)} />
+              <Input
+                id="name"
+                placeholder="Ex: Quiz de sexta-feira"
+                value={name}
+                onChange={(e) => setName(e.target.value)}
+              />
             </div>
 
             <div className="space-y-2">
@@ -264,6 +269,7 @@ function NewMatchPage() {
                   id="max"
                   type="number"
                   min={1}
+                  placeholder="Sem limite"
                   value={maxQuestions}
                   onChange={(e) => setMaxQuestions(e.target.value)}
                 />
@@ -274,6 +280,7 @@ function NewMatchPage() {
                   id="time"
                   type="number"
                   min={5}
+                  placeholder="Ex: 30"
                   value={timePerQuestion}
                   onChange={(e) => setTimePerQuestion(e.target.value)}
                 />
@@ -290,6 +297,7 @@ function NewMatchPage() {
                       id="ip"
                       type="number"
                       min={scoringMode === "eliminacao" ? 1 : 0}
+                      placeholder={scoringMode === "eliminacao" ? "Ex: 3" : "Ex: 500"}
                       value={initialPoints}
                       onChange={(e) => setInitialPoints(e.target.value)}
                     />
@@ -309,6 +317,7 @@ function NewMatchPage() {
                   type="number"
                   min={0}
                   max={5}
+                  placeholder="Ex: 2"
                   value={buzzerArmDelay}
                   onChange={(e) => setBuzzerArmDelay(e.target.value)}
                 />
