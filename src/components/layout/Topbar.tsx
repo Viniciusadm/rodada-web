@@ -1,9 +1,7 @@
-import { useState } from "react";
-import { Bell, Check, LogOut, Moon, Search, Sun } from "lucide-react";
+import { Bell, Check, LogOut, Moon, Sun } from "lucide-react";
 import { useNavigate } from "@tanstack/react-router";
 
 import { SidebarTrigger } from "@/components/ui/sidebar";
-import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
@@ -18,7 +16,6 @@ import {
   useMarkAllNotificationsRead,
   useMarkNotificationRead,
   useNotificationsQuery,
-  useSearchQuery,
 } from "@/features/games-hub-data";
 import { useAuthStore } from "@/stores/auth";
 
@@ -42,7 +39,6 @@ export function Topbar() {
   return (
     <header className="sticky top-0 z-20 flex h-16 items-center gap-3 border-b border-border bg-background/80 px-4 backdrop-blur-md md:px-6">
       <SidebarTrigger className="size-9" />
-      <GlobalSearch />
       <div className="ml-auto flex items-center gap-2">
         <Button
           variant="ghost"
@@ -87,92 +83,6 @@ export function Topbar() {
         </DropdownMenu>
       </div>
     </header>
-  );
-}
-
-function GlobalSearch() {
-  const navigate = useNavigate();
-  const [term, setTerm] = useState("");
-  const [open, setOpen] = useState(false);
-  const { data, isFetching } = useSearchQuery(term);
-
-  const hasResults = !!data && (data.games.length > 0 || data.players.length > 0);
-  const showPanel = open && term.trim().length >= 2;
-
-  const go = (to: string) => {
-    setOpen(false);
-    setTerm("");
-    void navigate({ to });
-  };
-
-  return (
-    <div className="relative flex-1 max-w-xl">
-      <Search className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
-      <Input
-        value={term}
-        onChange={(event) => {
-          setTerm(event.target.value);
-          setOpen(true);
-        }}
-        onFocus={() => setOpen(true)}
-        onBlur={() => window.setTimeout(() => setOpen(false), 150)}
-        placeholder="Buscar jogos ou jogadores..."
-        className="h-10 rounded-full border-transparent bg-muted/60 pl-10 focus-visible:border-ring/30 focus-visible:ring-2 focus-visible:ring-ring/20"
-      />
-      {showPanel && (
-        <div className="absolute left-0 right-0 top-12 z-30 overflow-hidden rounded-xl border border-border bg-popover shadow-lg">
-          {isFetching && !hasResults && (
-            <p className="px-4 py-3 text-sm text-muted-foreground">Buscando...</p>
-          )}
-          {!isFetching && !hasResults && (
-            <p className="px-4 py-3 text-sm text-muted-foreground">Nenhum resultado encontrado.</p>
-          )}
-          {hasResults && (
-            <div className="max-h-80 overflow-y-auto py-1">
-              <SearchGroup
-                label="Jogos"
-                items={data!.games.map((g) => ({ id: g.id, label: g.name }))}
-                onSelect={() => go("/games")}
-              />
-              <SearchGroup
-                label="Jogadores"
-                items={data!.players.map((p) => ({ id: p.id, label: p.displayName }))}
-                onSelect={() => go("/players")}
-              />
-            </div>
-          )}
-        </div>
-      )}
-    </div>
-  );
-}
-
-function SearchGroup({
-  label,
-  items,
-  onSelect,
-}: {
-  label: string;
-  items: Array<{ id: string; label: string }>;
-  onSelect: (id: string) => void;
-}) {
-  if (items.length === 0) return null;
-  return (
-    <div className="py-1">
-      <p className="px-4 py-1 text-[11px] font-medium uppercase tracking-wider text-muted-foreground">
-        {label}
-      </p>
-      {items.map((item) => (
-        <button
-          key={item.id}
-          onMouseDown={(event) => event.preventDefault()}
-          onClick={() => onSelect(item.id)}
-          className="block w-full truncate px-4 py-2 text-left text-sm hover:bg-accent"
-        >
-          {item.label}
-        </button>
-      ))}
-    </div>
   );
 }
 

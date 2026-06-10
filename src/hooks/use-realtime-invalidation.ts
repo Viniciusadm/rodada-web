@@ -53,8 +53,7 @@ function invalidateByEvent(
     void queryClient.invalidateQueries({ queryKey: ["matches"] });
   }
 
-  if (event.kind === "ranking_updated") {
-    void queryClient.invalidateQueries({ queryKey: ["ranking"] });
-    void queryClient.invalidateQueries({ queryKey: ["players"] });
+  if (event.kind === "ranking_updated" && scope.matchId) {
+    void queryClient.invalidateQueries({ queryKey: ["match-state", scope.matchId] });
   }
 }

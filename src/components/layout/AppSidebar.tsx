@@ -1,5 +1,5 @@
 import { Link, useRouterState } from "@tanstack/react-router";
-import { Home, Gamepad2, Trophy, Users, History, PlusCircle, Swords } from "lucide-react";
+import { Home, Gamepad2, History, PlusCircle, Swords } from "lucide-react";
 
 import {
   Sidebar,
@@ -35,11 +35,7 @@ const groups = [
   },
   {
     label: "Acompanhar",
-    items: [
-      { title: "Ranking", url: "/ranking", icon: Trophy },
-      { title: "Jogadores", url: "/players", icon: Users },
-      { title: "Histórico", url: "/history", icon: History },
-    ],
+    items: [{ title: "Histórico", url: "/history", icon: History }],
   },
 ];
 

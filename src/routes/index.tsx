@@ -1,10 +1,8 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { ArrowRight, Hand, ListChecks, PlusCircle, Trophy } from "lucide-react";
+import { ArrowRight, Hand, ListChecks, PlusCircle } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
-import { Skeleton } from "@/components/ui/skeleton";
 import { PublicLanding } from "@/components/landing/PublicLanding";
-import { useRankingQuery } from "@/features/games-hub-data";
 import { useAuthStore } from "@/stores/auth";
 
 export const Route = createFileRoute("/")({
@@ -14,7 +12,7 @@ export const Route = createFileRoute("/")({
       {
         name: "description",
         content:
-          "Jogos interativos. Crie partidas ao vivo, engaje participantes e acompanhe rankings.",
+          "Jogos interativos. Crie partidas ao vivo e engaje participantes em segundos.",
       },
     ],
   }),
@@ -30,9 +28,6 @@ function HomeRoute() {
 }
 
 function Dashboard() {
-  const { data: ranking = [], isLoading: rankingLoading } = useRankingQuery();
-  const top3 = ranking.slice(0, 3);
-
   return (
     <div className="mx-auto max-w-7xl space-y-10">
       <section className="relative overflow-hidden rounded-3xl border border-border bg-card p-8 md:p-10">
@@ -103,57 +98,6 @@ function Dashboard() {
           ))}
         </div>
       </section>
-
-      <div className="grid grid-cols-1 gap-6">
-        <section className="rounded-2xl border border-border bg-card p-6">
-          <div className="mb-5 flex items-center justify-between">
-            <div className="flex items-center gap-2">
-              <Trophy className="size-5 text-primary" />
-              <h2 className="text-base font-semibold">Ranking do mês</h2>
-            </div>
-            <Link to="/ranking" className="text-xs font-medium text-primary hover:underline">
-              Ver completo
-            </Link>
-          </div>
-          <ul className="space-y-3">
-            {rankingLoading &&
-              Array.from({ length: 3 }).map((_, index) => (
-                <Skeleton key={index} className="h-[60px] rounded-xl" />
-              ))}
-            {top3.map((p, i) => (
-              <li
-                key={p.id}
-                className="flex items-center justify-between rounded-xl bg-muted/40 px-4 py-3"
-              >
-                <div className="flex items-center gap-3">
-                  <span
-                    className={`w-6 text-base font-bold ${i === 0 ? "text-primary" : "text-muted-foreground"}`}
-                  >
-                    {i + 1}
-                  </span>
-                  <div
-                    className={`flex size-9 items-center justify-center rounded-full text-xs font-semibold ${p.color}`}
-                  >
-                    {p.initials}
-                  </div>
-                  <div>
-                    <p className="text-sm font-medium leading-tight">{p.name}</p>
-                  </div>
-                </div>
-                <span className="text-sm font-semibold tabular-nums">
-                  {p.points.toLocaleString("pt-BR")}{" "}
-                  <span className="text-xs text-muted-foreground">pts</span>
-                </span>
-              </li>
-            ))}
-            {!rankingLoading && top3.length === 0 && (
-              <li className="rounded-xl bg-muted/40 px-4 py-3 text-sm text-muted-foreground">
-                Ranking ainda sem pontuação.
-              </li>
-            )}
-          </ul>
-        </section>
-      </div>
     </div>
   );
 }

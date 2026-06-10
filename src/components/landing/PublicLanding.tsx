@@ -16,8 +16,8 @@ const FEATURES: Array<{ icon: LucideIcon; title: string; description: string }> 
   },
   {
     icon: Trophy,
-    title: "Ranking e engajamento",
-    description: "Acompanhe a pontuação dos jogadores a cada partida.",
+    title: "Placar ao vivo",
+    description: "Acompanhe a pontuação dos jogadores em tempo real durante a partida.",
   },
   {
     icon: Zap,

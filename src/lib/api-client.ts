@@ -6,21 +6,6 @@ export type MatchMode = "buzzer" | "quiz";
 export type QuestionType = "buzzer" | "true_false" | "free_text" | "multiple_choice";
 export type McOption = { text: string; correct: boolean };
 
-export type Player = {
-  id: string;
-  name: string;
-  initials: string;
-  points: number;
-  matches: number;
-  level: number;
-  color: string;
-  isActive: boolean;
-};
-
-export type RankingEntry = Player & {
-  position: number;
-};
-
 export type LiveRoom = {
   id: string;
   matchId: string;
@@ -121,7 +106,6 @@ type ApiMatchRoundDetail = {
 export type MatchParticipant = {
   id: string;
   matchId: string;
-  playerId: string | null;
   displayName: string;
   joinSource: "local" | "remote";
   currentScore: number;
@@ -171,24 +155,6 @@ export type ImportQuestionsResult = {
   invalidRows: Array<{ line: number; reason: string }>;
 };
 
-type ApiPlayer = {
-  id: string;
-  display_name: string;
-  is_active: boolean;
-  total_points: number;
-  matches_played: number;
-  wins: number;
-};
-
-type ApiRankingEntry = {
-  position: number;
-  player_id: string;
-  display_name: string;
-  total_points: number;
-  matches_played: number;
-  wins: number;
-};
-
 type ApiMcOption = { text: string; correct: boolean };
 
 type ApiMatchQuestion = {
@@ -205,7 +171,6 @@ type ApiMatchQuestion = {
 type ApiMatchParticipant = {
   id: string;
   match_id: string;
-  player_id: string | null;
   display_name: string;
   join_source: "local" | "remote";
   current_score: number;
@@ -281,11 +246,6 @@ export type AuthSession = {
   user: AuthUser;
 };
 
-export type SearchResults = {
-  games: Array<{ id: string; name: string; slug: string }>;
-  players: Array<{ id: string; displayName: string }>;
-};
-
 export type AppNotification = {
   id: string;
   kind: string;
@@ -303,11 +263,6 @@ export type NotificationPreference = {
 
 type ApiMeResponse = {
   user: { id: string; display_name: string; email: string };
-};
-
-type ApiSearchResponse = {
-  games: Array<{ id: string; name: string; slug: string }>;
-  players: Array<{ id: string; display_name: string; ministry_id: string | null }>;
 };
 
 type ApiNotification = {
@@ -385,16 +340,6 @@ export function getAccessToken() {
 
 export function onUnauthorized(handler: (() => void) | null) {
   unauthorizedHandler = handler;
-}
-
-export async function listPlayers(): Promise<Player[]> {
-  const players = await request<ApiPlayer[]>(`/api/v1/players`);
-  return players.map((player) => mapPlayer(player));
-}
-
-export async function listRankings(): Promise<RankingEntry[]> {
-  const ranking = await request<ApiRankingEntry[]>(`/api/v1/rankings`);
-  return ranking.map((entry) => mapRankingEntry(entry));
 }
 
 export async function listMatches(): Promise<MatchSummary[]> {
@@ -475,36 +420,10 @@ export async function createMatch(input: {
   return mapMatch(created);
 }
 
-export async function createPlayer(input: { displayName: string }): Promise<Player> {
-  const result = await request<ApiPlayer>("/api/v1/players", {
-    method: "POST",
-    body: {
-      user_id: null,
-      display_name: input.displayName,
-    },
-  });
-  return mapPlayer(result);
-}
-
-export async function updatePlayer(
-  playerId: string,
-  input: { displayName?: string; isActive?: boolean },
-): Promise<Player> {
-  const result = await request<ApiPlayer>(`/api/v1/players/${playerId}`, {
-    method: "PATCH",
-    body: {
-      display_name: input.displayName,
-      is_active: input.isActive,
-    },
-  });
-  return mapPlayer(result);
-}
-
 export async function addParticipant(matchId: string, displayName: string) {
   await requestNoContent(`/api/v1/matches/${matchId}/participants`, {
     method: "POST",
     body: {
-      player_id: null,
       display_name: displayName,
       join_source: "local",
     },
@@ -760,18 +679,6 @@ export async function fetchMe(): Promise<AuthSession> {
   };
 }
 
-export async function searchOrganization(query: string): Promise<SearchResults> {
-  const params = new URLSearchParams({ q: query });
-  const results = await request<ApiSearchResponse>(`/api/v1/search?${params}`);
-  return {
-    games: results.games.map((game) => ({ id: game.id, name: game.name, slug: game.slug })),
-    players: results.players.map((player) => ({
-      id: player.id,
-      displayName: player.display_name,
-    })),
-  };
-}
-
 export async function listNotifications(): Promise<AppNotification[]> {
   const notifications = await request<ApiNotification[]>(`/api/v1/notifications`);
   return notifications.map((notification) => ({
@@ -807,20 +714,6 @@ async function errorBody(response: Response): Promise<{ message: string; code: s
   }
 }
 
-function mapPlayer(player: ApiPlayer): Player {
-  const name = player.display_name;
-  return {
-    id: player.id,
-    name,
-    initials: initials(name),
-    points: player.total_points,
-    matches: player.matches_played,
-    level: levelFromPoints(player.total_points),
-    color: colorFor(player.id),
-    isActive: player.is_active,
-  };
-}
-
 function mapLiveRoom(room: ApiLiveRoom): LiveRoom {
   return {
     id: room.id,
@@ -833,21 +726,6 @@ function mapLiveRoom(room: ApiLiveRoom): LiveRoom {
     capacity: room.capacity ?? 0,
     host: room.host_name,
     startedMinutesAgo: room.started_minutes_ago,
-  };
-}
-
-function mapRankingEntry(entry: ApiRankingEntry): RankingEntry {
-  const name = entry.display_name === entry.player_id ? "Jogador" : entry.display_name;
-  return {
-    id: entry.player_id,
-    name,
-    initials: initials(name),
-    points: entry.total_points,
-    matches: entry.matches_played,
-    level: levelFromPoints(entry.total_points),
-    color: colorFor(entry.player_id),
-    isActive: true,
-    position: entry.position,
   };
 }
 
@@ -893,7 +771,6 @@ function mapParticipant(participant: ApiMatchParticipant): MatchParticipant {
   return {
     id: participant.id,
     matchId: participant.match_id,
-    playerId: participant.player_id,
     displayName: participant.display_name,
     joinSource: participant.join_source,
     currentScore: participant.current_score,
@@ -960,29 +837,4 @@ function normalizeQuestionType(type: string): QuestionType {
     return type;
   }
   return "buzzer";
-}
-
-function initials(name: string) {
-  return name
-    .split(/\s+/)
-    .filter(Boolean)
-    .slice(0, 2)
-    .map((part) => part[0]?.toUpperCase() ?? "")
-    .join("");
-}
-
-function levelFromPoints(points: number) {
-  return Math.max(1, Math.floor(points / 1000) + 1);
-}
-
-function colorFor(seed: string) {
-  const colors = [
-    "bg-violet-500/20 text-violet-300",
-    "bg-sky-500/20 text-sky-300",
-    "bg-emerald-500/20 text-emerald-300",
-    "bg-amber-500/20 text-amber-300",
-    "bg-rose-500/20 text-rose-300",
-  ];
-  const index = seed.split("").reduce((sum, char) => sum + char.charCodeAt(0), 0) % colors.length;
-  return colors[index];
 }

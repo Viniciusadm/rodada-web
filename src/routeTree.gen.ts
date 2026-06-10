@@ -10,8 +10,6 @@
 
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as RegisterRouteImport } from './routes/register'
-import { Route as RankingRouteImport } from './routes/ranking'
-import { Route as PlayersRouteImport } from './routes/players'
 import { Route as LoginRouteImport } from './routes/login'
 import { Route as HistoryRouteImport } from './routes/history'
 import { Route as EntrarRouteImport } from './routes/entrar'
@@ -26,16 +24,6 @@ import { Route as MatchesMatchIdHostRouteImport } from './routes/matches.$matchI
 const RegisterRoute = RegisterRouteImport.update({
   id: '/register',
   path: '/register',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const RankingRoute = RankingRouteImport.update({
-  id: '/ranking',
-  path: '/ranking',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const PlayersRoute = PlayersRouteImport.update({
-  id: '/players',
-  path: '/players',
   getParentRoute: () => rootRouteImport,
 } as any)
 const LoginRoute = LoginRouteImport.update({
@@ -94,8 +82,6 @@ export interface FileRoutesByFullPath {
   '/entrar': typeof EntrarRoute
   '/history': typeof HistoryRoute
   '/login': typeof LoginRoute
-  '/players': typeof PlayersRoute
-  '/ranking': typeof RankingRoute
   '/register': typeof RegisterRoute
   '/matches/new': typeof MatchesNewRoute
   '/play/$matchId': typeof PlayMatchIdRoute
@@ -109,8 +95,6 @@ export interface FileRoutesByTo {
   '/entrar': typeof EntrarRoute
   '/history': typeof HistoryRoute
   '/login': typeof LoginRoute
-  '/players': typeof PlayersRoute
-  '/ranking': typeof RankingRoute
   '/register': typeof RegisterRoute
   '/matches/new': typeof MatchesNewRoute
   '/play/$matchId': typeof PlayMatchIdRoute
@@ -125,8 +109,6 @@ export interface FileRoutesById {
   '/entrar': typeof EntrarRoute
   '/history': typeof HistoryRoute
   '/login': typeof LoginRoute
-  '/players': typeof PlayersRoute
-  '/ranking': typeof RankingRoute
   '/register': typeof RegisterRoute
   '/matches/new': typeof MatchesNewRoute
   '/play/$matchId': typeof PlayMatchIdRoute
@@ -142,8 +124,6 @@ export interface FileRouteTypes {
     | '/entrar'
     | '/history'
     | '/login'
-    | '/players'
-    | '/ranking'
     | '/register'
     | '/matches/new'
     | '/play/$matchId'
@@ -157,8 +137,6 @@ export interface FileRouteTypes {
     | '/entrar'
     | '/history'
     | '/login'
-    | '/players'
-    | '/ranking'
     | '/register'
     | '/matches/new'
     | '/play/$matchId'
@@ -172,8 +150,6 @@ export interface FileRouteTypes {
     | '/entrar'
     | '/history'
     | '/login'
-    | '/players'
-    | '/ranking'
     | '/register'
     | '/matches/new'
     | '/play/$matchId'
@@ -188,8 +164,6 @@ export interface RootRouteChildren {
   EntrarRoute: typeof EntrarRoute
   HistoryRoute: typeof HistoryRoute
   LoginRoute: typeof LoginRoute
-  PlayersRoute: typeof PlayersRoute
-  RankingRoute: typeof RankingRoute
   RegisterRoute: typeof RegisterRoute
   MatchesNewRoute: typeof MatchesNewRoute
   PlayMatchIdRoute: typeof PlayMatchIdRoute
@@ -206,20 +180,6 @@ declare module '@tanstack/react-router' {
       path: '/register'
       fullPath: '/register'
       preLoaderRoute: typeof RegisterRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/ranking': {
-      id: '/ranking'
-      path: '/ranking'
-      fullPath: '/ranking'
-      preLoaderRoute: typeof RankingRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/players': {
-      id: '/players'
-      path: '/players'
-      fullPath: '/players'
-      preLoaderRoute: typeof PlayersRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/login': {
@@ -300,8 +260,6 @@ const rootRouteChildren: RootRouteChildren = {
   EntrarRoute: EntrarRoute,
   HistoryRoute: HistoryRoute,
   LoginRoute: LoginRoute,
-  PlayersRoute: PlayersRoute,
-  RankingRoute: RankingRoute,
   RegisterRoute: RegisterRoute,
   MatchesNewRoute: MatchesNewRoute,
   PlayMatchIdRoute: PlayMatchIdRoute,
