@@ -1,6 +1,6 @@
 import { createFileRoute, Link, useRouter } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
-import { Loader2 } from "lucide-react";
+import { Eye, EyeOff, Loader2 } from "lucide-react";
 import { z } from "zod";
 
 import { AuthShell } from "@/components/auth/AuthShell";
@@ -36,6 +36,7 @@ function LoginPage() {
   const [password, setPassword] = useState(import.meta.env.VITE_DEMO_ADMIN_PASSWORD ?? "");
   const [fieldErrors, setFieldErrors] = useState<FieldErrors>({});
   const [submitting, setSubmitting] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
 
   useEffect(() => {
     void bootstrap();
@@ -98,13 +99,25 @@ function LoginPage() {
         <AuthField
           id="password"
           label="Senha"
-          type="password"
+          type={showPassword ? "text" : "password"}
           autoComplete="current-password"
           value={password}
           onChange={(event) => setPassword(event.target.value)}
           placeholder="••••••••"
           error={fieldErrors.password}
           required
+          trailing={
+            <button
+              type="button"
+              onClick={() => setShowPassword((prev) => !prev)}
+              className="flex size-7 items-center justify-center rounded-md text-muted-foreground transition-colors hover:text-foreground"
+              aria-label={showPassword ? "Ocultar senha" : "Mostrar senha"}
+              aria-pressed={showPassword}
+              tabIndex={-1}
+            >
+              {showPassword ? <EyeOff className="size-4" /> : <Eye className="size-4" />}
+            </button>
+          }
         />
 
         {error && (
