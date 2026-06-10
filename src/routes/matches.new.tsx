@@ -16,7 +16,13 @@ import {
 import { Switch } from "@/components/ui/switch";
 import { PageHeader } from "@/components/common/PageHeader";
 import { CsvImport } from "@/components/match/CsvImport";
-import { createMatch, errorToMessage, type MatchMode } from "@/lib/api-client";
+import { TemplatePickerDialog } from "@/components/match/TemplatePickerDialog";
+import {
+  createMatch,
+  errorToMessage,
+  type GeneralQuestion,
+  type MatchMode,
+} from "@/lib/api-client";
 import type { DraftOption, DraftQuestionType, GameMode } from "@/lib/match-types";
 import { cn } from "@/lib/utils";
 
@@ -38,7 +44,23 @@ type DraftQ = {
   answer: string;
   options: DraftOption[];
   points: number;
+  sourceQuestionId?: string | null;
 };
+
+function templateToDraftQ(template: GeneralQuestion): DraftQ {
+  const type: DraftQuestionType =
+    template.type === "true_false" || template.type === "multiple_choice"
+      ? template.type
+      : "free_text";
+  return {
+    type,
+    text: template.prompt,
+    answer: template.expectedAnswer,
+    options: template.options ?? [],
+    points: template.points,
+    sourceQuestionId: template.id,
+  };
+}
 
 function emptyQuestion(type: DraftQuestionType): DraftQ {
   if (type === "multiple_choice") {
@@ -99,9 +121,9 @@ function NewMatchPage() {
   const [initialPoints, setInitialPoints] = useState<string>("500");
   const [remoteEnabled, setRemoteEnabled] = useState(true);
   const [buzzerArmDelay, setBuzzerArmDelay] = useState<string>("0");
-  const [rankingDisplay, setRankingDisplay] = useState<
-    "always" | "between_questions" | "end_only"
-  >("always");
+  const [rankingDisplay, setRankingDisplay] = useState<"always" | "between_questions" | "end_only">(
+    "always",
+  );
 
   const [questions, setQuestions] = useState<DraftQ[]>([]);
 
@@ -136,6 +158,7 @@ function NewMatchPage() {
         answer: q.answer,
         options: q.type === "multiple_choice" ? q.options : undefined,
         points: q.points,
+        sourceQuestionId: q.sourceQuestionId ?? null,
       })),
     });
   }
@@ -366,14 +389,22 @@ function NewMatchPage() {
                     : "Escolha o tipo de cada pergunta."}
                 </p>
               </div>
-              <Button
-                size="sm"
-                variant="outline"
-                className="rounded-lg"
-                onClick={() => setQuestions([...questions, emptyQuestion("free_text")])}
-              >
-                <Plus className="mr-1 size-4" /> Adicionar
-              </Button>
+              <div className="flex items-center gap-2">
+                <TemplatePickerDialog
+                  onAdd={(templates) => {
+                    setQuestions((qs) => [...qs, ...templates.map(templateToDraftQ)]);
+                    toast.success(`${templates.length} pergunta(s) adicionada(s) do banco.`);
+                  }}
+                />
+                <Button
+                  size="sm"
+                  variant="outline"
+                  className="rounded-lg"
+                  onClick={() => setQuestions([...questions, emptyQuestion("free_text")])}
+                >
+                  <Plus className="mr-1 size-4" /> Adicionar
+                </Button>
+              </div>
             </div>
 
             <div className="space-y-3">

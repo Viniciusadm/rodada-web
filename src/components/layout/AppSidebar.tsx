@@ -1,5 +1,5 @@
 import { Link, useRouterState } from "@tanstack/react-router";
-import { Home, Gamepad2, History, PlusCircle, Swords } from "lucide-react";
+import { Home, Gamepad2, History, Library, PlusCircle, Swords } from "lucide-react";
 
 import {
   Sidebar,
@@ -31,6 +31,7 @@ const groups = [
       { title: "Início", url: "/", icon: Home },
       { title: "Nova partida", url: "/matches/new", icon: PlusCircle },
       { title: "Partidas", url: "/matches", icon: Swords },
+      { title: "Perguntas gerais", url: "/general-questions", icon: Library },
     ],
   },
   {
@@ -46,16 +47,13 @@ export function AppSidebar() {
   const user = useAuthStore((s) => s.user);
 
   const matches = (path: string) =>
-    path === "/"
-      ? currentPath === "/"
-      : currentPath === path || currentPath.startsWith(`${path}/`);
+    path === "/" ? currentPath === "/" : currentPath === path || currentPath.startsWith(`${path}/`);
 
   const activeUrl = allItems
     .filter((item) => matches(item.url))
-    .reduce<string | null>(
-      (best, item) => (!best || item.url.length > best.length ? item.url : best),
-      null,
-    );
+    .reduce<
+      string | null
+    >((best, item) => (!best || item.url.length > best.length ? item.url : best), null);
 
   const userName = user?.displayName ?? "Conta";
 
@@ -80,7 +78,11 @@ export function AppSidebar() {
               <SidebarMenu>
                 {group.items.map((item) => (
                   <SidebarMenuItem key={item.url}>
-                    <SidebarMenuButton asChild isActive={item.url === activeUrl} tooltip={item.title}>
+                    <SidebarMenuButton
+                      asChild
+                      isActive={item.url === activeUrl}
+                      tooltip={item.title}
+                    >
                       <Link to={item.url} className="flex items-center gap-2">
                         <item.icon className="size-4" />
                         <span>{item.title}</span>

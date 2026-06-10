@@ -1,15 +1,35 @@
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { keepPreviousData, useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 
 import {
+  listGeneralQuestions,
   listMatches,
   listMatchRounds,
   listNotifications,
   markAllNotificationsRead,
   markNotificationRead,
   type AppNotification,
+  type GeneralQuestionPage,
   type MatchRoundDetail,
   type MatchSummary,
 } from "@/lib/api-client";
+
+export function useGeneralQuestionsQuery(params: {
+  search: string;
+  page: number;
+  pageSize?: number;
+}) {
+  return useQuery<GeneralQuestionPage>({
+    queryKey: ["general-questions", "list", params.search, params.page],
+    queryFn: () =>
+      listGeneralQuestions({
+        search: params.search,
+        page: params.page,
+        pageSize: params.pageSize,
+      }),
+    placeholderData: keepPreviousData,
+    staleTime: 10_000,
+  });
+}
 
 export function useMatchesQuery() {
   return useQuery<MatchSummary[]>({

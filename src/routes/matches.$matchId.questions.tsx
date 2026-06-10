@@ -1,29 +1,30 @@
 import { createFileRoute, Link, notFound } from "@tanstack/react-router";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { ArrowLeft, Check, Plus, Save, Trash2 } from "lucide-react";
+import { ArrowLeft, Library, Plus, Save, Trash2 } from "lucide-react";
 import { useState } from "react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
 import { PageHeader } from "@/components/common/PageHeader";
 import { CsvImport } from "@/components/match/CsvImport";
+import { QuestionFields } from "@/components/match/QuestionFields";
+import {
+  draftValid,
+  emptyDraft,
+  fromQuestion,
+  toPayload,
+  type Draft,
+} from "@/components/match/question-draft";
+import { TemplatePickerDialog } from "@/components/match/TemplatePickerDialog";
 import {
   addMatchQuestion,
   deleteMatchQuestion,
   getMatchState,
   importMatchQuestions,
   updateMatchQuestion,
+  type GeneralQuestion,
   type MatchMode,
   type MatchQuestion,
 } from "@/lib/api-client";
-import type { DraftOption, DraftQuestionType } from "@/lib/match-types";
 
 export const Route = createFileRoute("/matches/$matchId/questions")({
   head: () => ({
@@ -32,80 +33,6 @@ export const Route = createFileRoute("/matches/$matchId/questions")({
   component: QuestionsPage,
   notFoundComponent: () => <div className="p-8 text-center">Partida não encontrada.</div>,
 });
-
-type Draft = {
-  type: DraftQuestionType;
-  prompt: string;
-  expectedAnswer: string;
-  options: DraftOption[];
-  points: number;
-};
-
-function emptyDraft(): Draft {
-  return { type: "free_text", prompt: "", expectedAnswer: "", options: [], points: 100 };
-}
-
-function fromQuestion(question: MatchQuestion): Draft {
-  const type: DraftQuestionType =
-    question.type === "true_false" || question.type === "multiple_choice"
-      ? question.type
-      : "free_text";
-  return {
-    type,
-    prompt: question.prompt,
-    expectedAnswer: question.expectedAnswer,
-    options:
-      question.options.length > 0
-        ? question.options.map((option) => ({ ...option }))
-        : [
-            { text: "", correct: true },
-            { text: "", correct: false },
-          ],
-    points: question.points,
-  };
-}
-
-function draftValid(draft: Draft, mode: MatchMode): boolean {
-  if (!draft.prompt.trim()) return false;
-  if (mode === "buzzer") return draft.expectedAnswer.trim().length > 0;
-  if (draft.type === "true_false")
-    return draft.expectedAnswer === "true" || draft.expectedAnswer === "false";
-  if (draft.type === "multiple_choice") {
-    return (
-      draft.options.length >= 2 &&
-      draft.options.length <= 4 &&
-      draft.options.every((option) => option.text.trim().length > 0) &&
-      draft.options.filter((option) => option.correct).length === 1
-    );
-  }
-  return draft.expectedAnswer.trim().length > 0;
-}
-
-function toPayload(draft: Draft, mode: MatchMode) {
-  if (mode === "buzzer") {
-    return {
-      prompt: draft.prompt,
-      expectedAnswer: draft.expectedAnswer,
-      points: draft.points,
-    };
-  }
-  if (draft.type === "multiple_choice") {
-    const correct = draft.options.find((option) => option.correct);
-    return {
-      questionType: "multiple_choice" as const,
-      prompt: draft.prompt,
-      expectedAnswer: correct?.text ?? "",
-      options: draft.options,
-      points: draft.points,
-    };
-  }
-  return {
-    questionType: draft.type,
-    prompt: draft.prompt,
-    expectedAnswer: draft.expectedAnswer,
-    points: draft.points,
-  };
-}
 
 function QuestionsPage() {
   const { matchId } = Route.useParams();
@@ -123,6 +50,21 @@ function QuestionsPage() {
       setDraft(emptyDraft());
       await refresh();
       toast.success("Pergunta criada.");
+    },
+    onError: (error) => toast.error(error.message),
+  });
+  const addTemplatesMutation = useMutation({
+    mutationFn: async (templates: GeneralQuestion[]) => {
+      for (const template of templates) {
+        await addMatchQuestion(matchId, {
+          ...toPayload(fromQuestion(template), mode),
+          sourceQuestionId: template.id,
+        });
+      }
+    },
+    onSuccess: async (_data, templates) => {
+      await refresh();
+      toast.success(`${templates.length} pergunta(s) adicionada(s) do banco.`);
     },
     onError: (error) => toast.error(error.message),
   });
@@ -166,12 +108,24 @@ function QuestionsPage() {
         </Link>
       </Button>
 
-      <PageHeader title="Perguntas da partida" description={query.data.match.name} />
+      <PageHeader
+        title="Perguntas da partida"
+        description={query.data.match.name}
+        actions={
+          <TemplatePickerDialog onAdd={(templates) => addTemplatesMutation.mutate(templates)} />
+        }
+      />
 
       <div className="grid grid-cols-1 gap-6 lg:grid-cols-[1fr_360px]">
         <div className="space-y-3">
           <div className="rounded-xl border border-border bg-card p-4">
-            <p className="mb-3 text-sm font-semibold">Nova pergunta</p>
+            <div className="mb-3 flex items-center justify-between gap-2">
+              <p className="text-sm font-semibold">Nova pergunta</p>
+              <TemplatePickerDialog
+                triggerLabel="Do banco"
+                onAdd={(templates) => addTemplatesMutation.mutate(templates)}
+              />
+            </div>
             <QuestionFields mode={mode} draft={draft} onChange={setDraft} />
             <Button
               className="mt-3 rounded-lg"
@@ -204,162 +158,6 @@ function QuestionsPage() {
   );
 }
 
-function QuestionFields({
-  mode,
-  draft,
-  onChange,
-  disabled,
-}: {
-  mode: MatchMode;
-  draft: Draft;
-  onChange: (draft: Draft) => void;
-  disabled?: boolean;
-}) {
-  const set = (patch: Partial<Draft>) => onChange({ ...draft, ...patch });
-  return (
-    <div className="space-y-2">
-      {mode === "quiz" && (
-        <Select
-          value={draft.type}
-          onValueChange={(v) => {
-            const type = v as DraftQuestionType;
-            onChange({
-              type,
-              prompt: draft.prompt,
-              points: draft.points,
-              expectedAnswer: type === "true_false" ? "true" : "",
-              options:
-                type === "multiple_choice"
-                  ? [
-                      { text: "", correct: true },
-                      { text: "", correct: false },
-                    ]
-                  : [],
-            });
-          }}
-        >
-          <SelectTrigger disabled={disabled}>
-            <SelectValue />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="multiple_choice">Múltipla escolha</SelectItem>
-            <SelectItem value="true_false">Verdadeiro ou Falso</SelectItem>
-            <SelectItem value="free_text">Texto</SelectItem>
-          </SelectContent>
-        </Select>
-      )}
-      <Input
-        value={draft.prompt}
-        disabled={disabled}
-        onChange={(event) => set({ prompt: event.target.value })}
-        placeholder={mode === "quiz" && draft.type === "true_false" ? "Afirmação" : "Pergunta"}
-      />
-      {mode === "buzzer" ? (
-        <Input
-          value={draft.expectedAnswer}
-          disabled={disabled}
-          onChange={(event) => set({ expectedAnswer: event.target.value })}
-          placeholder="Resposta de referência"
-        />
-      ) : draft.type === "true_false" ? (
-        <Select
-          value={draft.expectedAnswer === "true" ? "true" : "false"}
-          onValueChange={(v) => set({ expectedAnswer: v })}
-        >
-          <SelectTrigger disabled={disabled}>
-            <SelectValue />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="true">Verdadeiro</SelectItem>
-            <SelectItem value="false">Falso</SelectItem>
-          </SelectContent>
-        </Select>
-      ) : draft.type === "multiple_choice" ? (
-        <div className="space-y-2">
-          {draft.options.map((option, index) => (
-            <div key={index} className="flex items-center gap-2">
-              <Button
-                type="button"
-                size="sm"
-                variant={option.correct ? "default" : "outline"}
-                className="w-24 shrink-0 justify-center rounded-lg"
-                disabled={disabled}
-                onClick={() =>
-                  set({
-                    options: draft.options.map((opt, idx) => ({
-                      ...opt,
-                      correct: idx === index,
-                    })),
-                  })
-                }
-              >
-                {option.correct ? (
-                  <>
-                    <Check className="mr-1 size-4" /> Correta
-                  </>
-                ) : (
-                  "Correta?"
-                )}
-              </Button>
-              <Input
-                value={option.text}
-                disabled={disabled}
-                placeholder={`Opção ${index + 1}`}
-                onChange={(event) =>
-                  set({
-                    options: draft.options.map((opt, idx) =>
-                      idx === index ? { ...opt, text: event.target.value } : opt,
-                    ),
-                  })
-                }
-              />
-              {draft.options.length > 2 && (
-                <Button
-                  type="button"
-                  size="icon"
-                  variant="ghost"
-                  className="size-9 shrink-0 text-muted-foreground hover:text-destructive"
-                  disabled={disabled}
-                  onClick={() => set({ options: draft.options.filter((_, idx) => idx !== index) })}
-                >
-                  <Trash2 className="size-4" />
-                </Button>
-              )}
-            </div>
-          ))}
-          {draft.options.length < 4 && (
-            <Button
-              type="button"
-              size="sm"
-              variant="outline"
-              className="rounded-lg"
-              disabled={disabled}
-              onClick={() => set({ options: [...draft.options, { text: "", correct: false }] })}
-            >
-              <Plus className="mr-1 size-4" /> Opção
-            </Button>
-          )}
-        </div>
-      ) : (
-        <Input
-          value={draft.expectedAnswer}
-          disabled={disabled}
-          onChange={(event) => set({ expectedAnswer: event.target.value })}
-          placeholder="Resposta(s) aceitas — separe variações com |"
-        />
-      )}
-      <Input
-        type="number"
-        min={0}
-        value={draft.points}
-        disabled={disabled}
-        onChange={(event) => set({ points: Number(event.target.value) || 0 })}
-        placeholder="Pontos"
-      />
-    </div>
-  );
-}
-
 function QuestionEditor({
   question,
   mode,
@@ -380,7 +178,14 @@ function QuestionEditor({
         <span className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
           Pergunta {question.position}
         </span>
-        {question.used && <span className="text-xs text-muted-foreground">Já usada</span>}
+        <div className="flex items-center gap-2">
+          {question.sourceQuestionId && (
+            <span className="inline-flex items-center gap-1 rounded-full bg-primary/10 px-2 py-0.5 text-xs font-medium text-primary">
+              <Library className="size-3" /> Do banco
+            </span>
+          )}
+          {question.used && <span className="text-xs text-muted-foreground">Já usada</span>}
+        </div>
       </div>
       <QuestionFields mode={mode} draft={draft} onChange={setDraft} disabled={question.used} />
       <div className="mt-3 flex justify-end gap-2">

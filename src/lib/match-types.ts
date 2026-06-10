@@ -9,6 +9,7 @@ export type MatchQuestionDraft = {
   answer: string;
   options?: DraftOption[];
   points: number;
+  sourceQuestionId?: string | null;
 };
 
 export const getModeLabel = (mode: GameMode) =>

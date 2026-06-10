@@ -66,6 +66,7 @@ export type MatchSummary = {
 
 export type MatchQuestion = {
   id: string;
+  sourceQuestionId: string | null;
   type: QuestionType;
   prompt: string;
   expectedAnswer: string;
@@ -73,6 +74,23 @@ export type MatchQuestion = {
   points: number;
   used: boolean;
   position: number;
+};
+
+export type GeneralQuestion = {
+  id: string;
+  type: QuestionType;
+  prompt: string;
+  expectedAnswer: string;
+  options: McOption[];
+  points: number;
+  createdAt: string;
+};
+
+export type GeneralQuestionPage = {
+  items: GeneralQuestion[];
+  total: number;
+  page: number;
+  pageSize: number;
 };
 
 export type MatchRoundAnswer = {
@@ -159,6 +177,7 @@ type ApiMcOption = { text: string; correct: boolean };
 
 type ApiMatchQuestion = {
   id: string;
+  source_question_id: string | null;
   question_type: string;
   prompt: string;
   expected_answer: string;
@@ -408,7 +427,7 @@ export async function createMatch(input: {
       buzzer_arm_delay_seconds: input.buzzerArmDelaySeconds,
       ranking_display: input.rankingDisplay,
       questions: input.questions.map((question) => ({
-        source_question_id: null,
+        source_question_id: question.sourceQuestionId ?? null,
         question_type: input.mode === "buzzer" ? "buzzer" : question.type,
         prompt: question.text,
         expected_answer: question.answer,
@@ -438,11 +457,13 @@ export async function addMatchQuestion(
     expectedAnswer: string;
     options?: McOption[];
     points: number;
+    sourceQuestionId?: string | null;
   },
 ) {
   await requestNoContent(`/api/v1/matches/${matchId}/questions`, {
     method: "POST",
     body: {
+      source_question_id: question.sourceQuestionId ?? null,
       question_type: question.questionType,
       prompt: question.prompt,
       expected_answer: question.expectedAnswer,
@@ -493,6 +514,98 @@ export async function importMatchQuestions(
     body: { csv },
   });
   return { created: result.created, invalidRows: result.invalid_rows };
+}
+
+type ApiGeneralQuestion = {
+  id: string;
+  question_type: string;
+  prompt: string;
+  expected_answer: string;
+  options: ApiMcOption[];
+  default_points: number;
+  created_at: string;
+  updated_at: string;
+};
+
+type ApiGeneralQuestionList = {
+  items: ApiGeneralQuestion[];
+  total: number;
+  page: number;
+  page_size: number;
+};
+
+function mapGeneralQuestion(question: ApiGeneralQuestion): GeneralQuestion {
+  return {
+    id: question.id,
+    type: normalizeQuestionType(question.question_type),
+    prompt: question.prompt,
+    expectedAnswer: question.expected_answer,
+    options: question.options ?? [],
+    points: question.default_points,
+    createdAt: question.created_at,
+  };
+}
+
+export async function listGeneralQuestions(params?: {
+  search?: string;
+  page?: number;
+  pageSize?: number;
+}): Promise<GeneralQuestionPage> {
+  const query = new URLSearchParams();
+  if (params?.search?.trim()) query.set("search", params.search.trim());
+  if (params?.page) query.set("page", String(params.page));
+  if (params?.pageSize) query.set("page_size", String(params.pageSize));
+  const suffix = query.toString();
+  const result = await request<ApiGeneralQuestionList>(
+    `/api/v1/general-questions${suffix ? `?${suffix}` : ""}`,
+  );
+  return {
+    items: result.items.map(mapGeneralQuestion),
+    total: result.total,
+    page: result.page,
+    pageSize: result.page_size,
+  };
+}
+
+type GeneralQuestionInput = {
+  questionType: QuestionType;
+  prompt: string;
+  expectedAnswer: string;
+  options?: McOption[];
+  points: number;
+};
+
+function generalQuestionBody(input: GeneralQuestionInput) {
+  return {
+    question_type: input.questionType,
+    prompt: input.prompt,
+    expected_answer: input.expectedAnswer,
+    options: input.options ?? [],
+    default_points: input.points,
+  };
+}
+
+export async function createGeneralQuestion(input: GeneralQuestionInput): Promise<GeneralQuestion> {
+  const created = await request<ApiGeneralQuestion>(`/api/v1/general-questions`, {
+    method: "POST",
+    body: generalQuestionBody(input),
+  });
+  return mapGeneralQuestion(created);
+}
+
+export async function updateGeneralQuestion(
+  id: string,
+  input: GeneralQuestionInput,
+): Promise<GeneralQuestion> {
+  const updated = await request<ApiGeneralQuestion>(`/api/v1/general-questions/${id}`, {
+    method: "PATCH",
+    body: generalQuestionBody(input),
+  });
+  return mapGeneralQuestion(updated);
+}
+
+export async function deleteGeneralQuestion(id: string) {
+  await requestNoContent(`/api/v1/general-questions/${id}`, { method: "DELETE" });
 }
 
 export async function joinMatch(
@@ -741,10 +854,7 @@ function mapMatchState(state: ApiMatchState): MatchState {
       remoteEnabled: state.settings.remote_enabled,
       capacity: state.settings.capacity,
       buzzerArmDelaySeconds: state.settings.buzzer_arm_delay_seconds,
-      rankingDisplay: state.settings.ranking_display as
-        | "always"
-        | "between_questions"
-        | "end_only",
+      rankingDisplay: state.settings.ranking_display as "always" | "between_questions" | "end_only",
     },
     questions: state.questions.map(mapQuestion),
     participants: state.participants.map(mapParticipant),
@@ -757,6 +867,7 @@ function mapMatchState(state: ApiMatchState): MatchState {
 function mapQuestion(question: ApiMatchQuestion): MatchQuestion {
   return {
     id: question.id,
+    sourceQuestionId: question.source_question_id ?? null,
     type: normalizeQuestionType(question.question_type),
     prompt: question.prompt,
     expectedAnswer: question.expected_answer,
