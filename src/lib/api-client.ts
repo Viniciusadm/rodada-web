@@ -143,6 +143,14 @@ export type MatchRound = {
   earlyParticipantIds: string[];
 };
 
+export type LastRoundResult = {
+  roundNumber: number;
+  participantId: string | null;
+  displayName: string | null;
+  result: "correct" | "incorrect" | "skipped";
+  pointsApplied: number;
+};
+
 export type MatchState = {
   match: MatchSummary;
   settings: {
@@ -161,6 +169,7 @@ export type MatchState = {
   currentRound: MatchRound | null;
   room: LiveRoom | null;
   winner: MatchParticipant | null;
+  lastRoundResult: LastRoundResult | null;
 };
 
 export type JoinMatchResult = {
@@ -241,6 +250,15 @@ type ApiMatchState = {
   current_round: ApiMatchRound | null;
   room: ApiLiveRoom | null;
   winner: ApiMatchParticipant | null;
+  last_round_result: ApiLastRoundResult | null;
+};
+
+type ApiLastRoundResult = {
+  round_number: number;
+  participant_id: string | null;
+  display_name: string | null;
+  result: "correct" | "incorrect" | "skipped";
+  points_applied: number;
 };
 
 type ApiJoinMatchResult = {
@@ -424,8 +442,7 @@ export const GAMES_CATALOG: GameCatalogItem[] = [
   {
     mode: "quiz",
     name: "Quiz",
-    description:
-      "Perguntas com correção automática (verdadeiro/falso, múltipla escolha ou texto).",
+    description: "Perguntas com correção automática (verdadeiro/falso, múltipla escolha ou texto).",
   },
 ];
 
@@ -1088,6 +1105,15 @@ function mapMatchState(state: ApiMatchState): MatchState {
     currentRound: state.current_round ? mapRound(state.current_round) : null,
     room: state.room ? mapLiveRoom(state.room) : null,
     winner: state.winner ? mapParticipant(state.winner) : null,
+    lastRoundResult: state.last_round_result
+      ? {
+          roundNumber: state.last_round_result.round_number,
+          participantId: state.last_round_result.participant_id,
+          displayName: state.last_round_result.display_name,
+          result: state.last_round_result.result,
+          pointsApplied: state.last_round_result.points_applied,
+        }
+      : null,
   };
 }
 

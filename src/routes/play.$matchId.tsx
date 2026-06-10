@@ -437,6 +437,29 @@ function PlayPage() {
                     </div>
                   )}
                 </div>
+              ) : match.status !== "encerrada" && state.lastRoundResult ? (
+                <div className="flex flex-1 flex-col items-center justify-center gap-4">
+                  <p
+                    className={`rounded-2xl px-6 py-4 text-3xl font-bold sm:text-4xl ${
+                      state.lastRoundResult.result === "correct"
+                        ? "bg-emerald-500/15 text-emerald-500"
+                        : "bg-destructive/10 text-destructive"
+                    }`}
+                  >
+                    {state.lastRoundResult.participantId === participantId
+                      ? state.lastRoundResult.result === "correct"
+                        ? `Você acertou!${
+                            state.lastRoundResult.pointsApplied > 0
+                              ? ` +${state.lastRoundResult.pointsApplied} pts`
+                              : ""
+                          }`
+                        : "Você errou."
+                      : `${state.lastRoundResult.displayName ?? "Jogador"} ${
+                          state.lastRoundResult.result === "correct" ? "acertou" : "errou"
+                        }`}
+                  </p>
+                  <p className="text-lg text-muted-foreground">Aguardando a próxima pergunta.</p>
+                </div>
               ) : (
                 <div className="flex flex-1 items-center justify-center">
                   <p className="text-2xl font-medium text-muted-foreground">

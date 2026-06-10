@@ -127,14 +127,44 @@ function PresentPage() {
               </>
             ) : (
               <>
-                <Trophy className="mx-auto mb-6 size-16 text-primary" />
-                <h2 className="text-3xl font-semibold sm:text-4xl lg:text-5xl">
-                  {match.status === "encerrada"
-                    ? "Partida encerrada"
-                    : match.status === "em-andamento"
-                      ? "Aguardando próxima pergunta"
-                      : "Aguardando início"}
-                </h2>
+                {match.status === "em-andamento" && state.lastRoundResult ? (
+                  <>
+                    <div
+                      className={`mx-auto mb-8 inline-flex flex-col items-center gap-2 rounded-3xl px-10 py-8 ${
+                        state.lastRoundResult.result === "correct"
+                          ? "bg-emerald-500/15 text-emerald-500"
+                          : "bg-destructive/10 text-destructive"
+                      }`}
+                    >
+                      <span className="text-5xl font-bold sm:text-6xl">
+                        {state.lastRoundResult.result === "correct" ? "✓ Acertou!" : "✗ Errou"}
+                      </span>
+                      <span className="text-2xl font-semibold sm:text-3xl">
+                        {state.lastRoundResult.displayName ?? "Jogador"}
+                      </span>
+                      {state.lastRoundResult.result === "correct" &&
+                        state.lastRoundResult.pointsApplied > 0 && (
+                          <span className="text-xl font-medium sm:text-2xl">
+                            +{state.lastRoundResult.pointsApplied} pts
+                          </span>
+                        )}
+                    </div>
+                    <h2 className="text-2xl font-medium text-muted-foreground sm:text-3xl">
+                      Aguardando próxima pergunta
+                    </h2>
+                  </>
+                ) : (
+                  <>
+                    <Trophy className="mx-auto mb-6 size-16 text-primary" />
+                    <h2 className="text-3xl font-semibold sm:text-4xl lg:text-5xl">
+                      {match.status === "encerrada"
+                        ? "Partida encerrada"
+                        : match.status === "em-andamento"
+                          ? "Aguardando próxima pergunta"
+                          : "Aguardando início"}
+                    </h2>
+                  </>
+                )}
                 {state.winner && (
                   <p className="mt-6 text-2xl text-primary">Vencedor: {state.winner.displayName}</p>
                 )}
@@ -143,48 +173,50 @@ function PresentPage() {
           </section>
 
           {showRanking && (
-          <aside className="rounded-2xl border border-border bg-card/80 p-5">
-            <h3 className="mb-4 text-base font-semibold">Placar</h3>
-            <div className="space-y-2">
-              {leaders.map((participant, index) => {
-                const early = Boolean(round?.earlyParticipantIds.includes(participant.id));
-                return (
-                  <div
-                    key={participant.id}
-                    className={
-                      "flex items-center justify-between rounded-xl bg-muted/40 px-4 py-3" +
-                      (participant.eliminated || early ? " opacity-50" : "")
-                    }
-                  >
-                    <span className="flex items-center gap-2 text-sm font-medium">
-                      {index + 1}. {participant.displayName}
-                      {participant.livesRemaining != null && !participant.eliminated && !early && (
-                        <span className="text-rose-500">
-                          {"♥".repeat(Math.max(0, participant.livesRemaining))}
-                        </span>
-                      )}
-                      {participant.eliminated && (
-                        <span className="rounded bg-destructive/15 px-1.5 py-0.5 text-[10px] font-semibold uppercase text-destructive">
-                          Fora
-                        </span>
-                      )}
-                      {early && !participant.eliminated && (
-                        <span className="rounded bg-destructive/15 px-1.5 py-0.5 text-[10px] font-semibold uppercase text-destructive">
-                          Fora (rodada)
-                        </span>
-                      )}
-                    </span>
-                    <span className="text-sm font-semibold tabular-nums">
-                      {participant.currentScore}
-                    </span>
-                  </div>
-                );
-              })}
-              {leaders.length === 0 && (
-                <p className="text-sm text-muted-foreground">Sem participantes.</p>
-              )}
-            </div>
-          </aside>
+            <aside className="rounded-2xl border border-border bg-card/80 p-5">
+              <h3 className="mb-4 text-base font-semibold">Placar</h3>
+              <div className="space-y-2">
+                {leaders.map((participant, index) => {
+                  const early = Boolean(round?.earlyParticipantIds.includes(participant.id));
+                  return (
+                    <div
+                      key={participant.id}
+                      className={
+                        "flex items-center justify-between rounded-xl bg-muted/40 px-4 py-3" +
+                        (participant.eliminated || early ? " opacity-50" : "")
+                      }
+                    >
+                      <span className="flex items-center gap-2 text-sm font-medium">
+                        {index + 1}. {participant.displayName}
+                        {participant.livesRemaining != null &&
+                          !participant.eliminated &&
+                          !early && (
+                            <span className="text-rose-500">
+                              {"♥".repeat(Math.max(0, participant.livesRemaining))}
+                            </span>
+                          )}
+                        {participant.eliminated && (
+                          <span className="rounded bg-destructive/15 px-1.5 py-0.5 text-[10px] font-semibold uppercase text-destructive">
+                            Fora
+                          </span>
+                        )}
+                        {early && !participant.eliminated && (
+                          <span className="rounded bg-destructive/15 px-1.5 py-0.5 text-[10px] font-semibold uppercase text-destructive">
+                            Fora (rodada)
+                          </span>
+                        )}
+                      </span>
+                      <span className="text-sm font-semibold tabular-nums">
+                        {participant.currentScore}
+                      </span>
+                    </div>
+                  );
+                })}
+                {leaders.length === 0 && (
+                  <p className="text-sm text-muted-foreground">Sem participantes.</p>
+                )}
+              </div>
+            </aside>
           )}
         </main>
       </div>
