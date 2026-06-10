@@ -131,22 +131,6 @@ function AuthedShell({ children }: { children: React.ReactNode }) {
   );
 }
 
-function HomeShell() {
-  const status = useAuthStore((s) => s.status);
-  if (status === "authed") {
-    return (
-      <AuthedShell>
-        <Outlet />
-      </AuthedShell>
-    );
-  }
-  return (
-    <div className="min-h-screen bg-background text-foreground">
-      <Outlet />
-    </div>
-  );
-}
-
 function RootComponent() {
   const { queryClient } = Route.useRouteContext();
   const pathname = useRouterState({ select: (s) => s.location.pathname });
@@ -159,18 +143,12 @@ function RootComponent() {
     pathname === "/entrar";
 
   let content: React.ReactNode;
-  if (isPublicStandalone) {
+  if (isPublicStandalone || isHome) {
     content = (
       <PublicBootstrap>
         <div className="min-h-screen bg-background text-foreground">
           <Outlet />
         </div>
-      </PublicBootstrap>
-    );
-  } else if (isHome) {
-    content = (
-      <PublicBootstrap>
-        <HomeShell />
       </PublicBootstrap>
     );
   } else {

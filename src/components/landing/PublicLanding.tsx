@@ -1,7 +1,16 @@
 import { Link } from "@tanstack/react-router";
-import { ArrowRight, Gamepad2, Link2, Trophy, Zap, type LucideIcon } from "lucide-react";
+import {
+  ArrowRight,
+  Gamepad2,
+  LayoutDashboard,
+  Link2,
+  Trophy,
+  Zap,
+  type LucideIcon,
+} from "lucide-react";
 
 import { Button } from "@/components/ui/button";
+import { useAuthStore } from "@/stores/auth";
 
 const FEATURES: Array<{ icon: LucideIcon; title: string; description: string }> = [
   {
@@ -27,6 +36,10 @@ const FEATURES: Array<{ icon: LucideIcon; title: string; description: string }> 
 ];
 
 export function PublicLanding() {
+  const status = useAuthStore((s) => s.status);
+  const isAuthed = status === "authed";
+  const isAnon = status === "anon";
+
   return (
     <div className="min-h-screen bg-background text-foreground">
       <header className="mx-auto flex w-full max-w-7xl items-center justify-between px-4 py-5 md:px-8">
@@ -39,12 +52,23 @@ export function PublicLanding() {
           </div>
         </Link>
         <nav className="flex items-center gap-2">
-          <Button asChild variant="ghost" size="sm" className="rounded-xl">
-            <Link to="/login">Entrar</Link>
-          </Button>
-          <Button asChild size="sm" className="rounded-xl">
-            <Link to="/register">Criar conta</Link>
-          </Button>
+          {isAuthed && (
+            <Button asChild size="sm" className="rounded-xl">
+              <Link to="/play">
+                <LayoutDashboard className="mr-1.5 size-4" /> Ir para o painel
+              </Link>
+            </Button>
+          )}
+          {isAnon && (
+            <>
+              <Button asChild variant="ghost" size="sm" className="rounded-xl">
+                <Link to="/login">Entrar</Link>
+              </Button>
+              <Button asChild size="sm" className="rounded-xl">
+                <Link to="/register">Criar conta</Link>
+              </Button>
+            </>
+          )}
         </nav>
       </header>
 
@@ -63,14 +87,25 @@ export function PublicLanding() {
               em um só lugar.
             </p>
             <div className="mt-6 flex flex-wrap gap-3">
-              <Button asChild size="lg" className="rounded-xl">
-                <Link to="/register">
-                  Começar gratuitamente <ArrowRight className="ml-2 size-4" />
-                </Link>
-              </Button>
-              <Button asChild size="lg" variant="outline" className="rounded-xl">
-                <Link to="/login">Já tenho conta</Link>
-              </Button>
+              {isAuthed && (
+                <Button asChild size="lg" className="rounded-xl">
+                  <Link to="/play">
+                    Ir para o painel <ArrowRight className="ml-2 size-4" />
+                  </Link>
+                </Button>
+              )}
+              {isAnon && (
+                <>
+                  <Button asChild size="lg" className="rounded-xl">
+                    <Link to="/register">
+                      Começar gratuitamente <ArrowRight className="ml-2 size-4" />
+                    </Link>
+                  </Button>
+                  <Button asChild size="lg" variant="outline" className="rounded-xl">
+                    <Link to="/login">Já tenho conta</Link>
+                  </Button>
+                </>
+              )}
             </div>
           </div>
         </section>
@@ -103,12 +138,21 @@ export function PublicLanding() {
             Crie sua conta em poucos segundos e prepare a primeira partida para o próximo evento.
           </p>
           <div className="mt-6 flex flex-wrap justify-center gap-3">
-            <Button asChild size="lg" className="rounded-xl">
-              <Link to="/register">Criar conta</Link>
-            </Button>
-            <Button asChild size="lg" variant="outline" className="rounded-xl">
-              <Link to="/login">Entrar</Link>
-            </Button>
+            {isAuthed && (
+              <Button asChild size="lg" className="rounded-xl">
+                <Link to="/play">Ir para o painel</Link>
+              </Button>
+            )}
+            {isAnon && (
+              <>
+                <Button asChild size="lg" className="rounded-xl">
+                  <Link to="/register">Criar conta</Link>
+                </Button>
+                <Button asChild size="lg" variant="outline" className="rounded-xl">
+                  <Link to="/login">Entrar</Link>
+                </Button>
+              </>
+            )}
           </div>
         </section>
       </main>

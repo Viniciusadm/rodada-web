@@ -14,6 +14,7 @@ import { Route as LoginRouteImport } from './routes/login'
 import { Route as HistoryRouteImport } from './routes/history'
 import { Route as EntrarRouteImport } from './routes/entrar'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as PlayIndexRouteImport } from './routes/play.index'
 import { Route as MatchesIndexRouteImport } from './routes/matches.index'
 import { Route as MatchTemplatesIndexRouteImport } from './routes/match-templates.index'
 import { Route as GeneralQuestionsIndexRouteImport } from './routes/general-questions.index'
@@ -49,6 +50,11 @@ const EntrarRoute = EntrarRouteImport.update({
 const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const PlayIndexRoute = PlayIndexRouteImport.update({
+  id: '/play/',
+  path: '/play/',
   getParentRoute: () => rootRouteImport,
 } as any)
 const MatchesIndexRoute = MatchesIndexRouteImport.update({
@@ -121,6 +127,7 @@ export interface FileRoutesByFullPath {
   '/general-questions/': typeof GeneralQuestionsIndexRoute
   '/match-templates/': typeof MatchTemplatesIndexRoute
   '/matches/': typeof MatchesIndexRoute
+  '/play/': typeof PlayIndexRoute
   '/matches/$matchId/host': typeof MatchesMatchIdHostRoute
   '/matches/$matchId/present': typeof MatchesMatchIdPresentRoute
   '/matches/$matchId/questions': typeof MatchesMatchIdQuestionsRoute
@@ -139,6 +146,7 @@ export interface FileRoutesByTo {
   '/general-questions': typeof GeneralQuestionsIndexRoute
   '/match-templates': typeof MatchTemplatesIndexRoute
   '/matches': typeof MatchesIndexRoute
+  '/play': typeof PlayIndexRoute
   '/matches/$matchId/host': typeof MatchesMatchIdHostRoute
   '/matches/$matchId/present': typeof MatchesMatchIdPresentRoute
   '/matches/$matchId/questions': typeof MatchesMatchIdQuestionsRoute
@@ -158,6 +166,7 @@ export interface FileRoutesById {
   '/general-questions/': typeof GeneralQuestionsIndexRoute
   '/match-templates/': typeof MatchTemplatesIndexRoute
   '/matches/': typeof MatchesIndexRoute
+  '/play/': typeof PlayIndexRoute
   '/matches/$matchId/host': typeof MatchesMatchIdHostRoute
   '/matches/$matchId/present': typeof MatchesMatchIdPresentRoute
   '/matches/$matchId/questions': typeof MatchesMatchIdQuestionsRoute
@@ -178,6 +187,7 @@ export interface FileRouteTypes {
     | '/general-questions/'
     | '/match-templates/'
     | '/matches/'
+    | '/play/'
     | '/matches/$matchId/host'
     | '/matches/$matchId/present'
     | '/matches/$matchId/questions'
@@ -196,6 +206,7 @@ export interface FileRouteTypes {
     | '/general-questions'
     | '/match-templates'
     | '/matches'
+    | '/play'
     | '/matches/$matchId/host'
     | '/matches/$matchId/present'
     | '/matches/$matchId/questions'
@@ -214,6 +225,7 @@ export interface FileRouteTypes {
     | '/general-questions/'
     | '/match-templates/'
     | '/matches/'
+    | '/play/'
     | '/matches/$matchId/host'
     | '/matches/$matchId/present'
     | '/matches/$matchId/questions'
@@ -233,6 +245,7 @@ export interface RootRouteChildren {
   GeneralQuestionsIndexRoute: typeof GeneralQuestionsIndexRoute
   MatchTemplatesIndexRoute: typeof MatchTemplatesIndexRoute
   MatchesIndexRoute: typeof MatchesIndexRoute
+  PlayIndexRoute: typeof PlayIndexRoute
   MatchesMatchIdHostRoute: typeof MatchesMatchIdHostRoute
   MatchesMatchIdPresentRoute: typeof MatchesMatchIdPresentRoute
   MatchesMatchIdQuestionsRoute: typeof MatchesMatchIdQuestionsRoute
@@ -273,6 +286,13 @@ declare module '@tanstack/react-router' {
       path: '/'
       fullPath: '/'
       preLoaderRoute: typeof IndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/play/': {
+      id: '/play/'
+      path: '/play'
+      fullPath: '/play/'
+      preLoaderRoute: typeof PlayIndexRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/matches/': {
@@ -369,6 +389,7 @@ const rootRouteChildren: RootRouteChildren = {
   GeneralQuestionsIndexRoute: GeneralQuestionsIndexRoute,
   MatchTemplatesIndexRoute: MatchTemplatesIndexRoute,
   MatchesIndexRoute: MatchesIndexRoute,
+  PlayIndexRoute: PlayIndexRoute,
   MatchesMatchIdHostRoute: MatchesMatchIdHostRoute,
   MatchesMatchIdPresentRoute: MatchesMatchIdPresentRoute,
   MatchesMatchIdQuestionsRoute: MatchesMatchIdQuestionsRoute,

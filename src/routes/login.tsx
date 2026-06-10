@@ -44,7 +44,7 @@ function LoginPage() {
 
   useEffect(() => {
     if (status === "authed") {
-      void router.navigate({ to: "/" });
+      void router.navigate({ to: "/play" });
     }
   }, [status, router]);
 

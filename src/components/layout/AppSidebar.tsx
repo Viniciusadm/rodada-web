@@ -28,7 +28,7 @@ const groups = [
   {
     label: "Jogar",
     items: [
-      { title: "Início", url: "/", icon: Home },
+      { title: "Início", url: "/play", icon: Home },
       { title: "Jogos", url: "/games", icon: Gamepad2 },
       { title: "Modelos de partida", url: "/match-templates", icon: LayoutTemplate },
       { title: "Partidas", url: "/matches", icon: Swords },
@@ -61,7 +61,7 @@ export function AppSidebar() {
   return (
     <Sidebar collapsible="icon">
       <SidebarHeader>
-        <Link to="/" className="flex items-center gap-2.5 px-2 py-2">
+        <Link to="/play" className="flex items-center gap-2.5 px-2 py-2">
           <div className="flex size-9 items-center justify-center rounded-xl bg-primary">
             <Gamepad2 className="size-5 text-primary-foreground" />
           </div>
