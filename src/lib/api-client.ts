@@ -850,6 +850,18 @@ export async function joinByPin(pin: string, participantName: string): Promise<J
   };
 }
 
+export async function resumeByPin(pin: string, participantToken: string): Promise<JoinMatchResult> {
+  const result = await request<ApiJoinMatchResult>(`/api/v1/rooms/resume`, {
+    auth: false,
+    method: "POST",
+    body: { pin, participant_token: participantToken },
+  });
+  return {
+    participant: mapParticipant(result.participant),
+    participantToken: result.participant_token,
+  };
+}
+
 export async function sendPlayerAnswer(
   matchId: string,
   roundId: string,

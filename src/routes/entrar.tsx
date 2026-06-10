@@ -1,13 +1,34 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useMutation } from "@tanstack/react-query";
 import { Gamepad2, KeyRound } from "lucide-react";
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { InputOTP, InputOTPGroup, InputOTPSlot } from "@/components/ui/input-otp";
-import { ApiError, joinByPin } from "@/lib/api-client";
+import { ApiError, joinByPin, resumeByPin } from "@/lib/api-client";
 
 type EntrarSearch = { pin?: string };
+
+const STORAGE_PREFIX = "games-hub-participant:";
+
+function findStoredSessionByPin(pin: string): { matchId: string; token: string } | null {
+  if (typeof window === "undefined") return null;
+  for (let index = 0; index < localStorage.length; index += 1) {
+    const key = localStorage.key(index);
+    if (!key || !key.startsWith(STORAGE_PREFIX)) continue;
+    const raw = localStorage.getItem(key);
+    if (!raw) continue;
+    try {
+      const parsed = JSON.parse(raw) as { token?: string; pin?: string };
+      if (parsed.pin === pin && parsed.token) {
+        return { matchId: key.slice(STORAGE_PREFIX.length), token: parsed.token };
+      }
+    } catch {
+      localStorage.removeItem(key);
+    }
+  }
+  return null;
+}
 
 export const Route = createFileRoute("/entrar")({
   head: () => ({
@@ -43,6 +64,10 @@ function EntrarPage() {
   const search = Route.useSearch();
   const [pin, setPin] = useState(search.pin ?? "");
   const [name, setName] = useState("");
+  const [resuming, setResuming] = useState(
+    () => Boolean(search.pin) && Boolean(findStoredSessionByPin(search.pin ?? "")),
+  );
+  const resumeAttempts = useRef<Set<string>>(new Set());
 
   const joinMutation = useMutation({
     mutationFn: () => joinByPin(pin, name.trim()),
@@ -50,11 +75,12 @@ function EntrarPage() {
       const matchId = result.participant.matchId;
       if (typeof window !== "undefined") {
         localStorage.setItem(
-          `games-hub-participant:${matchId}`,
+          `${STORAGE_PREFIX}${matchId}`,
           JSON.stringify({
             token: result.participantToken,
             participantId: result.participant.id,
             name: result.participant.displayName,
+            pin,
           }),
         );
       }
@@ -62,7 +88,41 @@ function EntrarPage() {
     },
   });
 
+  useEffect(() => {
+    if (pin.length !== 6 || resumeAttempts.current.has(pin)) return;
+    const stored = findStoredSessionByPin(pin);
+    if (!stored) return;
+    resumeAttempts.current.add(pin);
+    setResuming(true);
+    resumeByPin(pin, stored.token)
+      .then((result) => {
+        const matchId = result.participant.matchId;
+        localStorage.setItem(
+          `${STORAGE_PREFIX}${matchId}`,
+          JSON.stringify({
+            token: result.participantToken,
+            participantId: result.participant.id,
+            name: result.participant.displayName,
+            pin,
+          }),
+        );
+        void navigate({ to: "/play/$matchId", params: { matchId } });
+      })
+      .catch(() => {
+        localStorage.removeItem(`${STORAGE_PREFIX}${stored.matchId}`);
+        setResuming(false);
+      });
+  }, [pin, navigate]);
+
   const canSubmit = pin.length === 6 && name.trim().length > 0 && !joinMutation.isPending;
+
+  if (resuming) {
+    return (
+      <div className="flex min-h-screen flex-col items-center justify-center bg-background px-6 text-center text-muted-foreground">
+        Retomando sua partida...
+      </div>
+    );
+  }
 
   return (
     <div className="flex min-h-screen flex-col items-center justify-center bg-background px-6 text-center">
