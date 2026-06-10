@@ -212,26 +212,26 @@ function PlayPage() {
   const iAmEarly = Boolean(participantId && round?.earlyParticipantIds.includes(participantId));
 
   return (
-    <div className="flex min-h-[100dvh] flex-col bg-background sm:items-center sm:justify-center sm:bg-muted/30 sm:p-6">
-      <div className="flex min-h-[100dvh] w-full flex-col bg-background sm:h-[min(88dvh,760px)] sm:min-h-0 sm:max-w-2xl sm:overflow-hidden sm:rounded-3xl sm:border sm:border-border sm:shadow-xl">
-        <header className="flex items-center gap-3 border-b border-border px-5 py-4">
-          <div className="flex size-14 items-center justify-center rounded-xl bg-primary">
-            <Gamepad2 className="size-7 text-primary-foreground" />
+    <div className="flex h-[100dvh] flex-col overflow-hidden bg-background sm:items-center sm:justify-center sm:bg-muted/30 sm:p-6">
+      <div className="flex h-full w-full flex-col overflow-hidden bg-background sm:h-[min(88dvh,760px)] sm:max-w-2xl sm:rounded-3xl sm:border sm:border-border sm:shadow-xl">
+        <header className="flex items-center gap-3 border-b border-border px-4 py-3 sm:px-6 sm:py-4">
+          <div className="flex size-10 items-center justify-center rounded-xl bg-primary sm:size-12">
+            <Gamepad2 className="size-5 text-primary-foreground sm:size-6" />
           </div>
           <div className="min-w-0">
-            <p className="text-xs font-medium uppercase tracking-widest text-muted-foreground">
+            <p className="text-[0.65rem] font-medium uppercase tracking-widest text-muted-foreground sm:text-xs">
               Games Hub
             </p>
-            <h1 className="truncate text-xl font-semibold">{match.name}</h1>
+            <h1 className="truncate text-base font-semibold sm:text-xl">{match.name}</h1>
           </div>
         </header>
 
         {!token ? (
-          <main className="flex flex-1 flex-col items-center justify-center gap-5 px-6 py-8 text-center">
-            <Hand className="size-16 text-primary" />
-            <p className="text-2xl font-semibold">Entrar na partida</p>
+          <main className="flex min-h-0 flex-1 flex-col items-center justify-center gap-4 overflow-hidden px-4 py-4 text-center sm:gap-5 sm:px-6">
+            <Hand className="size-12 text-primary sm:size-16" />
+            <p className="text-xl font-semibold sm:text-2xl">Entrar na partida</p>
             <Input
-              className="h-12 max-w-sm text-lg"
+              className="h-11 max-w-sm text-base sm:h-12 sm:text-lg"
               value={name}
               onChange={(event) => setName(event.target.value)}
               onKeyDown={(event) => {
@@ -240,7 +240,7 @@ function PlayPage() {
               placeholder="Seu nome"
             />
             <Button
-              className="h-12 w-full max-w-sm rounded-lg text-lg"
+              className="h-11 w-full max-w-sm rounded-lg text-base sm:h-12 sm:text-lg"
               disabled={!name.trim() || joinMutation.isPending}
               onClick={() => joinMutation.mutate()}
             >
@@ -250,21 +250,21 @@ function PlayPage() {
         ) : (
           <>
             {participant && (
-              <div className="flex items-center justify-between gap-3 border-b border-border px-5 py-4 text-left">
+              <div className="flex items-center justify-between gap-3 border-b border-border px-4 py-2.5 text-left sm:px-6 sm:py-4">
                 <div className="min-w-0">
-                  <p className="text-xs uppercase tracking-wide text-muted-foreground">
+                  <p className="text-[0.65rem] uppercase tracking-wide text-muted-foreground sm:text-xs">
                     Jogando como
                   </p>
-                  <p className="truncate text-lg font-semibold">
+                  <p className="truncate text-base font-semibold sm:text-lg">
                     {participant.displayName ?? name}
                   </p>
                 </div>
                 <div className="shrink-0 text-right">
-                  <p className="text-2xl font-semibold text-primary">
+                  <p className="text-lg font-semibold text-primary sm:text-2xl">
                     {participant.currentScore} pts
                   </p>
                   {participant.livesRemaining != null && (
-                    <p className="text-base text-rose-500">
+                    <p className="text-sm text-rose-500 sm:text-base">
                       {participant.eliminated
                         ? "Eliminado"
                         : `${"♥".repeat(Math.max(0, participant.livesRemaining)) || "—"}`}
@@ -274,27 +274,27 @@ function PlayPage() {
               </div>
             )}
 
-            <main className="flex flex-1 flex-col items-center justify-center gap-4 px-6 py-8 text-center">
+            <main className="flex min-h-0 flex-1 flex-col items-center justify-center gap-3 overflow-hidden px-4 py-3 text-center sm:gap-4 sm:px-6 sm:py-4">
               {participant?.eliminated ? (
-                <p className="rounded-lg bg-destructive/10 p-6 text-2xl text-destructive">
+                <p className="rounded-lg bg-destructive/10 p-5 text-xl text-destructive sm:text-2xl">
                   Você ficou sem vidas. Acompanhe o restante da partida pela apresentação.
                 </p>
               ) : round?.question ? (
-                <div className="flex w-full flex-1 flex-col gap-6">
+                <div className="flex min-h-0 w-full flex-1 flex-col gap-3 sm:gap-4">
                   {round.status === "open" && round.timeRemainingSeconds !== null && (
                     <RoundTimer
                       key={round.id}
                       initialSeconds={round.timeRemainingSeconds}
-                      className="text-3xl px-5 py-2"
+                      className="text-2xl px-4 py-1.5 sm:text-3xl sm:px-5 sm:py-2"
                       onExpire={() => setExpiredRoundId(round.id)}
                       paused={Boolean(round.selectedParticipantId)}
                     />
                   )}
-                  <p className="break-words text-2xl font-bold sm:text-3xl">
+                  <p className="min-h-0 shrink overflow-y-auto break-words text-lg font-bold leading-snug sm:text-2xl">
                     {round.question.prompt}
                   </p>
                   {round.answerRevealed && (
-                    <p className="rounded-lg bg-muted/40 p-4 text-xl font-semibold sm:text-2xl">
+                    <p className="rounded-lg bg-muted/40 p-3 text-base font-semibold sm:text-xl">
                       {questionType === "true_false"
                         ? round.question.expectedAnswer === "true"
                           ? "Verdadeiro"
@@ -304,7 +304,7 @@ function PlayPage() {
                   )}
 
                   {mode === "buzzer" ? (
-                    <div className="flex flex-1 flex-col items-center justify-center gap-4">
+                    <div className="flex min-h-0 flex-1 flex-col items-center justify-center gap-3 sm:gap-4">
                       {iAmEarly ? (
                         <p className="rounded-lg bg-destructive/10 p-3 text-sm text-destructive">
                           Você clicou cedo demais e está fora desta rodada. Aguarde a próxima
@@ -314,8 +314,8 @@ function PlayPage() {
                         <Button
                           className={
                             buzzerArmed
-                              ? "size-[min(75vw,22rem)] flex-col gap-1 rounded-full bg-amber-500 text-2xl font-semibold text-white shadow-lg hover:bg-amber-500/90"
-                              : "size-[min(75vw,22rem)] flex-col gap-2 rounded-full text-3xl font-semibold shadow-lg"
+                              ? "size-[min(70vw,38dvh,18rem)] flex-col gap-1 rounded-full bg-amber-500 text-xl font-semibold text-white shadow-lg hover:bg-amber-500/90 sm:text-2xl"
+                              : "size-[min(70vw,38dvh,18rem)] flex-col gap-2 rounded-full text-2xl font-semibold shadow-lg sm:text-3xl"
                           }
                           disabled={
                             answerMutation.isPending ||
@@ -326,31 +326,33 @@ function PlayPage() {
                         >
                           {buzzerArmed ? (
                             <>
-                              <span className="text-6xl font-bold tabular-nums">
+                              <span className="text-5xl font-bold tabular-nums sm:text-6xl">
                                 {armRemaining}
                               </span>
-                              <span className="text-sm uppercase tracking-wide">não clique</span>
+                              <span className="text-xs uppercase tracking-wide sm:text-sm">
+                                não clique
+                              </span>
                             </>
                           ) : (
                             <>
-                              <Hand className="!size-12" />
+                              <Hand className="!size-10 sm:!size-12" />
                               Eu sei
                             </>
                           )}
                         </Button>
                       )}
-                      <div className="flex min-h-[3.5rem] items-start justify-center">
+                      <div className="flex min-h-[2.75rem] items-start justify-center">
                         {buzzerArmed && !iAmEarly ? (
-                          <p className="text-lg text-amber-600">
+                          <p className="text-sm text-amber-600 sm:text-base">
                             Aguarde {armRemaining}s para liberar. Clicar agora elimina você desta
                             rodada.
                           </p>
                         ) : roundExpired && !round.selectedParticipantId ? (
-                          <p className="text-lg text-destructive">
+                          <p className="text-sm text-destructive sm:text-base">
                             Tempo esgotado. Aguarde o anfitrião.
                           </p>
                         ) : selected ? (
-                          <p className="text-lg text-muted-foreground">
+                          <p className="text-sm text-muted-foreground sm:text-base">
                             {selected.id === participantId
                               ? "Sua resposta foi recebida."
                               : `${selected.displayName} respondeu primeiro.`}
@@ -359,9 +361,9 @@ function PlayPage() {
                       </div>
                     </div>
                   ) : answeredThisRound ? (
-                    <div className="flex flex-1 items-center justify-center">
+                    <div className="flex min-h-0 flex-1 items-center justify-center">
                       <p
-                        className={`rounded-2xl p-6 text-4xl font-bold sm:text-5xl ${
+                        className={`rounded-2xl px-5 py-3 text-2xl font-bold sm:text-4xl ${
                           lastResult === "correct"
                             ? "bg-emerald-500/15 text-emerald-500"
                             : lastResult === "incorrect"
@@ -377,15 +379,17 @@ function PlayPage() {
                       </p>
                     </div>
                   ) : roundExpired ? (
-                    <div className="flex flex-1 items-center justify-center">
-                      <p className="text-3xl font-bold text-destructive">Tempo esgotado.</p>
+                    <div className="flex min-h-0 flex-1 items-center justify-center">
+                      <p className="text-2xl font-bold text-destructive sm:text-3xl">
+                        Tempo esgotado.
+                      </p>
                     </div>
                   ) : questionType === "multiple_choice" ? (
-                    <div className="grid flex-1 auto-rows-fr grid-cols-1 gap-3 sm:grid-cols-2">
+                    <div className="grid min-h-0 flex-1 auto-rows-fr grid-cols-1 gap-2.5 sm:grid-cols-2 sm:gap-3">
                       {round.question.options.map((option, index) => (
                         <Button
                           key={index}
-                          className={`h-full min-h-[5.5rem] w-full whitespace-normal rounded-2xl text-xl font-bold shadow-md sm:text-2xl ${MC_COLORS[index % MC_COLORS.length]}`}
+                          className={`h-full w-full whitespace-normal rounded-2xl text-base font-bold shadow-md sm:text-xl ${MC_COLORS[index % MC_COLORS.length]}`}
                           disabled={answerMutation.isPending}
                           onClick={() => answerMutation.mutate(String(index))}
                         >
@@ -394,16 +398,16 @@ function PlayPage() {
                       ))}
                     </div>
                   ) : questionType === "true_false" ? (
-                    <div className="flex flex-1 gap-3">
+                    <div className="flex min-h-0 flex-1 gap-2.5 sm:gap-3">
                       <Button
-                        className="h-full min-h-[8rem] flex-1 rounded-2xl bg-emerald-600 text-3xl font-semibold text-white shadow-md hover:bg-emerald-600/90 sm:text-4xl"
+                        className="h-full flex-1 rounded-2xl bg-emerald-600 text-2xl font-semibold text-white shadow-md hover:bg-emerald-600/90 sm:text-3xl"
                         disabled={answerMutation.isPending}
                         onClick={() => answerMutation.mutate("true")}
                       >
                         Verdadeiro
                       </Button>
                       <Button
-                        className="h-full min-h-[8rem] flex-1 rounded-2xl bg-rose-600 text-3xl font-semibold text-white shadow-md hover:bg-rose-600/90 sm:text-4xl"
+                        className="h-full flex-1 rounded-2xl bg-rose-600 text-2xl font-semibold text-white shadow-md hover:bg-rose-600/90 sm:text-3xl"
                         disabled={answerMutation.isPending}
                         onClick={() => answerMutation.mutate("false")}
                       >
@@ -411,9 +415,9 @@ function PlayPage() {
                       </Button>
                     </div>
                   ) : (
-                    <div className="flex flex-1 flex-col justify-center gap-3">
+                    <div className="flex min-h-0 flex-1 flex-col justify-center gap-3">
                       <Input
-                        className="h-16 text-center text-xl"
+                        className="h-14 text-center text-lg sm:text-xl"
                         value={wordAnswer}
                         onChange={(event) => setWordAnswer(event.target.value)}
                         onKeyDown={(event) => {
@@ -428,7 +432,7 @@ function PlayPage() {
                         placeholder="Sua resposta"
                       />
                       <Button
-                        className="h-16 w-full rounded-xl text-xl font-semibold"
+                        className="h-14 w-full rounded-xl text-lg font-semibold sm:text-xl"
                         disabled={!wordAnswer.trim() || answerMutation.isPending}
                         onClick={() => answerMutation.mutate(wordAnswer)}
                       >
@@ -438,9 +442,9 @@ function PlayPage() {
                   )}
                 </div>
               ) : match.status !== "encerrada" && state.lastRoundResult ? (
-                <div className="flex flex-1 flex-col items-center justify-center gap-4">
+                <div className="flex min-h-0 flex-1 flex-col items-center justify-center gap-3 sm:gap-4">
                   <p
-                    className={`rounded-2xl px-6 py-4 text-3xl font-bold sm:text-4xl ${
+                    className={`rounded-2xl px-5 py-3 text-2xl font-bold sm:text-4xl ${
                       state.lastRoundResult.result === "correct"
                         ? "bg-emerald-500/15 text-emerald-500"
                         : "bg-destructive/10 text-destructive"
@@ -458,11 +462,13 @@ function PlayPage() {
                           state.lastRoundResult.result === "correct" ? "acertou" : "errou"
                         }`}
                   </p>
-                  <p className="text-lg text-muted-foreground">Aguardando a próxima pergunta.</p>
+                  <p className="text-sm text-muted-foreground sm:text-base">
+                    Aguardando a próxima pergunta.
+                  </p>
                 </div>
               ) : (
-                <div className="flex flex-1 items-center justify-center">
-                  <p className="text-2xl font-medium text-muted-foreground">
+                <div className="flex min-h-0 flex-1 items-center justify-center">
+                  <p className="text-xl font-medium text-muted-foreground sm:text-2xl">
                     {match.status === "encerrada"
                       ? "Partida encerrada."
                       : "Aguardando o anfitrião sortear a próxima pergunta."}
