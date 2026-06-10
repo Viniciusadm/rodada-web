@@ -39,11 +39,23 @@ const groups = [
   },
 ];
 
+const allItems = groups.flatMap((group) => group.items);
+
 export function AppSidebar() {
   const currentPath = useRouterState({ select: (r) => r.location.pathname });
   const user = useAuthStore((s) => s.user);
-  const isActive = (path: string) =>
-    path === "/" ? currentPath === "/" : currentPath.startsWith(path);
+
+  const matches = (path: string) =>
+    path === "/"
+      ? currentPath === "/"
+      : currentPath === path || currentPath.startsWith(`${path}/`);
+
+  const activeUrl = allItems
+    .filter((item) => matches(item.url))
+    .reduce<string | null>(
+      (best, item) => (!best || item.url.length > best.length ? item.url : best),
+      null,
+    );
 
   const userName = user?.displayName ?? "Conta";
 
@@ -68,7 +80,7 @@ export function AppSidebar() {
               <SidebarMenu>
                 {group.items.map((item) => (
                   <SidebarMenuItem key={item.url}>
-                    <SidebarMenuButton asChild isActive={isActive(item.url)} tooltip={item.title}>
+                    <SidebarMenuButton asChild isActive={item.url === activeUrl} tooltip={item.title}>
                       <Link to={item.url} className="flex items-center gap-2">
                         <item.icon className="size-4" />
                         <span>{item.title}</span>
