@@ -1,9 +1,15 @@
 import type { ExternSuggestion } from "@folio/codemirror/completions";
 import type { Deck } from "@folio/compiler";
 import type { RendererHost } from "@folio/renderer/host";
-import { getAccessToken, getApiBaseUrl, type MatchState } from "@/lib/api-client";
-
-const RANKING_SIZE = 5;
+import { request, requestRaw, type MatchState } from "@/lib/api-client";
+import {
+  answerLabel,
+  headlineOf,
+  rankingLeaders,
+  showsRanking,
+  situationOf,
+  statusLine,
+} from "@/lib/match-display";
 
 export const presentScreenHost: RendererHost = {
   asset: () => "",
@@ -25,60 +31,24 @@ export type ScreenCheck = {
   diagnostics: ScreenDiagnostic[];
 };
 
-async function screenRequest(path: string, init: RequestInit = {}) {
-  const headers = new Headers(init.headers);
-  const token = getAccessToken();
-  if (token) headers.set("authorization", `Bearer ${token}`);
-  const response = await fetch(new URL(path, getApiBaseUrl()), { ...init, headers });
-  if (!response.ok) throw new Error(`${path} responded ${response.status}`);
-  return response;
-}
-
-export async function getMatchScreen(matchId: string): Promise<Deck> {
-  const response = await screenRequest(`/api/v1/matches/${matchId}/screen`, {
-    headers: { accept: "application/json" },
-  });
-  return response.json() as Promise<Deck>;
+export function getMatchScreen(matchId: string): Promise<Deck> {
+  return request<Deck>(`/api/v1/matches/${matchId}/screen`, { auth: false });
 }
 
 export async function getDefaultScreenSource(): Promise<string> {
-  const response = await screenRequest("/api/v1/screens/present/source");
+  const response = await requestRaw("/api/v1/screens/present/source", { auth: false });
   return response.text();
 }
 
-export async function getScreenContract(): Promise<ExternSuggestion[]> {
-  const response = await screenRequest("/api/v1/screens/present/contract", {
-    headers: { accept: "application/json" },
-  });
-  return response.json() as Promise<ExternSuggestion[]>;
+export function getScreenContract(): Promise<ExternSuggestion[]> {
+  return request<ExternSuggestion[]>("/api/v1/screens/present/contract", { auth: false });
 }
 
-export async function checkPresentScreen(source: string): Promise<ScreenCheck> {
-  const response = await screenRequest("/api/v1/screens/present/check", {
+export function checkPresentScreen(source: string): Promise<ScreenCheck> {
+  return request<ScreenCheck>("/api/v1/screens/present/check", {
     method: "POST",
-    headers: { accept: "application/json", "content-type": "application/json" },
-    body: JSON.stringify({ source }),
+    body: { source },
   });
-  return response.json() as Promise<ScreenCheck>;
-}
-
-function situationOf(state: MatchState) {
-  if (state.currentRound?.question) return "pergunta";
-  if (state.match.status === "em-andamento" && state.lastRoundResult) return "resultado";
-  return "aguardando";
-}
-
-function headlineOf(state: MatchState) {
-  if (state.match.status === "encerrada") return "Partida encerrada";
-  if (state.match.status === "em-andamento") return "Aguardando próxima pergunta";
-  return "Aguardando início";
-}
-
-function showsRanking(state: MatchState) {
-  const display = state.settings.rankingDisplay;
-  if (display === "always") return true;
-  if (display === "end_only") return state.match.status === "encerrada";
-  return !state.currentRound?.question;
 }
 
 export function presentScreenValues(
@@ -88,10 +58,7 @@ export function presentScreenValues(
   const round = state.currentRound;
   const question = round?.question ?? null;
   const type = question?.type ?? "buzzer";
-  const selected = state.participants.find((player) => player.id === round?.selectedParticipantId);
-  const leaders = [...state.participants]
-    .sort((a, b) => b.currentScore - a.currentScore)
-    .slice(0, RANKING_SIZE);
+  const leaders = rankingLeaders(state);
   const options = type === "multiple_choice" ? (question?.options ?? []) : [];
   const result = state.lastRoundResult;
 
@@ -103,18 +70,8 @@ export function presentScreenValues(
     tempo: seconds ?? 0,
     pergunta: question?.prompt ?? "",
     revelada: round?.answerRevealed ?? false,
-    resposta:
-      type === "true_false"
-        ? question?.expectedAnswer === "true"
-          ? "Verdadeiro"
-          : "Falso"
-        : (question?.expectedAnswer ?? ""),
-    aviso:
-      state.settings.mode === "buzzer"
-        ? selected
-          ? `${selected.displayName} respondeu primeiro`
-          : "Aguardando resposta dos jogadores"
-        : "Os jogadores respondem pelo celular",
+    resposta: answerLabel(question),
+    aviso: statusLine(state),
     acertou: result?.result === "correct",
     jogador: result?.displayName ?? "Jogador",
     ganhos: result?.result === "correct" ? result.pointsApplied : 0,

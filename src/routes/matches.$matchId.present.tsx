@@ -1,14 +1,23 @@
 import { createFileRoute, notFound } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
 import { Gamepad2, Loader2, Trophy } from "lucide-react";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo } from "react";
 import { externState } from "@folio/player/extern";
 import { RendererHostContext } from "@folio/renderer/host";
 import { ScaledSlide, SlideView } from "@folio/renderer/SlideView";
 import { MatchStatusBadge } from "@/components/match/MatchStatusBadge";
 import { RoundTimer } from "@/components/match/RoundTimer";
+import { useCountdown } from "@/hooks/use-countdown";
 import { useRealtimeInvalidation } from "@/hooks/use-realtime-invalidation";
 import { getMatchState, type MatchState } from "@/lib/api-client";
+import {
+  answerLabel,
+  headlineOf,
+  rankingLeaders,
+  showsRanking,
+  situationOf,
+  statusLine,
+} from "@/lib/match-display";
 import { getMatchScreen, presentScreenHost, presentScreenValues } from "@/lib/present-screen";
 
 const PRESENT_MC_COLORS = ["bg-rose-600", "bg-sky-600", "bg-amber-500", "bg-emerald-600"];
@@ -47,19 +56,6 @@ function PresentPage() {
   return classic ? <ClassicPresent state={query.data} /> : <FolioPresent state={query.data} />;
 }
 
-function useCountdown(key: string | null, initial: number | null, paused: boolean) {
-  const [seconds, setSeconds] = useState(initial);
-  useEffect(() => {
-    setSeconds(initial);
-    if (initial === null || paused) return;
-    const interval = setInterval(() => {
-      setSeconds((value) => (value === null ? value : Math.max(0, value - 1)));
-    }, 1000);
-    return () => clearInterval(interval);
-  }, [key, initial, paused]);
-  return seconds;
-}
-
 function FolioPresent({ state }: { state: MatchState }) {
   const screen = useQuery({
     queryKey: ["present-screen", state.match.id],
@@ -68,9 +64,9 @@ function FolioPresent({ state }: { state: MatchState }) {
   });
   const round = state.currentRound;
   const seconds = useCountdown(
-    round?.id ?? null,
     round?.status === "open" ? round.timeRemainingSeconds : null,
     Boolean(round?.selectedParticipantId),
+    round?.id,
   );
   const deck = screen.data;
   const values = useMemo(
@@ -106,19 +102,9 @@ function FolioPresent({ state }: { state: MatchState }) {
 function ClassicPresent({ state }: { state: MatchState }) {
   const match = state.match;
   const round = state.currentRound;
-  const mode = state.settings.mode;
   const questionType = round?.question?.type ?? "buzzer";
-  const selected = state.participants.find((player) => player.id === round?.selectedParticipantId);
-  const leaders = [...state.participants]
-    .sort((a, b) => b.currentScore - a.currentScore)
-    .slice(0, 5);
-  const matchEnded = match.status === "encerrada";
-  const showRanking =
-    state.settings.rankingDisplay === "always"
-      ? true
-      : state.settings.rankingDisplay === "end_only"
-        ? matchEnded
-        : !round?.question;
+  const leaders = rankingLeaders(state);
+  const showRanking = showsRanking(state);
 
   return (
     <div className="relative min-h-screen overflow-hidden bg-background">
@@ -179,24 +165,14 @@ function ClassicPresent({ state }: { state: MatchState }) {
                 )}
                 {round.answerRevealed && questionType !== "multiple_choice" && (
                   <p className="mt-8 text-2xl font-medium text-primary sm:text-3xl">
-                    {questionType === "true_false"
-                      ? round.question.expectedAnswer === "true"
-                        ? "Verdadeiro"
-                        : "Falso"
-                      : round.question.expectedAnswer}
+                    {answerLabel(round.question)}
                   </p>
                 )}
-                <p className="mt-6 text-lg text-muted-foreground">
-                  {mode === "buzzer"
-                    ? selected
-                      ? `${selected.displayName} respondeu primeiro`
-                      : "Aguardando resposta dos jogadores"
-                    : "Os jogadores respondem pelo celular"}
-                </p>
+                <p className="mt-6 text-lg text-muted-foreground">{statusLine(state)}</p>
               </>
             ) : (
               <>
-                {match.status === "em-andamento" && state.lastRoundResult ? (
+                {situationOf(state) === "resultado" && state.lastRoundResult ? (
                   <>
                     <div
                       className={`mx-auto mb-8 inline-flex flex-col items-center gap-2 rounded-3xl px-10 py-8 ${
@@ -226,11 +202,7 @@ function ClassicPresent({ state }: { state: MatchState }) {
                   <>
                     <Trophy className="mx-auto mb-6 size-16 text-primary" />
                     <h2 className="text-3xl font-semibold sm:text-4xl lg:text-5xl">
-                      {match.status === "encerrada"
-                        ? "Partida encerrada"
-                        : match.status === "em-andamento"
-                          ? "Aguardando próxima pergunta"
-                          : "Aguardando início"}
+                      {headlineOf(state)}
                     </h2>
                   </>
                 )}

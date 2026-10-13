@@ -969,7 +969,7 @@ export function getApiBaseUrl() {
   return API_BASE_URL;
 }
 
-async function request<T>(
+export async function request<T>(
   path: string,
   options: { auth?: boolean; method?: string; body?: unknown } = {},
 ): Promise<T> {
@@ -984,7 +984,7 @@ async function requestNoContent(
   await requestRaw(path, options);
 }
 
-async function requestRaw(
+export async function requestRaw(
   path: string,
   options: { auth?: boolean; method?: string; body?: unknown } = {},
 ): Promise<Response> {

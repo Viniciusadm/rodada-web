@@ -1,4 +1,5 @@
-import { useEffect, useState } from "react";
+import { useEffect } from "react";
+import { useCountdown } from "@/hooks/use-countdown";
 import { cn } from "@/lib/utils";
 
 export function RoundTimer({
@@ -12,15 +13,7 @@ export function RoundTimer({
   onExpire?: () => void;
   paused?: boolean;
 }) {
-  const [seconds, setSeconds] = useState(initialSeconds);
-  useEffect(() => {
-    setSeconds(initialSeconds);
-    if (paused) return;
-    const interval = setInterval(() => {
-      setSeconds((value) => Math.max(0, value - 1));
-    }, 1000);
-    return () => clearInterval(interval);
-  }, [initialSeconds, paused]);
+  const seconds = useCountdown(initialSeconds, Boolean(paused)) ?? 0;
   const expired = seconds <= 0;
   useEffect(() => {
     if (expired) onExpire?.();
