@@ -13,7 +13,7 @@ import {
 
 export const Route = createFileRoute("/match-templates/$id")({
   head: () => ({
-    meta: [{ title: "Editar modelo — Games Hub" }],
+    meta: [{ title: "Editar modelo — Rodada" }],
   }),
   component: EditMatchTemplatePage,
 });

@@ -32,7 +32,7 @@ function findStoredSessionByPin(pin: string): { matchId: string; token: string }
 
 export const Route = createFileRoute("/entrar")({
   head: () => ({
-    meta: [{ title: "Entrar com PIN — Games Hub" }],
+    meta: [{ title: "Entrar com PIN — Rodada" }],
   }),
   validateSearch: (search: Record<string, unknown>): EntrarSearch => {
     const pin = typeof search.pin === "string" ? search.pin.replace(/\D/g, "").slice(0, 6) : "";
@@ -132,7 +132,7 @@ function EntrarPage() {
         </div>
         <div className="text-left">
           <p className="text-xs font-medium uppercase tracking-widest text-muted-foreground">
-            Games Hub
+            Rodada
           </p>
           <h1 className="text-xl font-semibold">Entrar em uma partida</h1>
         </div>

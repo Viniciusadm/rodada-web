@@ -11,7 +11,7 @@ import { useAuthStore } from "@/stores/auth";
 export const Route = createFileRoute("/login")({
   head: () => ({
     meta: [
-      { title: "Entrar — Games Hub" },
+      { title: "Entrar — Rodada" },
       { name: "description", content: "Acesse o hub de jogos da sua comunidade." },
     ],
   }),

@@ -21,7 +21,7 @@ export function AuthShell({
             <div className="flex size-9 items-center justify-center rounded-xl bg-primary">
               <Gamepad2 className="size-5 text-primary-foreground" />
             </div>
-            <span className="text-base font-semibold tracking-tight">Games Hub</span>
+            <span className="text-base font-semibold tracking-tight">Rodada</span>
           </Link>
           <Link
             to="/"

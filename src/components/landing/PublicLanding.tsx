@@ -48,7 +48,7 @@ export function PublicLanding() {
             <Gamepad2 className="size-5 text-primary-foreground" />
           </div>
           <div className="flex flex-col leading-none">
-            <span className="text-base font-semibold tracking-tight">Games Hub</span>
+            <span className="text-base font-semibold tracking-tight">Rodada</span>
           </div>
         </Link>
         <nav className="flex items-center gap-2">
@@ -159,7 +159,7 @@ export function PublicLanding() {
 
       <footer className="border-t border-border">
         <div className="mx-auto flex w-full max-w-7xl flex-col items-center justify-between gap-2 px-4 py-6 text-xs text-muted-foreground md:flex-row md:px-8">
-          <span>© {new Date().getFullYear()} Games Hub</span>
+          <span>© {new Date().getFullYear()} Rodada</span>
           <span>Hub de jogos.</span>
         </div>
       </footer>

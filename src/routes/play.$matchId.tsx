@@ -17,7 +17,7 @@ import {
 
 export const Route = createFileRoute("/play/$matchId")({
   head: () => ({
-    meta: [{ title: "Jogar — Games Hub" }],
+    meta: [{ title: "Jogar — Rodada" }],
   }),
   component: PlayPage,
   notFoundComponent: () => <div className="p-8 text-center">Partida não encontrada.</div>,
@@ -220,7 +220,7 @@ function PlayPage() {
           </div>
           <div className="min-w-0">
             <p className="text-[0.65rem] font-medium uppercase tracking-widest text-muted-foreground sm:text-xs">
-              Games Hub
+              Rodada
             </p>
             <h1 className="truncate text-base font-semibold sm:text-xl">{match.name}</h1>
           </div>

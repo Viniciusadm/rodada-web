@@ -5,7 +5,7 @@ import { PublicLanding } from "@/components/landing/PublicLanding";
 export const Route = createFileRoute("/")({
   head: () => ({
     meta: [
-      { title: "Games Hub — Plataforma de jogos" },
+      { title: "Rodada — Plataforma de jogos" },
       {
         name: "description",
         content:

@@ -28,7 +28,7 @@ import {
 
 export const Route = createFileRoute("/matches/$matchId/questions")({
   head: () => ({
-    meta: [{ title: "Perguntas — Games Hub" }],
+    meta: [{ title: "Perguntas — Rodada" }],
   }),
   component: QuestionsPage,
   notFoundComponent: () => <div className="p-8 text-center">Partida não encontrada.</div>,

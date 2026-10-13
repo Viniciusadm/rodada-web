@@ -11,10 +11,10 @@ import { useAuthStore } from "@/stores/auth";
 export const Route = createFileRoute("/register")({
   head: () => ({
     meta: [
-      { title: "Criar conta — Games Hub" },
+      { title: "Criar conta — Rodada" },
       {
         name: "description",
-        content: "Crie sua conta no Games Hub e comece a apresentar jogos para sua comunidade.",
+        content: "Crie sua conta no Rodada e comece a apresentar jogos para sua comunidade.",
       },
     ],
   }),

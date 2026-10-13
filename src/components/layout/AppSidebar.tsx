@@ -66,7 +66,7 @@ export function AppSidebar() {
             <Gamepad2 className="size-5 text-primary-foreground" />
           </div>
           <div className="flex flex-col leading-none group-data-[collapsible=icon]:hidden">
-            <span className="text-base font-semibold tracking-tight">Games Hub</span>
+            <span className="text-base font-semibold tracking-tight">Rodada</span>
           </div>
         </Link>
       </SidebarHeader>

@@ -12,7 +12,7 @@ export const Route = createFileRoute("/match-templates/new")({
   },
   head: () => ({
     meta: [
-      { title: "Novo modelo — Games Hub" },
+      { title: "Novo modelo — Rodada" },
       { name: "description", content: "Crie um modelo de partida reutilizável." },
     ],
   }),

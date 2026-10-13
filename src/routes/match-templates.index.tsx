@@ -17,7 +17,7 @@ import { deleteMatchTemplate, duplicateMatchTemplate, errorToMessage } from "@/l
 export const Route = createFileRoute("/match-templates/")({
   head: () => ({
     meta: [
-      { title: "Modelos de partida — Games Hub" },
+      { title: "Modelos de partida — Rodada" },
       { name: "description", content: "Crie e gerencie modelos reutilizáveis de partida." },
     ],
   }),

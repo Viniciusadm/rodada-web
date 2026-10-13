@@ -10,7 +10,7 @@ import { useMatchesQuery } from "@/features/games-hub-data";
 export const Route = createFileRoute("/matches/")({
   head: () => ({
     meta: [
-      { title: "Partidas — Games Hub" },
+      { title: "Partidas — Rodada" },
       { name: "description", content: "Gerencie e conduza partidas de jogos." },
     ],
   }),

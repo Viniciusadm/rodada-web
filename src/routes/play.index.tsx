@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 
 export const Route = createFileRoute("/play/")({
   head: () => ({
-    meta: [{ title: "Painel — Games Hub" }],
+    meta: [{ title: "Painel — Rodada" }],
   }),
   component: Dashboard,
 });

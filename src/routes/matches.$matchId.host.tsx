@@ -47,7 +47,7 @@ import {
 
 export const Route = createFileRoute("/matches/$matchId/host")({
   head: () => ({
-    meta: [{ title: "Painel do anfitrião — Games Hub" }],
+    meta: [{ title: "Painel do anfitrião — Rodada" }],
   }),
   component: HostPanel,
   notFoundComponent: () => <div className="p-8 text-center">Partida não encontrada.</div>,

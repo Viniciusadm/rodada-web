@@ -13,7 +13,7 @@ import { formatDateTime, formatDuration } from "@/lib/utils";
 export const Route = createFileRoute("/history")({
   head: () => ({
     meta: [
-      { title: "Histórico de partidas — Games Hub" },
+      { title: "Histórico de partidas — Rodada" },
       {
         name: "description",
         content: "Histórico completo das partidas jogadas na sua comunidade.",
@@ -32,7 +32,7 @@ function HistoryPage() {
     <div className="mx-auto max-w-5xl">
       <PageHeader
         title="Histórico de partidas"
-        description="Acompanhe as últimas atividades do Games Hub na sua comunidade."
+        description="Acompanhe as últimas atividades do Rodada na sua comunidade."
       />
       {isLoading && (
         <div className="space-y-2">

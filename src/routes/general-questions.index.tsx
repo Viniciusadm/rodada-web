@@ -29,7 +29,7 @@ const PAGE_SIZE = 10;
 
 export const Route = createFileRoute("/general-questions/")({
   head: () => ({
-    meta: [{ title: "Perguntas gerais — Games Hub" }],
+    meta: [{ title: "Perguntas gerais — Rodada" }],
   }),
   component: GeneralQuestionsPage,
 });

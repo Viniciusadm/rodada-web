@@ -21,7 +21,7 @@ export const Route = createFileRoute("/matches/new")({
   }),
   head: () => ({
     meta: [
-      { title: "Criar partida — Games Hub" },
+      { title: "Criar partida — Rodada" },
       { name: "description", content: "Crie uma partida a partir de um modelo." },
     ],
   }),

@@ -8,7 +8,7 @@ import { GAMES_CATALOG } from "@/lib/api-client";
 export const Route = createFileRoute("/games/")({
   head: () => ({
     meta: [
-      { title: "Jogos — Games Hub" },
+      { title: "Jogos — Rodada" },
       { name: "description", content: "Conheça as mecânicas disponíveis e crie um modelo." },
     ],
   }),
