@@ -26,8 +26,9 @@ import type {
 } from "@/lib/api-client";
 import type { DraftOption, DraftQuestionType, GameMode } from "@/lib/match-types";
 import { cn } from "@/lib/utils";
+import { PresentScreenEditor } from "./PresentScreenEditor";
 
-const steps = ["Regras", "Perguntas", "Revisão"];
+const steps = ["Regras", "Perguntas", "Telão", "Revisão"];
 
 type DraftQ = {
   type: DraftQuestionType;
@@ -148,6 +149,8 @@ export function MatchTemplateWizard({
   );
 
   const [questions, setQuestions] = useState<DraftQ[]>(() => initialQuestions(initial));
+  const [presentScreen, setPresentScreen] = useState<string | null>(initial?.presentScreen ?? null);
+  const [screenValid, setScreenValid] = useState(true);
 
   function updateQuestion(index: number, patch: Partial<DraftQ>) {
     setQuestions((qs) => qs.map((q, i) => (i === index ? { ...q, ...patch } : q)));
@@ -156,6 +159,7 @@ export function MatchTemplateWizard({
   function canAdvance() {
     if (step === 0) return name.trim().length > 0;
     if (step === 1) return questions.length > 0 && questions.every((q) => questionValid(q, mode));
+    if (step === 2) return presentScreen === null || screenValid;
     return true;
   }
 
@@ -175,6 +179,7 @@ export function MatchTemplateWizard({
       buzzerArmDelaySeconds:
         mode === "buzzer" ? Math.min(5, Math.max(0, Number(buzzerArmDelay) || 0)) : undefined,
       rankingDisplay: mode === "quiz" ? rankingDisplay : undefined,
+      presentScreen,
       questions: questions.map((q) => ({
         type: q.type,
         text: q.text,
@@ -639,18 +644,27 @@ export function MatchTemplateWizard({
         )}
 
         {step === 2 && (
+          <PresentScreenEditor
+            value={presentScreen}
+            onChange={setPresentScreen}
+            onValidityChange={setScreenValid}
+          />
+        )}
+
+        {step === 3 && (
           <div className="space-y-5">
             <div className="rounded-xl border border-border bg-muted/30 p-5">
               <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
                 Resumo
               </p>
               <h3 className="mt-2 text-xl font-semibold">{name}</h3>
-              <div className="mt-4 grid grid-cols-2 gap-3 sm:grid-cols-4">
+              <div className="mt-4 grid grid-cols-2 gap-3 sm:grid-cols-5">
                 {[
                   { label: "Perguntas", value: questions.length },
                   { label: "Jogo", value: mode === "buzzer" ? "Buzzer" : "Quiz" },
                   { label: "Tempo/pergunta", value: timePerQuestion ? `${timePerQuestion}s` : "—" },
                   { label: "Remoto", value: remoteEnabled ? "Sim" : "Não" },
+                  { label: "Telão", value: presentScreen === null ? "Padrão" : "Personalizado" },
                 ].map((s) => (
                   <div key={s.label} className="rounded-lg bg-background/60 p-3 text-center">
                     <p className="text-lg font-semibold">{s.value}</p>
@@ -675,7 +689,11 @@ export function MatchTemplateWizard({
             <ArrowLeft className="mr-1 size-4" /> Voltar
           </Button>
           {step < steps.length - 1 ? (
-            <Button onClick={() => setStep(step + 1)} disabled={!canAdvance()} className="rounded-lg">
+            <Button
+              onClick={() => setStep(step + 1)}
+              disabled={!canAdvance()}
+              className="rounded-lg"
+            >
               Próximo <ArrowRight className="ml-1 size-4" />
             </Button>
           ) : (

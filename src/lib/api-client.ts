@@ -472,6 +472,7 @@ export type MatchTemplate = {
   capacity: number | null;
   buzzerArmDelaySeconds: number;
   rankingDisplay: "always" | "between_questions" | "end_only";
+  presentScreen: string | null;
   questions: MatchTemplateQuestion[];
   createdAt: string;
   updatedAt: string;
@@ -501,6 +502,7 @@ export type MatchTemplateInput = {
   remoteEnabled: boolean;
   buzzerArmDelaySeconds?: number;
   rankingDisplay?: "always" | "between_questions" | "end_only";
+  presentScreen?: string | null;
   questions: MatchQuestionDraft[];
 };
 
@@ -530,6 +532,7 @@ type ApiMatchTemplate = {
   capacity: number | null;
   buzzer_arm_delay_seconds: number;
   ranking_display: string;
+  present_screen: string | null;
   questions: ApiMatchTemplateQuestion[];
   created_at: string;
   updated_at: string;
@@ -574,6 +577,7 @@ function matchTemplateBody(input: MatchTemplateInput) {
     remote_enabled: input.remoteEnabled,
     buzzer_arm_delay_seconds: input.buzzerArmDelaySeconds,
     ranking_display: input.rankingDisplay,
+    present_screen: input.presentScreen ?? null,
     questions: input.questions.map((question) => ({
       source_question_id: question.sourceQuestionId ?? null,
       question_type: input.mode === "buzzer" ? "buzzer" : question.type,
@@ -601,6 +605,7 @@ function mapMatchTemplate(template: ApiMatchTemplate): MatchTemplate {
     capacity: template.capacity,
     buzzerArmDelaySeconds: template.buzzer_arm_delay_seconds,
     rankingDisplay: template.ranking_display as "always" | "between_questions" | "end_only",
+    presentScreen: template.present_screen ?? null,
     questions: template.questions.map((question) => ({
       id: question.id,
       sourceQuestionId: question.source_question_id ?? null,

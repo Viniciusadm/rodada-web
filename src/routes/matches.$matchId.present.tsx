@@ -1,23 +1,33 @@
 import { createFileRoute, notFound } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
 import { Gamepad2, Loader2, Trophy } from "lucide-react";
+import { useEffect, useMemo, useState } from "react";
+import { externState } from "@folio/player/extern";
+import { RendererHostContext } from "@folio/renderer/host";
+import { ScaledSlide, SlideView } from "@folio/renderer/SlideView";
 import { MatchStatusBadge } from "@/components/match/MatchStatusBadge";
 import { RoundTimer } from "@/components/match/RoundTimer";
 import { useRealtimeInvalidation } from "@/hooks/use-realtime-invalidation";
-import { getMatchState } from "@/lib/api-client";
+import { getMatchState, type MatchState } from "@/lib/api-client";
+import { getMatchScreen, presentScreenHost, presentScreenValues } from "@/lib/present-screen";
 
 const PRESENT_MC_COLORS = ["bg-rose-600", "bg-sky-600", "bg-amber-500", "bg-emerald-600"];
 
 export const Route = createFileRoute("/matches/$matchId/present")({
   head: () => ({
-    meta: [{ title: "Apresentação — Games Hub" }],
+    meta: [{ title: "Apresentação — Rodada" }],
   }),
+  validateSearch: (search: Record<string, unknown>): { classic?: boolean } =>
+    search.classic === undefined
+      ? {}
+      : { classic: search.classic !== false && search.classic !== "0" },
   component: PresentPage,
   notFoundComponent: () => <div className="p-8 text-center">Partida não encontrada.</div>,
 });
 
 function PresentPage() {
   const { matchId } = Route.useParams();
+  const { classic } = Route.useSearch();
   const realtime = useRealtimeInvalidation({ channel: `match:${matchId}`, matchId });
   const query = useQuery({
     queryKey: ["match-state", matchId],
@@ -34,7 +44,66 @@ function PresentPage() {
   }
   if (query.isError || !query.data) throw notFound();
 
-  const state = query.data;
+  return classic ? <ClassicPresent state={query.data} /> : <FolioPresent state={query.data} />;
+}
+
+function useCountdown(key: string | null, initial: number | null, paused: boolean) {
+  const [seconds, setSeconds] = useState(initial);
+  useEffect(() => {
+    setSeconds(initial);
+    if (initial === null || paused) return;
+    const interval = setInterval(() => {
+      setSeconds((value) => (value === null ? value : Math.max(0, value - 1)));
+    }, 1000);
+    return () => clearInterval(interval);
+  }, [key, initial, paused]);
+  return seconds;
+}
+
+function FolioPresent({ state }: { state: MatchState }) {
+  const screen = useQuery({
+    queryKey: ["present-screen", state.match.id],
+    queryFn: () => getMatchScreen(state.match.id),
+    staleTime: Number.POSITIVE_INFINITY,
+  });
+  const round = state.currentRound;
+  const seconds = useCountdown(
+    round?.id ?? null,
+    round?.status === "open" ? round.timeRemainingSeconds : null,
+    Boolean(round?.selectedParticipantId),
+  );
+  const deck = screen.data;
+  const values = useMemo(
+    () => (deck ? externState(deck, presentScreenValues(state, seconds)) : null),
+    [deck, state, seconds],
+  );
+  const ignored = values?.ignored.join(", ") ?? "";
+  useEffect(() => {
+    if (import.meta.env.DEV && ignored) console.warn(`Telão ignorou: ${ignored}`);
+  }, [ignored]);
+
+  if (screen.isError) return <ClassicPresent state={state} />;
+  const slide = deck?.slides[0];
+  if (!deck || !slide || !values) {
+    return (
+      <div className="flex min-h-screen items-center justify-center bg-black">
+        <Loader2 className="size-8 animate-spin text-white/60" />
+      </div>
+    );
+  }
+
+  return (
+    <RendererHostContext.Provider value={presentScreenHost}>
+      <div className="h-screen w-screen bg-black">
+        <ScaledSlide width={deck.meta.width} height={deck.meta.height}>
+          <SlideView deck={deck} slide={slide} state={values.state} />
+        </ScaledSlide>
+      </div>
+    </RendererHostContext.Provider>
+  );
+}
+
+function ClassicPresent({ state }: { state: MatchState }) {
   const match = state.match;
   const round = state.currentRound;
   const mode = state.settings.mode;
@@ -61,7 +130,7 @@ function PresentPage() {
             </div>
             <div>
               <p className="text-xs font-medium uppercase tracking-widest text-muted-foreground">
-                Games Hub
+                Rodada
               </p>
               <h1 className="text-2xl font-semibold">{match.name}</h1>
             </div>
