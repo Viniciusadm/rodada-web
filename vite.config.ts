@@ -3,7 +3,7 @@ import { fileURLToPath, URL } from "node:url";
 import tailwindcss from "@tailwindcss/vite";
 import { tanstackRouter } from "@tanstack/router-plugin/vite";
 import react from "@vitejs/plugin-react";
-import { defineConfig, searchForWorkspaceRoot } from "vite";
+import { defineConfig } from "vite";
 import tsconfigPaths from "vite-tsconfig-paths";
 
 export default defineConfig({
@@ -40,13 +40,6 @@ export default defineConfig({
   server: {
     host: "::",
     port: 8080,
-    fs: {
-      allow: [
-        searchForWorkspaceRoot(process.cwd()),
-        "../../slides/language/packages",
-        "../../slides/node_modules",
-      ],
-    },
   },
   build: {
     outDir: "dist",

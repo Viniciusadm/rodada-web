@@ -1,15 +1,16 @@
 import { useEffect, useMemo, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { AlertTriangle, CheckCircle2, Loader2, RotateCcw } from "lucide-react";
-import { externState } from "@folio/player/extern";
-import { RendererHostContext } from "@folio/renderer/host";
-import { ScaledSlide, SlideView } from "@folio/renderer/SlideView";
+import { externState } from "@ribaltalang/player/extern";
+import { RendererHostContext } from "@ribaltalang/renderer/host";
+import { ScaledSlide, SlideView } from "@ribaltalang/renderer/SlideView";
+import "@ribaltalang/renderer/styles.css";
 
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import { cn } from "@/lib/utils";
-import { FolioCodeEditor } from "./FolioCodeEditor";
+import { RibaltaCodeEditor } from "./RibaltaCodeEditor";
 import {
   checkPresentScreen,
   getScreenContract,
@@ -103,7 +104,7 @@ export function PresentScreenEditor({ value, onChange, onValidityChange }: Props
             Telão personalizado
           </Label>
           <p className="text-xs text-muted-foreground">
-            Escreva o telão em Folio. Desligado, as partidas usam o telão padrão do hub.
+            Escreva o telão em Ribalta. Desligado, as partidas usam o telão padrão do hub.
           </p>
         </div>
         <Switch
@@ -134,7 +135,7 @@ export function PresentScreenEditor({ value, onChange, onValidityChange }: Props
               id="screen-source"
               className="h-[520px] rounded-xl border border-input bg-background/40 focus-within:ring-2 focus-within:ring-ring"
             >
-              <FolioCodeEditor
+              <RibaltaCodeEditor
                 value={value}
                 onChange={onChange}
                 diagnostics={problems}

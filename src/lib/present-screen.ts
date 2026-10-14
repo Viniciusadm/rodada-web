@@ -1,6 +1,6 @@
-import type { ExternSuggestion } from "@folio/codemirror/completions";
-import type { Deck } from "@folio/compiler";
-import type { RendererHost } from "@folio/renderer/host";
+import type { ExternSuggestion } from "@ribaltalang/codemirror/completions";
+import type { Deck } from "@ribaltalang/compiler";
+import type { RendererHost } from "@ribaltalang/renderer/host";
 import { request, requestRaw, type MatchState } from "@/lib/api-client";
 import {
   answerLabel,

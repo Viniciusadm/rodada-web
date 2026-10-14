@@ -17,11 +17,11 @@ import {
   keymap,
   lineNumbers,
 } from "@codemirror/view";
-import type { Diagnostic, Theme } from "@folio/compiler";
-import { folioCompletions, type ExternSuggestion } from "@folio/codemirror/completions";
-import { toEditorDiagnostics } from "@folio/codemirror/diagnostics";
-import { folioHighlight, folioLanguage } from "@folio/codemirror/language";
-import { completionsPt } from "@folio/codemirror/messages";
+import type { Diagnostic, Theme } from "@ribaltalang/compiler";
+import { ribaltaCompletions, type ExternSuggestion } from "@ribaltalang/codemirror/completions";
+import { toEditorDiagnostics } from "@ribaltalang/codemirror/diagnostics";
+import { ribaltaHighlight, ribaltaLanguage } from "@ribaltalang/codemirror/language";
+import { completionsPt } from "@ribaltalang/codemirror/messages";
 
 type Props = {
   value: string;
@@ -63,7 +63,7 @@ const editorTheme = EditorView.theme({
   ".cm-diagnostic": { padding: "6px 10px" },
 });
 
-export function FolioCodeEditor({
+export function RibaltaCodeEditor({
   value,
   onChange,
   diagnostics,
@@ -91,12 +91,12 @@ export function FolioCodeEditor({
           history(),
           closeBrackets(),
           bracketMatching(),
-          folioLanguage,
-          folioHighlight,
+          ribaltaLanguage,
+          ribaltaHighlight,
           lintGutter(),
           autocompletion({
             override: [
-              folioCompletions(() => ({
+              ribaltaCompletions(() => ({
                 theme: latest.current.theme,
                 styles: [],
                 components: [],

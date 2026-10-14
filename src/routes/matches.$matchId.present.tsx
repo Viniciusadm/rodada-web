@@ -2,9 +2,10 @@ import { createFileRoute, notFound } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
 import { Gamepad2, Loader2, Trophy } from "lucide-react";
 import { useEffect, useMemo } from "react";
-import { externState } from "@folio/player/extern";
-import { RendererHostContext } from "@folio/renderer/host";
-import { ScaledSlide, SlideView } from "@folio/renderer/SlideView";
+import { externState } from "@ribaltalang/player/extern";
+import { RendererHostContext } from "@ribaltalang/renderer/host";
+import { ScaledSlide, SlideView } from "@ribaltalang/renderer/SlideView";
+import "@ribaltalang/renderer/styles.css";
 import { MatchStatusBadge } from "@/components/match/MatchStatusBadge";
 import { RoundTimer } from "@/components/match/RoundTimer";
 import { useCountdown } from "@/hooks/use-countdown";
@@ -53,10 +54,10 @@ function PresentPage() {
   }
   if (query.isError || !query.data) throw notFound();
 
-  return classic ? <ClassicPresent state={query.data} /> : <FolioPresent state={query.data} />;
+  return classic ? <ClassicPresent state={query.data} /> : <RibaltaPresent state={query.data} />;
 }
 
-function FolioPresent({ state }: { state: MatchState }) {
+function RibaltaPresent({ state }: { state: MatchState }) {
   const screen = useQuery({
     queryKey: ["present-screen", state.match.id],
     queryFn: () => getMatchScreen(state.match.id),
