@@ -5,7 +5,7 @@ import { LogoMark } from "@/components/common/Logo";
 import { useEffect, useMemo } from "react";
 import { externState } from "@ribaltalang/player/extern";
 import { RendererHostContext } from "@ribaltalang/renderer/host";
-import { ScaledSlide, SlideView } from "@ribaltalang/renderer/SlideView";
+import { PageView, ScaledPage } from "@ribaltalang/renderer/PageView";
 import "@ribaltalang/renderer/styles.css";
 import { MatchStatusBadge } from "@/components/match/MatchStatusBadge";
 import { RoundTimer } from "@/components/match/RoundTimer";
@@ -20,7 +20,12 @@ import {
   situationOf,
   statusLine,
 } from "@/lib/match-display";
-import { getMatchScreen, presentScreenHost, presentScreenValues } from "@/lib/present-screen";
+import {
+  declaredValues,
+  getMatchScreen,
+  presentScreenHost,
+  presentScreenValues,
+} from "@/lib/present-screen";
 
 const PRESENT_MC_COLORS = ["bg-rose-600", "bg-sky-600", "bg-amber-500", "bg-emerald-600"];
 
@@ -70,10 +75,10 @@ function RibaltaPresent({ state }: { state: MatchState }) {
     Boolean(round?.selectedParticipantId),
     round?.id,
   );
-  const deck = screen.data;
+  const doc = screen.data;
   const values = useMemo(
-    () => (deck ? externState(deck, presentScreenValues(state, seconds)) : null),
-    [deck, state, seconds],
+    () => (doc ? externState(doc, declaredValues(doc, presentScreenValues(state, seconds))) : null),
+    [doc, state, seconds],
   );
   const ignored = values?.ignored.join(", ") ?? "";
   useEffect(() => {
@@ -81,8 +86,8 @@ function RibaltaPresent({ state }: { state: MatchState }) {
   }, [ignored]);
 
   if (screen.isError) return <ClassicPresent state={state} />;
-  const slide = deck?.slides[0];
-  if (!deck || !slide || !values) {
+  const page = doc?.pages[0];
+  if (!doc || !page || !values) {
     return (
       <div className="flex min-h-screen items-center justify-center bg-black">
         <Loader2 className="size-8 animate-spin text-white/60" />
@@ -93,9 +98,9 @@ function RibaltaPresent({ state }: { state: MatchState }) {
   return (
     <RendererHostContext.Provider value={presentScreenHost}>
       <div className="h-screen w-screen bg-black">
-        <ScaledSlide width={deck.meta.width} height={deck.meta.height}>
-          <SlideView deck={deck} slide={slide} state={values.state} />
-        </ScaledSlide>
+        <ScaledPage width={page.width} height={page.height}>
+          <PageView doc={doc} page={page} state={values.state} />
+        </ScaledPage>
       </div>
     </RendererHostContext.Provider>
   );
@@ -172,7 +177,7 @@ function ClassicPresent({ state }: { state: MatchState }) {
               </>
             ) : (
               <>
-                {situationOf(state) === "resultado" && state.lastRoundResult ? (
+                {situationOf(state) === "result" && state.lastRoundResult ? (
                   <>
                     <div
                       className={`mx-auto mb-8 inline-flex flex-col items-center gap-2 rounded-3xl px-10 py-8 ${

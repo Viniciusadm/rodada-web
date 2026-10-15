@@ -192,7 +192,7 @@ export function MatchTemplateWizard({
   }
 
   return (
-    <div className="mx-auto max-w-4xl">
+    <div className={cn("mx-auto", step === 2 ? "max-w-[1600px]" : "max-w-4xl")}>
       <PageHeader
         title={title}
         description={description}

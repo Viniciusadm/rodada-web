@@ -1,4 +1,4 @@
-import { useEffect, useRef } from "react";
+import { useEffect, useImperativeHandle, useRef, type Ref } from "react";
 import {
   autocompletion,
   closeBrackets,
@@ -23,7 +23,14 @@ import { toEditorDiagnostics } from "@ribaltalang/codemirror/diagnostics";
 import { ribaltaHighlight, ribaltaLanguage } from "@ribaltalang/codemirror/language";
 import { completionsPt } from "@ribaltalang/codemirror/messages";
 
+export type EditorInsertion = { text: string; at?: number };
+
+export type RibaltaEditorHandle = {
+  insert: (insertions: EditorInsertion[]) => void;
+};
+
 type Props = {
+  ref?: Ref<RibaltaEditorHandle>;
   value: string;
   onChange: (value: string) => void;
   diagnostics: Diagnostic[];
@@ -33,7 +40,7 @@ type Props = {
 };
 
 const editorTheme = EditorView.theme({
-  "&": { height: "100%", fontSize: "12px", backgroundColor: "transparent" },
+  "&": { height: "100%", fontSize: "13px", backgroundColor: "transparent" },
   ".cm-scroller": {
     fontFamily: "ui-monospace, SFMono-Regular, Menlo, monospace",
     lineHeight: "1.6",
@@ -64,6 +71,7 @@ const editorTheme = EditorView.theme({
 });
 
 export function RibaltaCodeEditor({
+  ref,
   value,
   onChange,
   diagnostics,
@@ -76,6 +84,23 @@ export function RibaltaCodeEditor({
   const initialValue = useRef(value);
   const latest = useRef({ onChange, theme, variables, externs });
   latest.current = { onChange, theme, variables, externs };
+
+  useImperativeHandle(ref, () => ({
+    insert(insertions) {
+      const instance = view.current;
+      if (!instance) return;
+      const cursor = instance.state.selection.main.head;
+      const changes = instance.state.changes(
+        insertions.map(({ text, at }) => ({ from: at ?? cursor, insert: text })),
+      );
+      instance.dispatch({
+        changes,
+        selection: { anchor: changes.mapPos(cursor, 1) },
+        scrollIntoView: true,
+      });
+      instance.focus();
+    },
+  }));
 
   useEffect(() => {
     if (!host.current) return;
@@ -142,5 +167,5 @@ export function RibaltaCodeEditor({
     );
   }, [diagnostics]);
 
-  return <div ref={host} className="h-full min-h-[420px] overflow-hidden" />;
+  return <div ref={host} className="h-full overflow-hidden" />;
 }

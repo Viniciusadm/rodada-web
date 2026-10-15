@@ -2,7 +2,7 @@ import type { MatchQuestion, MatchState } from "@/lib/api-client";
 
 export const RANKING_SIZE = 5;
 
-export type MatchSituation = "pergunta" | "resultado" | "aguardando";
+export type MatchSituation = "question" | "result" | "waiting" | "finished";
 
 export function rankingLeaders(state: MatchState) {
   return [...state.participants]
@@ -18,9 +18,10 @@ export function showsRanking(state: MatchState) {
 }
 
 export function situationOf(state: MatchState): MatchSituation {
-  if (state.currentRound?.question) return "pergunta";
-  if (state.match.status === "em-andamento" && state.lastRoundResult) return "resultado";
-  return "aguardando";
+  if (state.currentRound?.question) return "question";
+  if (state.match.status === "em-andamento" && state.lastRoundResult) return "result";
+  if (state.match.status === "encerrada") return "finished";
+  return "waiting";
 }
 
 export function headlineOf(state: MatchState) {
