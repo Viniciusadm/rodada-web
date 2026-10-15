@@ -13,6 +13,7 @@ import {
   SidebarMenuItem,
   SidebarFooter,
 } from "@/components/ui/sidebar";
+import { Logo } from "@/components/common/Logo";
 import { useAuthStore } from "@/stores/auth";
 
 function initialsOf(name: string) {
@@ -61,13 +62,8 @@ export function AppSidebar() {
   return (
     <Sidebar collapsible="icon">
       <SidebarHeader>
-        <Link to="/play" className="flex items-center gap-2.5 px-2 py-2">
-          <div className="flex size-9 items-center justify-center rounded-xl bg-primary">
-            <Gamepad2 className="size-5 text-primary-foreground" />
-          </div>
-          <div className="flex flex-col leading-none group-data-[collapsible=icon]:hidden">
-            <span className="text-base font-semibold tracking-tight">Rodada</span>
-          </div>
+        <Link to="/play" className="flex items-center px-1.5 py-2">
+          <Logo size={28} wordClassName="text-lg group-data-[collapsible=icon]:hidden" />
         </Link>
       </SidebarHeader>
 
@@ -99,7 +95,7 @@ export function AppSidebar() {
 
       <SidebarFooter>
         <div className="flex items-center gap-3 rounded-lg px-2 py-2 group-data-[collapsible=icon]:justify-center">
-          <div className="flex size-8 shrink-0 items-center justify-center rounded-full bg-primary/15 text-xs font-semibold text-foreground">
+          <div className="flex size-8 shrink-0 items-center justify-center rounded-lg bg-primary/15 font-mono text-xs font-semibold text-primary">
             {initialsOf(userName) || "U"}
           </div>
           <div className="min-w-0 flex-1 group-data-[collapsible=icon]:hidden">

@@ -8,8 +8,7 @@ export const Route = createFileRoute("/")({
       { title: "Rodada — Plataforma de jogos" },
       {
         name: "description",
-        content:
-          "Jogos interativos. Crie partidas ao vivo e engaje participantes em segundos.",
+        content: "Jogos interativos. Crie partidas ao vivo e engaje participantes em segundos.",
       },
     ],
   }),

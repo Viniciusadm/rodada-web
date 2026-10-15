@@ -110,9 +110,7 @@ function MatchTemplatesPage() {
                 <Badge variant="secondary">{template.modeLabel}</Badge>
               </div>
               {template.description && (
-                <p className="line-clamp-2 text-sm text-muted-foreground">
-                  {template.description}
-                </p>
+                <p className="line-clamp-2 text-sm text-muted-foreground">{template.description}</p>
               )}
               <div className="mt-3 flex items-center gap-1.5 text-xs text-muted-foreground">
                 <HelpCircle className="size-3.5" />

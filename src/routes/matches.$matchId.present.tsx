@@ -1,6 +1,7 @@
 import { createFileRoute, notFound } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
-import { Gamepad2, Loader2, Trophy } from "lucide-react";
+import { Loader2, Trophy } from "lucide-react";
+import { LogoMark } from "@/components/common/Logo";
 import { useEffect, useMemo } from "react";
 import { externState } from "@ribaltalang/player/extern";
 import { RendererHostContext } from "@ribaltalang/renderer/host";
@@ -112,9 +113,7 @@ function ClassicPresent({ state }: { state: MatchState }) {
       <div className="relative mx-auto flex min-h-screen max-w-7xl flex-col p-4 sm:p-8">
         <header className="mb-8 flex items-center justify-between">
           <div className="flex items-center gap-3">
-            <div className="flex size-12 items-center justify-center rounded-2xl bg-primary">
-              <Gamepad2 className="size-6 text-primary-foreground" />
-            </div>
+            <LogoMark size={48} />
             <div>
               <p className="text-xs font-medium uppercase tracking-widest text-muted-foreground">
                 Rodada

@@ -1,6 +1,7 @@
 import { createFileRoute, notFound } from "@tanstack/react-router";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { Gamepad2, Hand } from "lucide-react";
+import { Hand } from "lucide-react";
+import { LogoMark } from "@/components/common/Logo";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
@@ -215,9 +216,7 @@ function PlayPage() {
     <div className="flex h-[100dvh] flex-col overflow-hidden bg-background sm:items-center sm:justify-center sm:bg-muted/30 sm:p-6">
       <div className="flex h-full w-full flex-col overflow-hidden bg-background sm:h-[min(88dvh,760px)] sm:max-w-2xl sm:rounded-3xl sm:border sm:border-border sm:shadow-xl">
         <header className="flex items-center gap-3 border-b border-border px-4 py-3 sm:px-6 sm:py-4">
-          <div className="flex size-10 items-center justify-center rounded-xl bg-primary sm:size-12">
-            <Gamepad2 className="size-5 text-primary-foreground sm:size-6" />
-          </div>
+          <LogoMark size={40} className="sm:size-12" />
           <div className="min-w-0">
             <p className="text-[0.65rem] font-medium uppercase tracking-widest text-muted-foreground sm:text-xs">
               Rodada

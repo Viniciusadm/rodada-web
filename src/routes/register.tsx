@@ -156,7 +156,7 @@ function RegisterPage() {
           <p className="rounded-lg bg-destructive/10 px-3 py-2 text-sm text-destructive">{error}</p>
         )}
 
-        <Button type="submit" className="w-full" disabled={submitting}>
+        <Button type="submit" size="lg" className="mt-2 w-full" disabled={submitting}>
           {submitting ? (
             <>
               <Loader2 className="size-4 animate-spin" />

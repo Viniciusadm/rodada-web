@@ -1,7 +1,7 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useMutation } from "@tanstack/react-query";
-import { Gamepad2, KeyRound } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
+import { Logo } from "@/components/common/Logo";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { InputOTP, InputOTPGroup, InputOTPSlot } from "@/components/ui/input-otp";
@@ -125,23 +125,18 @@ function EntrarPage() {
   }
 
   return (
-    <div className="flex min-h-screen flex-col items-center justify-center bg-background px-6 text-center">
-      <div className="mb-8 flex items-center gap-3">
-        <div className="flex size-14 items-center justify-center rounded-2xl bg-primary">
-          <Gamepad2 className="size-7 text-primary-foreground" />
-        </div>
-        <div className="text-left">
-          <p className="text-xs font-medium uppercase tracking-widest text-muted-foreground">
-            Rodada
-          </p>
-          <h1 className="text-xl font-semibold">Entrar em uma partida</h1>
-        </div>
-      </div>
+    <div className="dot-grid flex min-h-dvh flex-col items-center justify-center bg-background px-5 py-10 text-center">
+      <Logo className="mb-10" />
 
-      <div className="w-full max-w-sm space-y-5 rounded-2xl border border-border bg-card p-6">
-        <KeyRound className="mx-auto size-12 text-primary" />
+      <div className="w-full max-w-sm space-y-5 rounded-2xl border border-border bg-card p-6 text-left shadow-[0_30px_80px_rgba(0,0,0,0.25)]">
+        <div>
+          <h1 className="text-2xl font-bold">Entrar em uma partida</h1>
+          <p className="mt-1.5 text-sm text-muted-foreground">
+            Digite o PIN que aparece no telão e o nome que vai no placar.
+          </p>
+        </div>
         <div className="space-y-2">
-          <p className="text-sm font-medium">Digite o PIN da sala</p>
+          <p className="text-sm font-medium">PIN da sala</p>
           <div className="flex justify-center">
             <InputOTP
               maxLength={6}
@@ -153,7 +148,11 @@ function EntrarPage() {
             >
               <InputOTPGroup>
                 {Array.from({ length: 6 }).map((_, index) => (
-                  <InputOTPSlot key={index} index={index} className="h-11 w-10 text-lg" />
+                  <InputOTPSlot
+                    key={index}
+                    index={index}
+                    className="h-12 w-11 font-mono text-xl font-semibold"
+                  />
                 ))}
               </InputOTPGroup>
             </InputOTP>
@@ -176,7 +175,8 @@ function EntrarPage() {
         )}
 
         <Button
-          className="w-full rounded-lg"
+          size="lg"
+          className="w-full"
           disabled={!canSubmit}
           onClick={() => joinMutation.mutate()}
         >
