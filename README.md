@@ -29,7 +29,7 @@ Stack: React 19, Vite 7, TanStack Router and Query, Tailwind CSS 4, shadcn/ui (R
 
 ## Running locally
 
-Copy the example environment and point `VITE_API_BASE_URL` at the API. `VITE_DEMO_ADMIN_EMAIL` and `VITE_DEMO_ADMIN_PASSWORD` only prefill the login form.
+Copy the example environment and point `VITE_API_BASE_URL` at the API.
 
 ```bash
 cp .env.example .env

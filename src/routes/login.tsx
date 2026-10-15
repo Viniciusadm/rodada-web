@@ -32,8 +32,8 @@ function LoginPage() {
   const login = useAuthStore((s) => s.login);
   const bootstrap = useAuthStore((s) => s.bootstrap);
 
-  const [email, setEmail] = useState(import.meta.env.VITE_DEMO_ADMIN_EMAIL ?? "");
-  const [password, setPassword] = useState(import.meta.env.VITE_DEMO_ADMIN_PASSWORD ?? "");
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
   const [fieldErrors, setFieldErrors] = useState<FieldErrors>({});
   const [submitting, setSubmitting] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
@@ -124,7 +124,7 @@ function LoginPage() {
           <p className="rounded-lg bg-destructive/10 px-3 py-2 text-sm text-destructive">{error}</p>
         )}
 
-        <Button type="submit" className="w-full" disabled={submitting}>
+        <Button type="submit" size="lg" className="mt-2 w-full" disabled={submitting}>
           {submitting ? (
             <>
               <Loader2 className="size-4 animate-spin" />
