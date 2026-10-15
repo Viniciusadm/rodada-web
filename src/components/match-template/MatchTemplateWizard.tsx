@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useQuery } from "@tanstack/react-query";
 import { Link } from "@tanstack/react-router";
 import { ArrowLeft, ArrowRight, Check, Plus, Trash2 } from "lucide-react";
 import { toast } from "sonner";
@@ -25,6 +26,7 @@ import type {
   MatchTemplateInput,
 } from "@/lib/api-client";
 import type { DraftOption, DraftQuestionType, GameMode } from "@/lib/match-types";
+import { getScreenTemplates, screenLabel } from "@/lib/present-screen";
 import { cn } from "@/lib/utils";
 import { PresentScreenEditor } from "./PresentScreenEditor";
 
@@ -151,6 +153,11 @@ export function MatchTemplateWizard({
   const [questions, setQuestions] = useState<DraftQ[]>(() => initialQuestions(initial));
   const [presentScreen, setPresentScreen] = useState<string | null>(initial?.presentScreen ?? null);
   const [screenValid, setScreenValid] = useState(true);
+  const screenTemplates = useQuery({
+    queryKey: ["present-screen-templates"],
+    queryFn: getScreenTemplates,
+    staleTime: Number.POSITIVE_INFINITY,
+  });
 
   function updateQuestion(index: number, patch: Partial<DraftQ>) {
     setQuestions((qs) => qs.map((q, i) => (i === index ? { ...q, ...patch } : q)));
@@ -664,7 +671,7 @@ export function MatchTemplateWizard({
                   { label: "Jogo", value: mode === "buzzer" ? "Buzzer" : "Quiz" },
                   { label: "Tempo/pergunta", value: timePerQuestion ? `${timePerQuestion}s` : "—" },
                   { label: "Remoto", value: remoteEnabled ? "Sim" : "Não" },
-                  { label: "Telão", value: presentScreen === null ? "Padrão" : "Personalizado" },
+                  { label: "Telão", value: screenLabel(presentScreen, screenTemplates.data) },
                 ].map((s) => (
                   <div key={s.label} className="rounded-lg bg-background/60 p-3 text-center">
                     <p className="text-lg font-semibold">{s.value}</p>

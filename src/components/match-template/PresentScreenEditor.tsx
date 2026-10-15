@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
-import { AlertTriangle, CheckCircle2, Loader2, Maximize2, Minimize2 } from "lucide-react";
+import { AlertTriangle, CheckCircle2, Code2, Loader2, Maximize2, Minimize2, X } from "lucide-react";
 import { externState } from "@ribaltalang/player/extern";
 import { RendererHostContext } from "@ribaltalang/renderer/host";
 import { PageView, ScaledPage } from "@ribaltalang/renderer/PageView";
@@ -8,18 +8,18 @@ import "@ribaltalang/renderer/styles.css";
 
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
-import { Switch } from "@/components/ui/switch";
 import { cn } from "@/lib/utils";
 import { RibaltaCodeEditor, type RibaltaEditorHandle } from "./RibaltaCodeEditor";
-import { ScreenTemplatePicker } from "./ScreenTemplatePicker";
+import { CUSTOM_SCREEN, ScreenTemplateGallery } from "./ScreenTemplateGallery";
 import { ScreenVariablesPanel } from "./ScreenVariablesPanel";
 import {
   checkPresentScreen,
   declarationInsertion,
   getScreenContract,
-  getDefaultScreenSource,
+  getScreenTemplates,
   presentScreenHost,
   type ScreenCheck,
+  type ScreenTemplate,
   type ScreenVariable,
 } from "@/lib/present-screen";
 
@@ -49,13 +49,18 @@ type Props = {
 export function PresentScreenEditor({ value, onChange, onValidityChange }: Props) {
   const [check, setCheck] = useState<ScreenCheck | null>(null);
   const [checking, setChecking] = useState(false);
-  const [loadingDefault, setLoadingDefault] = useState(false);
+  const [editing, setEditing] = useState(false);
   const [scene, setScene] = useState(0);
   const [fullscreen, setFullscreen] = useState(false);
   const editor = useRef<RibaltaEditorHandle>(null);
   const contract = useQuery({
     queryKey: ["present-screen-contract"],
     queryFn: getScreenContract,
+    staleTime: Number.POSITIVE_INFINITY,
+  });
+  const templates = useQuery({
+    queryKey: ["present-screen-templates"],
+    queryFn: getScreenTemplates,
     staleTime: Number.POSITIVE_INFINITY,
   });
 
@@ -102,16 +107,22 @@ export function PresentScreenEditor({ value, onChange, onValidityChange }: Props
   }, [fullscreen]);
 
   useEffect(() => {
-    if (value === null) setFullscreen(false);
-  }, [value]);
+    if (!editing) setFullscreen(false);
+  }, [editing]);
 
-  async function loadDefault() {
-    setLoadingDefault(true);
-    try {
-      onChange(await getDefaultScreenSource());
-    } finally {
-      setLoadingDefault(false);
-    }
+  const defaultTemplate = templates.data?.[0];
+  const selected =
+    value === null
+      ? (defaultTemplate?.id ?? null)
+      : (templates.data?.find((template) => template.source === value)?.id ?? CUSTOM_SCREEN);
+
+  function pick(template: ScreenTemplate) {
+    onChange(!editing && template.id === defaultTemplate?.id ? null : template.source);
+  }
+
+  function startEditing() {
+    if (value === null && defaultTemplate) onChange(defaultTemplate.source);
+    setEditing(true);
   }
 
   const page = check?.document.pages[0];
@@ -140,24 +151,46 @@ export function PresentScreenEditor({ value, onChange, onValidityChange }: Props
 
   return (
     <div className="space-y-5">
-      <div className="flex flex-wrap items-center justify-between gap-4 rounded-xl border border-border bg-muted/30 p-4">
+      <div className="flex flex-wrap items-end justify-between gap-3">
         <div>
-          <Label htmlFor="custom-screen" className="text-sm font-medium">
-            Telão personalizado
-          </Label>
+          <p className="text-sm font-medium">Visual do telão</p>
           <p className="text-xs text-muted-foreground">
-            Escreva o telão em Ribalta. Desligado, as partidas usam o telão padrão do hub.
+            Clique em um modelo para usar nas partidas. Se quiser mudar algo, edite o código.
           </p>
         </div>
-        <Switch
-          id="custom-screen"
-          checked={value !== null}
-          disabled={loadingDefault}
-          onCheckedChange={(checked) => (checked ? void loadDefault() : onChange(null))}
-        />
+        {editing ? (
+          <Button
+            type="button"
+            variant="outline"
+            size="sm"
+            className="rounded-lg"
+            onClick={() => setEditing(false)}
+          >
+            <X className="mr-1 size-3.5" /> Fechar editor
+          </Button>
+        ) : (
+          <Button
+            type="button"
+            variant="outline"
+            size="sm"
+            className="rounded-lg"
+            disabled={!defaultTemplate}
+            onClick={startEditing}
+          >
+            <Code2 className="mr-1 size-3.5" /> Editar código
+          </Button>
+        )}
       </div>
 
-      {value !== null && (
+      <ScreenTemplateGallery
+        templates={templates.data}
+        loading={templates.isLoading}
+        selected={selected}
+        custom={selected === CUSTOM_SCREEN ? (check?.document ?? null) : null}
+        onPick={pick}
+      />
+
+      {editing && value !== null && (
         <div
           className={cn(
             "grid gap-5 xl:grid-cols-[minmax(0,1fr)_minmax(0,1fr)]",
@@ -169,10 +202,6 @@ export function PresentScreenEditor({ value, onChange, onValidityChange }: Props
             <div className="flex flex-wrap items-center justify-between gap-2">
               <Label htmlFor="screen-source">Texto do telão</Label>
               <div className="flex gap-2">
-                <ScreenTemplatePicker
-                  disabled={loadingDefault}
-                  onPick={(template) => onChange(template.source)}
-                />
                 <Button
                   type="button"
                   variant="outline"

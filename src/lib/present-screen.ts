@@ -1,7 +1,7 @@
 import type { ExternSuggestion } from "@ribaltalang/codemirror/completions";
 import type { Document } from "@ribaltalang/compiler";
 import type { RendererHost } from "@ribaltalang/renderer/host";
-import { request, requestRaw, type MatchState } from "@/lib/api-client";
+import { request, type MatchState } from "@/lib/api-client";
 import {
   answerLabel,
   headlineOf,
@@ -35,11 +35,6 @@ export function getMatchScreen(matchId: string): Promise<Document> {
   return request<Document>(`/api/v1/matches/${matchId}/screen`, { auth: false });
 }
 
-export async function getDefaultScreenSource(): Promise<string> {
-  const response = await requestRaw("/api/v1/screens/present/source", { auth: false });
-  return response.text();
-}
-
 export type ScreenVariable = ExternSuggestion & {
   kind: string;
   description: string;
@@ -57,6 +52,11 @@ export type ScreenTemplate = {
 
 export function getScreenContract(): Promise<ScreenVariable[]> {
   return request<ScreenVariable[]>("/api/v1/screens/present/contract", { auth: false });
+}
+
+export function screenLabel(source: string | null, templates: ScreenTemplate[] | undefined) {
+  if (source === null) return templates?.[0]?.name ?? "Padrão";
+  return templates?.find((template) => template.source === source)?.name ?? "Personalizado";
 }
 
 export function getScreenTemplates(): Promise<ScreenTemplate[]> {
